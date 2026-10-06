@@ -1,0 +1,2521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estación Terrena de Telemetría</title>
+
+    <style>
+        :root {
+            --bg: #080b10;
+            --panel: #10151d;
+            --panel-2: #151b24;
+            --border: #252d38;
+            --text: #e7edf5;
+            --muted: #7f8b9a;
+
+            --green: #39d98a;
+            --yellow: #f5c451;
+            --red: #ff5d6c;
+            --blue: #4da3ff;
+            --cyan: #35d6e8;
+
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        /* =========================================================
+           HEADER
+           ========================================================= */
+
+        .topbar {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+
+            background: #0c1016;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--blue);
+            border-radius: 8px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: var(--blue);
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .brand-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        .brand-subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .connection {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 10px rgba(255, 93, 108, 0.5);
+        }
+
+        .status-dot.connected {
+            background: var(--green);
+            box-shadow: 0 0 10px rgba(57, 217, 138, 0.55);
+        }
+
+        .header-stat {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .header-stat strong {
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* =========================================================
+           MAIN
+           ========================================================= */
+
+        main {
+            width: 100%;
+            padding: 18px;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-rows: auto minmax(500px, 1fr);
+            gap: 14px;
+        }
+
+        /* =========================================================
+           COMMON PANEL
+           ========================================================= */
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .panel-header {
+            height: 43px;
+            padding: 0 15px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            border-bottom: 1px solid var(--border);
+            background: var(--panel-2);
+        }
+
+        .panel-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .panel-subtitle {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        /* =========================================================
+           TOP CARDS
+           ========================================================= */
+
+        .metric-card {
+            min-height: 150px;
+            padding: 17px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .metric-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .metric-icon {
+            color: var(--blue);
+            font-size: 15px;
+        }
+
+        .metric-value {
+            margin-top: 12px;
+
+            font-size: clamp(28px, 3vw, 42px);
+            font-weight: 700;
+            line-height: 1;
+
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.04em;
+        }
+
+        .metric-unit {
+            margin-left: 5px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+
+        .metric-secondary {
+            margin-top: 12px;
+
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .metric-secondary strong {
+            color: var(--text);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* =========================================================
+           CONNECTION HEALTH
+           ========================================================= */
+
+        .health-card {
+            min-height: 150px;
+            padding: 17px;
+        }
+
+        .health-main {
+            margin-top: 15px;
+
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .health-indicator {
+            width: 12px;
+            height: 12px;
+            flex: 0 0 12px;
+
+            border-radius: 50%;
+            background: var(--red);
+        }
+
+        .health-indicator.ok {
+            background: var(--green);
+            box-shadow: 0 0 12px rgba(57, 217, 138, 0.5);
+        }
+
+        .health-indicator.warning {
+            background: var(--yellow);
+            box-shadow: 0 0 12px rgba(245, 196, 81, 0.45);
+        }
+
+        .health-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .health-text strong {
+            font-size: 18px;
+        }
+
+        .health-text span {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .health-stats {
+            margin-top: 17px;
+
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .health-stat {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #0d1218;
+        }
+
+        .health-stat-label {
+            color: var(--muted);
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+
+        .health-stat-value {
+            margin-top: 4px;
+            font-size: 13px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* =========================================================
+           BOTTOM AREA
+           ========================================================= */
+
+        .map-panel {
+            grid-column: span 2;
+            min-height: 500px;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-panel {
+            grid-column: span 1;
+            min-height: 500px;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .frame-panel {
+            grid-column: span 1;
+            min-height: 500px;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =========================================================
+           MAP
+           ========================================================= */
+
+        .map-content {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            background:
+                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+                #0b1016;
+
+            background-size: 45px 45px;
+            overflow: hidden;
+        }
+
+        .map-content::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    transparent 48%,
+                    rgba(53, 214, 232, 0.07) 49%,
+                    rgba(53, 214, 232, 0.07) 51%,
+                    transparent 52%
+                );
+
+            pointer-events: none;
+        }
+
+        .map-placeholder {
+            position: absolute;
+            inset: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #384554;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+
+            pointer-events: none;
+        }
+
+        .map-placeholder[hidden] {
+            display: none;
+        }
+
+        .map-position {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+
+            width: 17px;
+            height: 17px;
+
+            transform: translate(-50%, -50%);
+
+            border-radius: 50%;
+            background: var(--red);
+            border: 3px solid #fff;
+
+            box-shadow:
+                0 0 0 8px rgba(255, 93, 108, 0.12),
+                0 0 22px rgba(255, 93, 108, 0.7);
+
+            display: none;
+        }
+
+        .map-position.visible {
+            display: block;
+        }
+
+        .map-position::after {
+            content: "";
+
+            position: absolute;
+            width: 80px;
+            height: 80px;
+
+            left: 50%;
+            top: 50%;
+
+            transform: translate(-50%, -50%);
+
+            border: 1px solid rgba(255, 93, 108, 0.2);
+            border-radius: 50%;
+        }
+
+        .map-info {
+            position: absolute;
+            left: 14px;
+            bottom: 14px;
+
+            padding: 10px 12px;
+
+            border: 1px solid var(--border);
+            border-radius: 7px;
+
+            background: rgba(8, 11, 16, 0.88);
+            backdrop-filter: blur(5px);
+
+            font-size: 11px;
+        }
+
+        .map-info-row {
+            display: flex;
+            gap: 10px;
+            margin: 3px 0;
+        }
+
+        .map-info-label {
+            width: 70px;
+            color: var(--muted);
+        }
+
+        .map-info-value {
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .map-top-info {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+
+            display: flex;
+            gap: 8px;
+        }
+
+        .map-badge {
+            padding: 6px 9px;
+
+            border: 1px solid var(--border);
+            border-radius: 6px;
+
+            background: rgba(8, 11, 16, 0.88);
+            color: var(--muted);
+
+            font-size: 10px;
+        }
+
+        .map-badge strong {
+            color: var(--text);
+        }
+
+        /* =========================================================
+           LOG
+           ========================================================= */
+
+        .log-content {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+
+            padding: 8px;
+        }
+
+        .log-empty {
+            height: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .log-entry {
+            padding: 9px 8px;
+            border-bottom: 1px solid rgba(37, 45, 56, 0.7);
+        }
+
+        .log-entry:last-child {
+            border-bottom: 0;
+        }
+
+        .log-time {
+            color: var(--muted);
+            font-size: 9px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .log-message {
+            margin-top: 4px;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .log-entry.info .log-message {
+            color: var(--text);
+        }
+
+        .log-entry.success .log-message {
+            color: var(--green);
+        }
+
+        .log-entry.warning .log-message {
+            color: var(--yellow);
+        }
+
+        .log-entry.error .log-message {
+            color: var(--red);
+        }
+
+        /* =========================================================
+           FRAME
+           ========================================================= */
+
+        .frame-content {
+            flex: 1;
+            min-height: 0;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .frame-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .frame-field {
+            padding: 9px;
+
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #0d1218;
+        }
+
+        .frame-field-label {
+            color: var(--muted);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .frame-field-value {
+            margin-top: 4px;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            font-variant-numeric: tabular-nums;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .frame-fields-wrap {
+            flex: 1;
+            min-height: 0;
+            margin: 0 12px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #090d12;
+            overflow: auto;
+        }
+
+        .frame-fields-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .frame-fields-table th,
+        .frame-fields-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .frame-fields-table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: var(--panel-2);
+            color: var(--muted);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .frame-fields-table td {
+            font-size: 10px;
+        }
+
+        .frame-fields-table td:first-child,
+        .frame-fields-table td:nth-child(2) {
+            font-family: "Cascadia Code", Consolas, monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .telemetry-empty {
+            color: var(--muted);
+            text-align: center !important;
+        }
+
+        .map-trail-svg {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        #gpsTrajectory {
+            fill: none;
+            stroke: var(--cyan);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            vector-effect: non-scaling-stroke;
+        }
+
+        #gpsStart {
+            fill: var(--green);
+            stroke: #fff;
+            stroke-width: 2;
+            visibility: hidden;
+        }
+
+        #gpsCurrent {
+            fill: var(--red);
+            stroke: #fff;
+            stroke-width: 3;
+            visibility: hidden;
+            filter: drop-shadow(0 0 7px rgba(255, 93, 108, 0.8));
+        }
+
+        .map-top-info,
+        .map-info {
+            z-index: 2;
+        }
+
+        /* =========================================================
+           SCROLLBARS
+           ========================================================= */
+
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0e13;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2b3440;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b4755;
+        }
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-rows: auto;
+            }
+
+            .map-panel {
+                grid-column: span 2;
+            }
+
+            .log-panel,
+            .frame-panel {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .topbar {
+                height: auto;
+                min-height: 64px;
+                padding: 12px 14px;
+
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .header-status {
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+
+            .header-stat {
+                display: none;
+            }
+
+            main {
+                padding: 10px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .map-panel,
+            .log-panel,
+            .frame-panel {
+                grid-column: span 1;
+            }
+
+            .map-panel,
+            .log-panel,
+            .frame-panel {
+                min-height: 400px;
+            }
+
+            .frame-meta {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .metric-card,
+            .health-card {
+                min-height: 135px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="brand-mark">ET</div>
+
+        <div class="brand-text">
+            <div class="brand-title">ESTACIÓN TERRENA</div>
+            <div class="brand-subtitle">SISTEMA DE TELEMETRÍA</div>
+        </div>
+    </div>
+
+    <div class="header-status">
+
+        <div class="connection">
+            <span id="connectionDot" class="status-dot"></span>
+            <span id="connectionText">DISCONNECTED</span>
+        </div>
+
+        <div class="header-stat">
+            T+
+            <strong id="headerTime">--:--:--</strong>
+        </div>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <div class="dashboard">
+
+        <!-- =====================================================
+             FILA SUPERIOR
+             ===================================================== -->
+
+        <!-- BARÓMETRO -->
+        <section class="panel metric-card">
+
+            <div class="metric-title">
+                <span>Barómetro</span>
+                <span class="metric-icon">⌁</span>
+            </div>
+
+            <div>
+                <div class="metric-value">
+                    <span id="barometerPressure">---</span>
+                    <span class="metric-unit">hPa</span>
+                </div>
+
+                <div class="metric-secondary">
+                    <span>
+                        TEMP
+                        <strong id="barometerTemp">--.- °C</strong>
+                    </span>
+
+                    <span>
+                        TEND
+                        <strong id="barometerTrend">---</strong>
+                    </span>
+
+                    <span>
+                        MIN
+                        <strong id="barometerMin">--- hPa</strong>
+                    </span>
+
+                    <span>
+                        MAX
+                        <strong id="barometerMax">--- hPa</strong>
+                    </span>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ALTITUD -->
+        <section class="panel metric-card">
+
+            <div class="metric-title">
+                <span>Altitud</span>
+                <span class="metric-icon">↟</span>
+            </div>
+
+            <div>
+                <div class="metric-value">
+                    <span id="altitudeValue">---</span>
+                    <span class="metric-unit">m</span>
+                </div>
+
+                <div class="metric-secondary">
+                    <span>
+                        MÁX
+                        <strong id="altitudeMax">--- m</strong>
+                    </span>
+
+                    <span>
+                        V/S
+                        <strong id="verticalSpeed">--- m/s</strong>
+                    </span>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ACELERACIÓN -->
+        <section class="panel metric-card">
+
+            <div class="metric-title">
+                <span>Aceleración</span>
+                <span class="metric-icon">✦</span>
+            </div>
+
+            <div>
+                <div class="metric-value">
+                    <span id="accelMagnitude">---</span>
+                    <span class="metric-unit">g</span>
+                </div>
+
+                <div class="metric-secondary">
+                    <span>
+                        X
+                        <strong id="accelX">---</strong>
+                    </span>
+
+                    <span>
+                        Y
+                        <strong id="accelY">---</strong>
+                    </span>
+
+                    <span>
+                        Z
+                        <strong id="accelZ">---</strong>
+                    </span>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- SALUD DE CONEXIÓN -->
+        <section class="panel health-card">
+
+            <div class="metric-title">
+                <span>Salud de conexión</span>
+                <span class="metric-icon">●</span>
+            </div>
+
+            <div class="health-main">
+
+                <span id="healthIndicator" class="health-indicator"></span>
+
+                <div class="health-text">
+                    <strong id="healthStatus">OFFLINE</strong>
+                    <span id="healthDetail">Esperando conexión...</span>
+                </div>
+
+            </div>
+
+            <div class="health-stats">
+
+                <div class="health-stat">
+                    <div class="health-stat-label">RSSI</div>
+                    <div class="health-stat-value" id="healthRssi">-- dBm</div>
+                </div>
+
+                <div class="health-stat">
+                    <div class="health-stat-label">SNR</div>
+                    <div class="health-stat-value" id="healthSnr">-- dB</div>
+                </div>
+
+                <div class="health-stat">
+                    <div class="health-stat-label">Frames recibidos</div>
+                    <div class="health-stat-value" id="healthReceived">0</div>
+                </div>
+
+                <div class="health-stat">
+                    <div class="health-stat-label">Frames perdidos</div>
+                    <div class="health-stat-value" id="lostPackets">0</div>
+                </div>
+
+                <div class="health-stat">
+                    <div class="health-stat-label">Pérdida</div>
+                    <div class="health-stat-value" id="healthLoss">0.00 %</div>
+                </div>
+
+                <div class="health-stat">
+                    <div class="health-stat-label">Tasa RX</div>
+                    <div class="health-stat-value" id="healthRate">-- Hz</div>
+                </div>
+
+                <div class="health-stat">
+                    <div class="health-stat-label">Último paquete</div>
+                    <div class="health-stat-value" id="healthLastPacket">--</div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             FILA INFERIOR
+             ===================================================== -->
+
+        <!-- GPS / MAPA - 2 COLUMNAS -->
+        <section class="panel map-panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+                    GPS / Mapa
+                </div>
+
+                <div class="panel-subtitle">
+                    <span id="gpsFixStatus">NO FIX</span>
+                </div>
+
+            </div>
+
+            <div class="map-content">
+
+                <div class="map-placeholder" id="mapPlaceholder">
+                    Esperando posición GPS
+                </div>
+
+                <svg
+                    class="map-trail-svg"
+                    viewBox="0 0 1000 600"
+                    preserveAspectRatio="none"
+                    aria-label="Trayectoria GPS"
+                >
+                    <polyline id="gpsTrajectory" points=""></polyline>
+                    <circle id="gpsStart" cx="0" cy="0" r="8"></circle>
+                    <circle id="gpsCurrent" cx="0" cy="0" r="9"></circle>
+                </svg>
+
+                <div class="map-top-info">
+
+                    <div class="map-badge">
+                        SAT <strong id="gpsSatellites">--</strong>
+                    </div>
+
+                    <div class="map-badge">
+                        HDOP <strong id="gpsHdop">--</strong>
+                    </div>
+
+                    <div class="map-badge">
+                        FIX <strong id="gpsFix">--</strong>
+                    </div>
+
+                </div>
+
+                <div class="map-info">
+
+                    <div class="map-info-row">
+                        <span class="map-info-label">LAT</span>
+                        <span class="map-info-value" id="gpsLatitude">
+                            ---
+                        </span>
+                    </div>
+
+                    <div class="map-info-row">
+                        <span class="map-info-label">LON</span>
+                        <span class="map-info-value" id="gpsLongitude">
+                            ---
+                        </span>
+                    </div>
+
+                    <div class="map-info-row">
+                        <span class="map-info-label">ALT</span>
+                        <span class="map-info-value" id="gpsAltitude">
+                            --- m
+                        </span>
+                    </div>
+
+                    <div class="map-info-row">
+                        <span class="map-info-label">SPEED</span>
+                        <span class="map-info-value" id="gpsSpeed">
+                            --- m/s
+                        </span>
+                    </div>
+
+                    <div class="map-info-row">
+                        <span class="map-info-label">COURSE</span>
+                        <span class="map-info-value" id="gpsCourse">
+                            --- °
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- LOG DE HITOS -->
+        <section class="panel log-panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+                    Log de hitos
+                </div>
+
+                <div class="panel-subtitle">
+                    EVENTOS
+                </div>
+
+            </div>
+
+            <div id="milestoneLog" class="log-content">
+
+                <div id="logEmpty" class="log-empty">
+                    Sin eventos todavía
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FRAME -->
+        <section class="panel frame-panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+                    Frame
+                </div>
+
+                <div class="panel-subtitle">
+                    ÚLTIMO RECIBIDO
+                </div>
+
+            </div>
+
+            <div class="frame-content">
+
+                <div class="frame-meta">
+
+                    <div class="frame-field">
+                        <div class="frame-field-label">Sequence</div>
+                        <div
+                            class="frame-field-value"
+                            id="frameSequence"
+                        >
+                            ---
+                        </div>
+                    </div>
+
+                    <div class="frame-field">
+                        <div class="frame-field-label">Timestamp</div>
+                        <div class="frame-field-value" id="frameTimestamp">
+                            ---
+                        </div>
+                    </div>
+
+                    <div class="frame-field">
+                        <div class="frame-field-label">Size</div>
+                        <div
+                            class="frame-field-value"
+                            id="frameLength"
+                        >
+                            ---
+                        </div>
+                    </div>
+
+                    <div class="frame-field">
+                        <div class="frame-field-label">Frames válidos</div>
+                        <div class="frame-field-value" id="frameValid">0</div>
+                    </div>
+
+                    <div class="frame-field">
+                        <div class="frame-field-label">Frames inválidos</div>
+                        <div class="frame-field-value" id="frameInvalid">0</div>
+                    </div>
+
+                    <div class="frame-field">
+                        <div class="frame-field-label">CRC</div>
+                        <div
+                            class="frame-field-value"
+                            id="frameCrc"
+                        >
+                            ---
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="frame-fields-wrap">
+                    <table class="frame-fields-table">
+                    <thead>
+                        <tr>
+                            <th>Campo</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="telemetryFields">
+                        <tr>
+                            <td colspan="2" class="telemetry-empty">
+                                Esperando telemetría...
+                            </td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<script>
+"use strict";
+
+/* =============================================================
+   ESTADO
+   ============================================================= */
+
+const state = {
+    ws: null,
+    connected: false,
+    lossPercent: 0,
+
+    rx: 0,
+    lost: 0,
+
+    lastSequence: null,
+    altitudeMax: null,
+    pressureMin: null,
+    pressureMax: null,
+    lastPressure: null,
+    sessionStartedAt: Date.now(),
+    lastPacketAt: null,
+    packetTimes: [],
+    gpsTrail: [],
+
+    lastTelemetry: null,
+
+    reconnectTimer: null,
+    reconnectDelay: 1000,
+
+    milestones: []
+};
+
+
+/* =============================================================
+   HELPERS
+   ============================================================= */
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+
+function setText(id, value) {
+    const element = $(id);
+
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+
+function numberValue(value, decimals = 2) {
+
+    if (value === null || value === undefined || value === "") {
+        return null;
+    }
+
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return null;
+    }
+
+    return number.toFixed(decimals);
+}
+
+
+function firstValue(object, names, fallback = null) {
+
+    if (!object || typeof object !== "object") {
+        return fallback;
+    }
+
+    for (const name of names) {
+
+        if (
+            Object.prototype.hasOwnProperty.call(object, name) &&
+            object[name] !== null &&
+            object[name] !== undefined
+        ) {
+            return object[name];
+        }
+    }
+
+    return fallback;
+}
+
+
+function formatNumber(value, decimals = 2, suffix = "") {
+
+    const formatted = numberValue(value, decimals);
+
+    if (formatted === null) {
+        return "---";
+    }
+
+    return formatted + suffix;
+}
+
+
+function formatTime(date = new Date()) {
+
+    return date.toLocaleTimeString("es-AR", {
+        hour12: false
+    });
+}
+
+
+function formatElapsed(milliseconds) {
+    const seconds = Math.max(0, Math.floor(milliseconds / 1000));
+    const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+    const remainder = String(seconds % 60).padStart(2, "0");
+    return `${hours}:${minutes}:${remainder}`;
+}
+
+
+/* =============================================================
+   CONNECTION UI
+   ============================================================= */
+
+function updateConnectionUI() {
+
+    const dot = $("connectionDot");
+    const text = $("connectionText");
+
+    const indicator = $("healthIndicator");
+    const healthStatus = $("healthStatus");
+    const healthDetail = $("healthDetail");
+
+    if (state.connected) {
+
+        dot.classList.add("connected");
+        if (state.lossPercent > 0) {
+            text.textContent = "DEGRADED";
+            indicator.className = "health-indicator warning";
+            healthStatus.textContent = "DEGRADED";
+            healthDetail.textContent = `Pérdida ${state.lossPercent.toFixed(2)} %`;
+        } else {
+            text.textContent = "CONNECTED";
+            indicator.className = "health-indicator ok";
+            healthStatus.textContent = "ONLINE";
+            healthDetail.textContent = "Telemetría recibida";
+        }
+
+    } else {
+
+        dot.classList.remove("connected");
+        text.textContent = "DISCONNECTED";
+
+        indicator.className = "health-indicator";
+
+        healthStatus.textContent = "OFFLINE";
+        healthDetail.textContent = "Esperando conexión...";
+
+    }
+
+    setText("lostPackets", state.lost);
+}
+
+
+function setConnected(value) {
+
+    state.connected = Boolean(value);
+
+    updateConnectionUI();
+}
+
+
+/* =============================================================
+   REST API
+   ============================================================= */
+
+async function loadStatus() {
+
+    try {
+
+        const response = await fetch("/api/status", {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        updateStatus(data);
+
+    } catch (error) {
+
+        console.warn("No se pudo obtener /api/status:", error);
+    }
+}
+
+
+function updateStatus(data) {
+
+    if (!data || typeof data !== "object") {
+        return;
+    }
+
+    if (typeof data.connected === "boolean") {
+        setConnected(data.connected);
+    }
+
+    const rx = firstValue(data, ["frames_received", "rx", "received"]);
+
+    if (rx !== null) {
+
+        const n = Number(rx);
+
+        if (Number.isFinite(n)) {
+            state.rx = n;
+        }
+    }
+
+
+    const lost = firstValue(data, ["lost", "lost_packets", "packets_lost"]);
+
+    if (lost !== null) {
+
+        const n = Number(lost);
+
+        if (Number.isFinite(n)) {
+            state.lost = n;
+        }
+    }
+
+    const statistics = data.statistics;
+    if (statistics && typeof statistics === "object") {
+        updateStatistics(statistics);
+    }
+
+    updateConnectionUI();
+}
+
+
+/* =============================================================
+   WEBSOCKET
+   ============================================================= */
+
+function connectWebSocket() {
+
+    if (
+        state.ws &&
+        (
+            state.ws.readyState === WebSocket.OPEN ||
+            state.ws.readyState === WebSocket.CONNECTING
+        )
+    ) {
+        return;
+    }
+
+    const protocol =
+        window.location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+    const url =
+        protocol +
+        "//" +
+        window.location.host +
+        "/ws";
+
+    console.log("Conectando WebSocket:", url);
+
+    try {
+
+        state.ws = new WebSocket(url);
+
+    } catch (error) {
+
+        console.error("WebSocket error:", error);
+        scheduleReconnect();
+
+        return;
+    }
+
+
+    state.ws.onopen = function () {
+
+        console.log("WebSocket conectado");
+
+        state.reconnectDelay = 1000;
+
+        setConnected(true);
+
+        addMilestone(
+            "Conexión WebSocket establecida",
+            "success"
+        );
+    };
+
+
+    state.ws.onmessage = function (event) {
+
+        handleWebSocketMessage(event.data);
+    };
+
+
+    state.ws.onerror = function (error) {
+
+        console.warn("WebSocket error:", error);
+    };
+
+
+    state.ws.onclose = function () {
+
+        console.warn("WebSocket cerrado");
+
+        setConnected(false);
+
+        addMilestone(
+            "Conexión WebSocket perdida",
+            "warning"
+        );
+
+        scheduleReconnect();
+    };
+}
+
+
+function scheduleReconnect() {
+
+    if (state.reconnectTimer) {
+        return;
+    }
+
+    state.reconnectTimer = setTimeout(
+        function () {
+
+            state.reconnectTimer = null;
+
+            connectWebSocket();
+
+        },
+        state.reconnectDelay
+    );
+
+    state.reconnectDelay = Math.min(
+        state.reconnectDelay * 2,
+        10000
+    );
+}
+
+
+/* =============================================================
+   WEBSOCKET MESSAGE
+   ============================================================= */
+
+function handleWebSocketMessage(raw) {
+
+    state.rx++;
+    state.lastPacketAt = Date.now();
+    state.packetTimes.push(state.lastPacketAt);
+    state.packetTimes = state.packetTimes.filter(
+        timestamp => state.lastPacketAt - timestamp <= 5000
+    );
+
+    let data = raw;
+
+    if (typeof raw === "string") {
+
+        try {
+            data = JSON.parse(raw);
+        } catch {
+            data = {
+                raw: raw
+            };
+        }
+    }
+
+    processTelemetry(data);
+    if (data && typeof data === "object" && data.statistics) {
+        updateStatistics(data.statistics);
+    }
+
+    updateFrame(data, raw);
+
+}
+
+
+/* =============================================================
+   TELEMETRY
+   ============================================================= */
+
+function processTelemetry(data) {
+
+    if (!data || typeof data !== "object") {
+        return;
+    }
+
+    if (data.type === "connection") {
+        if (typeof data.connected === "boolean") {
+            setConnected(data.connected);
+        }
+        return;
+    }
+
+    state.lastTelemetry = data;
+
+
+    /*
+     * El backend puede enviar los datos directamente
+     * o dentro de telemetry/data/payload.
+     */
+
+    const telemetry =
+        firstValue(
+            data,
+            ["telemetry", "data", "payload"],
+            data
+        );
+
+
+    if (
+        telemetry &&
+        typeof telemetry === "object"
+    ) {
+        updateBarometer(telemetry);
+        updateAltitude(telemetry);
+        updateAcceleration(telemetry);
+        updateGps(telemetry);
+        updateTelemetryFields(telemetry);
+        updateSequence(telemetry);
+    }
+
+    const radio = firstValue(data, ["radio", "link"], data);
+    updateLinkMetrics(radio);
+}
+
+
+/* =============================================================
+   BARÓMETRO
+   ============================================================= */
+
+function updateBarometer(data) {
+
+    const pressure = firstValue(
+        data,
+        [
+            "baro_pressure",
+            "barometer_pressure",
+            "pressure_hpa"
+        ]
+    );
+    const pressurePa = data.pressure;
+
+    const temperature = firstValue(
+        data,
+        [
+            "pressure_temperature",
+            "baro_temperature",
+            "barometer_temperature",
+            "temperature"
+        ]
+    );
+
+
+    if (pressurePa !== null && pressurePa !== undefined) {
+        const pressureHpa = Number(pressurePa) / 100;
+        setText(
+            "barometerPressure",
+            formatNumber(pressureHpa, 1)
+        );
+        updatePressureExtremes(pressureHpa);
+    } else if (pressure !== null) {
+        setText("barometerPressure", formatNumber(pressure, 1));
+        const pressureValue = Number(pressure);
+        updatePressureExtremes(pressureValue);
+    }
+
+
+    if (temperature !== null) {
+
+        setText(
+            "barometerTemp",
+            formatNumber(temperature, 1, " °C")
+        );
+    }
+}
+
+
+function updatePressureExtremes(pressure) {
+    if (!Number.isFinite(pressure)) {
+        return;
+    }
+    state.pressureMin = state.pressureMin === null
+        ? pressure
+        : Math.min(state.pressureMin, pressure);
+    state.pressureMax = state.pressureMax === null
+        ? pressure
+        : Math.max(state.pressureMax, pressure);
+    setText("barometerMin", `${state.pressureMin.toFixed(1)} hPa`);
+    setText("barometerMax", `${state.pressureMax.toFixed(1)} hPa`);
+
+    if (state.lastPressure !== null) {
+        const change = pressure - state.lastPressure;
+        const direction = change > 0 ? "↑" : change < 0 ? "↓" : "→";
+        setText("barometerTrend", `${direction} ${Math.abs(change).toFixed(2)} hPa`);
+    }
+    state.lastPressure = pressure;
+}
+
+
+/* =============================================================
+   ALTITUD
+   ============================================================= */
+
+function updateAltitude(data) {
+
+    const altitude = firstValue(
+        data,
+        [
+            "altitude",
+            "alt",
+            "altitude_m",
+            "barometric_altitude"
+        ]
+    );
+
+
+    if (altitude !== null) {
+
+        const numericAltitude = Number(altitude);
+
+        if (Number.isFinite(numericAltitude)) {
+
+            setText(
+                "altitudeValue",
+                numericAltitude.toFixed(1)
+            );
+
+            if (
+                state.altitudeMax === null ||
+                numericAltitude > state.altitudeMax
+            ) {
+
+                state.altitudeMax = numericAltitude;
+
+                setText(
+                    "altitudeMax",
+                    numericAltitude.toFixed(1) + " m"
+                );
+            }
+        }
+    }
+
+
+    const verticalSpeed = firstValue(
+        data,
+        [
+            "vertical_speed",
+            "climb_rate",
+            "vz",
+            "vertical_velocity"
+        ]
+    );
+
+
+    if (verticalSpeed !== null) {
+
+        setText(
+            "verticalSpeed",
+            formatNumber(verticalSpeed, 2, " m/s")
+        );
+    }
+}
+
+
+/* =============================================================
+   ACELERACIÓN
+   ============================================================= */
+
+function updateAcceleration(data) {
+
+    const x = firstValue(
+        data,
+        [
+            "accel_x",
+            "acceleration_x",
+            "ax"
+        ]
+    );
+
+    const y = firstValue(
+        data,
+        [
+            "accel_y",
+            "acceleration_y",
+            "ay"
+        ]
+    );
+
+    const z = firstValue(
+        data,
+        [
+            "accel_z",
+            "acceleration_z",
+            "az"
+        ]
+    );
+
+
+    if (x !== null) {
+        setText("accelX", formatNumber(x, 3));
+    }
+
+    if (y !== null) {
+        setText("accelY", formatNumber(y, 3));
+    }
+
+    if (z !== null) {
+        setText("accelZ", formatNumber(z, 3));
+    }
+
+
+    const magnitude = firstValue(
+        data,
+        [
+            "acceleration",
+            "accel",
+            "acceleration_magnitude",
+            "accel_magnitude"
+        ]
+    );
+
+
+    if (magnitude !== null) {
+
+        setText(
+            "accelMagnitude",
+            formatNumber(magnitude, 3)
+        );
+
+    } else if (
+        x !== null &&
+        y !== null &&
+        z !== null
+    ) {
+
+        const ax = Number(x);
+        const ay = Number(y);
+        const az = Number(z);
+
+        if (
+            Number.isFinite(ax) &&
+            Number.isFinite(ay) &&
+            Number.isFinite(az)
+        ) {
+
+            const mag =
+                Math.sqrt(
+                    ax * ax +
+                    ay * ay +
+                    az * az
+                );
+
+            setText(
+                "accelMagnitude",
+                mag.toFixed(3)
+            );
+        }
+    }
+}
+
+
+/* =============================================================
+   GPS
+   ============================================================= */
+
+function updateGps(data) {
+
+    const latitude = firstValue(
+        data,
+        [
+            "latitude",
+            "lat",
+            "gps_latitude",
+            "gps_lat"
+        ]
+    );
+
+    const longitude = firstValue(
+        data,
+        [
+            "longitude",
+            "lon",
+            "lng",
+            "gps_longitude",
+            "gps_lon"
+        ]
+    );
+
+
+    if (latitude !== null) {
+
+        setText(
+            "gpsLatitude",
+            formatNumber(latitude, 6)
+        );
+    }
+
+
+    if (longitude !== null) {
+
+        setText(
+            "gpsLongitude",
+            formatNumber(longitude, 6)
+        );
+    }
+
+
+    const gpsAltitude = firstValue(
+        data,
+        [
+            "gps_altitude",
+            "gps_alt",
+            "altitude"
+        ]
+    );
+
+
+    if (gpsAltitude !== null) {
+
+        setText(
+            "gpsAltitude",
+            formatNumber(gpsAltitude, 1, " m")
+        );
+    }
+
+
+    const speed = firstValue(
+        data,
+        [
+            "gps_speed",
+            "ground_speed",
+            "speed"
+        ]
+    );
+
+
+    if (speed !== null) {
+
+        setText(
+            "gpsSpeed",
+            formatNumber(speed, 2, " m/s")
+        );
+    }
+
+
+    const course = firstValue(
+        data,
+        [
+            "gps_course",
+            "course",
+            "heading"
+        ]
+    );
+
+
+    if (course !== null) {
+
+        setText(
+            "gpsCourse",
+            formatNumber(course, 1, " °")
+        );
+    }
+
+
+    const satellites = firstValue(
+        data,
+        [
+            "satellites",
+            "gps_satellites",
+            "gps_sats"
+        ]
+    );
+
+
+    if (satellites !== null) {
+
+        setText(
+            "gpsSatellites",
+            satellites
+        );
+    }
+
+
+    const hdop = firstValue(
+        data,
+        [
+            "hdop",
+            "gps_hdop"
+        ]
+    );
+
+
+    if (hdop !== null) {
+
+        setText(
+            "gpsHdop",
+            formatNumber(hdop, 1)
+        );
+    }
+
+
+    const fix = firstValue(
+        data,
+        [
+            "gps_fix",
+            "fix",
+            "fix_type"
+        ]
+    );
+
+
+    if (fix !== null) {
+
+        setText(
+            "gpsFix",
+            fix
+        );
+
+        setText(
+            "gpsFixStatus",
+            String(fix).toUpperCase()
+        );
+    }
+
+
+    if (
+        latitude !== null &&
+        longitude !== null
+    ) {
+
+        const lat = Number(latitude);
+        const lon = Number(longitude);
+
+        if (
+            Number.isFinite(lat) &&
+            Number.isFinite(lon)
+        ) {
+            state.gpsTrail.push({ latitude: lat, longitude: lon });
+            if (state.gpsTrail.length > 250) {
+                state.gpsTrail.shift();
+            }
+            renderGpsTrail();
+            setText("gpsFixStatus", "GPS POSICIÓN RECIBIDA");
+            $("mapPlaceholder").hidden = true;
+        }
+    }
+}
+
+
+function renderGpsTrail() {
+    if (state.gpsTrail.length === 0) {
+        return;
+    }
+
+    const latitudes = state.gpsTrail.map(point => point.latitude);
+    const longitudes = state.gpsTrail.map(point => point.longitude);
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLon = Math.min(...longitudes);
+    const maxLon = Math.max(...longitudes);
+    const latRange = maxLat - minLat;
+    const lonRange = maxLon - minLon;
+    const pointToSvg = point => ({
+        x: lonRange === 0
+            ? 500
+            : 40 + ((point.longitude - minLon) / lonRange) * 920,
+        y: latRange === 0
+            ? 300
+            : 40 + ((maxLat - point.latitude) / latRange) * 520
+    });
+    const coordinates = state.gpsTrail.map(pointToSvg);
+    $("gpsTrajectory").setAttribute(
+        "points",
+        coordinates.map(point => `${point.x},${point.y}`).join(" ")
+    );
+    const start = coordinates[0];
+    const current = coordinates[coordinates.length - 1];
+    for (const [id, point] of [["gpsStart", start], ["gpsCurrent", current]]) {
+        const marker = $(id);
+        marker.setAttribute("cx", point.x);
+        marker.setAttribute("cy", point.y);
+        marker.setAttribute("visibility", "visible");
+    }
+}
+
+
+/* =============================================================
+   SEQUENCE / PACKETS
+   ============================================================= */
+
+function updateSequence(data) {
+
+    const sequence = firstValue(
+        data,
+        [
+            "frame_number",
+            "sequence",
+            "seq",
+            "sequence_number",
+            "packet_sequence"
+        ]
+    );
+
+    if (sequence === null) {
+        return;
+    }
+
+    const current = Number(sequence);
+
+    if (!Number.isFinite(current)) {
+        return;
+    }
+
+
+    if (state.lastSequence !== null) {
+
+        const previous = state.lastSequence;
+
+        const difference = current - previous;
+
+        if (difference > 1) {
+
+            const lost = difference - 1;
+
+            state.lost += lost;
+
+            setText(
+                "lostPackets",
+                state.lost
+            );
+
+            addMilestone(
+                `Pérdida de ${lost} frame${lost > 1 ? "s" : ""}`,
+                "warning"
+            );
+        }
+    }
+
+
+    state.lastSequence = current;
+}
+
+
+/* =============================================================
+   FRAME
+   ============================================================= */
+
+function updateFrame(data, raw) {
+
+    if (!data || typeof data !== "object") {
+        return;
+    }
+
+    if (data.type === "connection") {
+        return;
+    }
+
+    const telemetry = firstValue(
+        data,
+        ["telemetry", "data", "payload"],
+        data
+    );
+
+    const sequence = firstValue(
+        telemetry,
+        [
+            "frame_number",
+            "sequence",
+            "seq",
+            "sequence_number",
+            "packet_sequence"
+        ]
+    );
+
+    const length = firstValue(
+        data,
+        [
+            "length",
+            "packet_length",
+            "size"
+        ]
+    );
+
+    const crc = firstValue(
+        data,
+        [
+            "crc_valid",
+            "crc",
+            "crc16",
+            "crc_ok"
+        ]
+    );
+
+
+    if (sequence !== null) {
+        setText("frameSequence", sequence);
+    }
+
+    if (length !== null) {
+        setText("frameLength", length + " bytes");
+    } else if (data.frame_length !== undefined) {
+        setText("frameLength", `${data.frame_length} bytes`);
+    } else {
+        setText("frameLength", "---");
+    }
+
+    const timestamp = firstValue(telemetry, ["timestamp"]);
+    setText(
+        "frameTimestamp",
+        timestamp === null ? "---" : `${timestamp} ms`
+    );
+
+    if (crc !== null) {
+
+        if (typeof crc === "boolean") {
+            setText(
+                "frameCrc",
+                crc ? "OK" : "ERROR"
+            );
+        } else {
+            setText("frameCrc", crc);
+        }
+    } else if (data.type === "telemetry") {
+        setText("frameCrc", "OK");
+    } else {
+        setText("frameCrc", "---");
+    }
+
+
+    const statistics = data.statistics || {};
+    updateStatistics(statistics);
+    updateLinkMetrics(data);
+
+    if (telemetry && typeof telemetry === "object") {
+        updateTelemetryFields(telemetry);
+    }
+}
+
+
+const telemetryUnits = {
+    timestamp: "ms",
+    accel_x: "g",
+    accel_y: "g",
+    accel_z: "g",
+    pressure: "Pa",
+    latitude: "deg",
+    longitude: "deg",
+    altitude: "m"
+};
+
+
+function displayTelemetryValue(value) {
+    if (value === null || value === undefined) {
+        return "---";
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return new Intl.NumberFormat("es", {
+            maximumFractionDigits: 6
+        }).format(value);
+    }
+
+    if (typeof value === "object") {
+        return JSON.stringify(value);
+    }
+
+    return String(value);
+}
+
+
+function updateTelemetryFields(data) {
+    const body = $("telemetryFields");
+    if (!body || !data || typeof data !== "object") {
+        return;
+    }
+
+    const fields = Object.entries(data).filter(
+        ([name, value]) =>
+            !name.endsWith("_label") &&
+            (value === null || ["string", "number", "boolean"].includes(typeof value))
+    );
+
+    body.replaceChildren();
+
+    if (fields.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 2;
+        cell.className = "telemetry-empty";
+        cell.textContent = "No hay campos de telemetría disponibles.";
+        row.appendChild(cell);
+        body.appendChild(row);
+        return;
+    }
+
+    for (const [name, value] of fields) {
+        const row = document.createElement("tr");
+        const label = data[`${name}_label`];
+        const unit = telemetryUnits[name];
+        const formattedValue = displayTelemetryValue(value);
+        const valueText = unit
+            ? `${formattedValue} ${unit}`
+            : formattedValue;
+        const labelText = label === null || label === undefined
+            ? ""
+            : ` · ${label}`;
+
+        for (const text of [
+            name.replaceAll("_", " "),
+            `${valueText}${labelText}`
+        ]) {
+            const cell = document.createElement("td");
+            cell.textContent = text;
+            row.appendChild(cell);
+        }
+
+        body.appendChild(row);
+    }
+}
+
+
+function updateStatistics(statistics) {
+    setText("frameValid", statistics.received ?? "---");
+    setText("healthReceived", statistics.received ?? "---");
+    setText("frameInvalid", statistics.invalid ?? "---");
+    setText("lostPackets", statistics.lost ?? state.lost);
+    setText(
+        "healthLoss",
+        statistics.loss_percent === undefined
+            ? "---"
+            : `${Number(statistics.loss_percent).toFixed(2)} %`
+    );
+    if (statistics.loss_percent !== undefined) {
+        state.lossPercent = Number(statistics.loss_percent) || 0;
+        updateConnectionUI();
+    }
+    if (statistics.lost !== undefined) {
+        state.lost = Number(statistics.lost) || 0;
+    }
+}
+
+
+function updateLinkMetrics(data) {
+    const rssi = firstValue(data, ["rssi", "RSSI"]);
+    const snr = firstValue(data, ["snr", "SNR"]);
+    if (rssi !== null) {
+        setText("healthRssi", `${rssi} dBm`);
+    }
+    if (snr !== null) {
+        setText("healthSnr", `${snr} dB`);
+    }
+}
+
+
+/* =============================================================
+   LOG DE HITOS
+   ============================================================= */
+
+function addMilestone(message, type = "info") {
+
+    const container = $("milestoneLog");
+    const empty = $("logEmpty");
+
+    if (empty) {
+        empty.remove();
+    }
+
+
+    const entry = document.createElement("div");
+
+    entry.className =
+        "log-entry " +
+        type;
+
+
+    const time = document.createElement("div");
+
+    time.className = "log-time";
+    time.textContent = formatTime();
+
+
+    const text = document.createElement("div");
+
+    text.className = "log-message";
+    text.textContent = message;
+
+
+    entry.appendChild(time);
+    entry.appendChild(text);
+
+
+    container.prepend(entry);
+
+
+    while (container.children.length > 100) {
+        container.lastElementChild.remove();
+    }
+
+
+    state.milestones.unshift({
+        time: new Date(),
+        message,
+        type
+    });
+}
+
+
+/* =============================================================
+   CLOCK
+   ============================================================= */
+
+function updateClock() {
+
+    setText(
+        "headerTime",
+        formatElapsed(Date.now() - state.sessionStartedAt)
+    );
+    if (state.lastPacketAt === null) {
+        setText("healthLastPacket", "--");
+    } else {
+        setText(
+            "healthLastPacket",
+            `${((Date.now() - state.lastPacketAt) / 1000).toFixed(1)} s`
+        );
+    }
+    const cutoff = Date.now() - 5000;
+    state.packetTimes = state.packetTimes.filter(timestamp => timestamp >= cutoff);
+    const rate = state.packetTimes.length > 1
+        ? (state.packetTimes.length - 1) /
+            ((state.packetTimes[state.packetTimes.length - 1] - state.packetTimes[0]) / 1000)
+        : null;
+    setText(
+        "healthRate",
+        rate === null ? "-- Hz" : `${rate.toFixed(1)} Hz`
+    );
+}
+
+
+/* =============================================================
+   INIT
+   ============================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        updateConnectionUI();
+
+        updateClock();
+
+        setInterval(
+            updateClock,
+            1000
+        );
+
+
+        loadStatus();
+
+        setInterval(
+            loadStatus,
+            5000
+        );
+
+
+        addMilestone(
+            "Ground Station iniciada",
+            "info"
+        );
+
+
+        connectWebSocket();
+    }
+);
+</script>
+
+</body>
+</html>

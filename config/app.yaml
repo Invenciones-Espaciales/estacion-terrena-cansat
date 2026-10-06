@@ -1,0 +1,12 @@
+serial:
+  port: "COM6"
+  baudrate: 115200
+  reconnect_delay: 3
+
+websocket:
+  host: "0.0.0.0"
+  port: 8000
+
+storage:
+  database: "telemetry.db"
+  csv: "telemetry.csv"
