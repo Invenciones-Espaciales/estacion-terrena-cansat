@@ -15,6 +15,7 @@ from typing import Any, Optional
 import serial_asyncio
 import yaml
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 from fastapi.responses import FileResponse
 
@@ -1579,6 +1580,11 @@ async def serial_loop():
 app = FastAPI(
     title="Telemetry Ground Station",
     version="1.0.0",
+)
+app.mount(
+    "/frontend",
+    StaticFiles(directory=FRONTEND_DIR),
+    name="frontend",
 )
 
 

@@ -54,7 +54,7 @@
            ========================================================= */
 
         .topbar {
-            height: 64px;
+            height: 84px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -70,38 +70,11 @@
             gap: 12px;
         }
 
-        .brand-mark {
-            width: 34px;
-            height: 34px;
-            border: 1px solid var(--blue);
-            border-radius: 8px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            color: var(--blue);
-            font-size: 18px;
-            font-weight: 800;
-        }
-
-        .brand-text {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.1;
-        }
-
-        .brand-title {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-        }
-
-        .brand-subtitle {
-            margin-top: 4px;
-            color: var(--muted);
-            font-size: 11px;
-            letter-spacing: 0.05em;
+        .brand-logo {
+            display: block;
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
         }
 
         .header-status {
@@ -818,12 +791,11 @@
 <header class="topbar">
 
     <div class="brand">
-        <div class="brand-mark">ET</div>
-
-        <div class="brand-text">
-            <div class="brand-title">ESTACIÓN TERRENA</div>
-            <div class="brand-subtitle">SISTEMA DE TELEMETRÍA</div>
-        </div>
+        <img
+            class="brand-logo"
+            src="/frontend/assets/invenciones-espaciales.png"
+            alt="Invenciones Espaciales"
+        >
     </div>
 
     <div class="header-status">
