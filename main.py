@@ -847,6 +847,7 @@ class FrameBuffer:
         self.parser = parser
         self.buffer = bytearray()
         self.invalid_frames = 0
+        self.last_raw_frames: list[bytes] = []
 
     def feed(
         self,
@@ -856,6 +857,7 @@ class FrameBuffer:
         self.buffer.extend(data)
 
         frames = []
+        self.last_raw_frames = []
 
         frame_size = (
             self.parser.config.frame_size
@@ -928,6 +930,7 @@ class FrameBuffer:
 
             if parsed is not None:
                 frames.append(parsed)
+                self.last_raw_frames.append(raw_frame)
             else:
                 self.invalid_frames += 1
 
@@ -1269,6 +1272,8 @@ class RuntimeState:
     ] = None
 
     frames_received: int = 0
+    last_raw_frame: Optional[str] = None
+    last_crc_value: Optional[str] = None
 
 
 # ============================================================
@@ -1361,6 +1366,7 @@ def create_background_task(
 
 async def process_frame(
     frame: dict[str, Any],
+    raw_frame: Optional[bytes] = None,
 ):
 
     if statistics is None:
@@ -1390,6 +1396,18 @@ async def process_frame(
     runtime.last_frame = frame
     runtime.last_timestamp = time.time()
     runtime.frames_received += 1
+    if raw_frame is not None:
+        runtime.last_raw_frame = raw_frame.hex(" ").upper()
+        if frame_config is not None and frame_config.crc_size:
+            crc_offset = (
+                frame_config.crc_offset
+                if frame_config.crc_offset is not None
+                else len(raw_frame) - frame_config.crc_size
+            )
+            crc_bytes = raw_frame[
+                crc_offset:crc_offset + frame_config.crc_size
+            ]
+            runtime.last_crc_value = crc_bytes.hex().upper()
 
     snapshot = statistics.snapshot()
     snapshot["frames_received"] = runtime.frames_received
@@ -1404,6 +1422,8 @@ async def process_frame(
                 else None
             ),
             "crc_valid": True,
+            "crc_value": runtime.last_crc_value,
+            "raw_hex": runtime.last_raw_frame,
             "data": frame,
             "statistics": snapshot,
         }
@@ -1439,7 +1459,7 @@ class SerialProtocol(asyncio.Protocol):
 
     def data_received(self, data: bytes):
 
-        if frame_buffer is None:
+        if frame_buffer is None or statistics is None:
             return
 
         if not data:
@@ -1453,11 +1473,24 @@ class SerialProtocol(asyncio.Protocol):
         try:
 
             frames = frame_buffer.feed(data)
+            previous_invalid = statistics.invalid
             statistics.invalid = frame_buffer.invalid_frames
 
-            for frame in frames:
+            for frame, raw_frame in zip(
+                frames,
+                frame_buffer.last_raw_frames,
+            ):
                 create_background_task(
-                    process_frame(frame)
+                    process_frame(frame, raw_frame)
+                )
+            if statistics.invalid > previous_invalid:
+                create_background_task(
+                    websocket_manager.broadcast(
+                        {
+                            "type": "statistics",
+                            "statistics": statistics.snapshot(),
+                        }
+                    )
                 )
 
         except Exception:
@@ -1578,7 +1611,7 @@ async def serial_loop():
 # ============================================================
 
 app = FastAPI(
-    title="Telemetry Ground Station",
+    title="Estación Terrena de Telemetría",
     version="1.0.0",
 )
 app.mount(
@@ -1621,6 +1654,16 @@ async def status():
         "connected": runtime.connected,
         "frames_received": runtime.frames_received,
         "last_timestamp": runtime.last_timestamp,
+        "serial_port": (
+            app_config.serial.port
+            if app_config is not None
+            else None
+        ),
+        "baudrate": (
+            app_config.serial.baudrate
+            if app_config is not None
+            else None
+        ),
         "statistics": (
             statistics.snapshot()
             if statistics
@@ -1636,6 +1679,14 @@ async def telemetry():
         "connected": runtime.connected,
         "timestamp": runtime.last_timestamp,
         "data": runtime.last_frame,
+        "frame_length": (
+            frame_config.frame_size
+            if frame_config is not None
+            else None
+        ),
+        "crc_valid": runtime.last_frame is not None,
+        "crc_value": runtime.last_crc_value,
+        "raw_hex": runtime.last_raw_frame,
         "statistics": (
             statistics.snapshot()
             if statistics
@@ -1644,6 +1695,7 @@ async def telemetry():
     }
 
 
+@app.websocket("/ws/telemetry")
 @app.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
@@ -1669,6 +1721,14 @@ async def websocket_endpoint(
                 {
                     "type": "telemetry",
                     "timestamp": runtime.last_timestamp,
+                    "frame_length": (
+                        frame_config.frame_size
+                        if frame_config is not None
+                        else None
+                    ),
+                    "crc_valid": True,
+                    "crc_value": runtime.last_crc_value,
+                    "raw_hex": runtime.last_raw_frame,
                     "data": runtime.last_frame,
                     "statistics": (
                         statistics.snapshot()
@@ -1751,8 +1811,13 @@ async def startup():
     csv_logger = CSVLogger(
         app_config.storage.csv,
         [
-            field.name
-            for field in frame_config.fields
+            output_name
+            for frame_field in frame_config.fields
+            for output_name in (
+                [frame_field.name, f"{frame_field.name}_label"]
+                if frame_field.values
+                else [frame_field.name]
+            )
         ],
     )
 

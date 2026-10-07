@@ -1,1083 +1,1321 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estación Terrena de Telemetría</title>
-
-    <style>
-        :root {
-            --bg: #080b10;
-            --panel: #10151d;
-            --panel-2: #151b24;
-            --border: #252d38;
-            --text: #e7edf5;
-            --muted: #7f8b9a;
-
-            --green: #39d98a;
-            --yellow: #f5c451;
-            --red: #ff5d6c;
-            --blue: #4da3ff;
-            --cyan: #35d6e8;
-
-            --radius: 10px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            min-height: 100%;
-            background: var(--bg);
-            color: var(--text);
-            font-family:
-                Inter,
-                ui-sans-serif,
-                system-ui,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
-        }
-
-        body {
-            min-height: 100vh;
-        }
-
-        /* =========================================================
-           HEADER
-           ========================================================= */
-
-        .topbar {
-            height: 84px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 22px;
-
-            background: #0c1016;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-logo {
-            display: block;
-            width: 76px;
-            height: 76px;
-            object-fit: contain;
-        }
-
-        .header-status {
-            display: flex;
-            align-items: center;
-            gap: 22px;
-        }
-
-        .connection {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .status-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: var(--red);
-            box-shadow: 0 0 10px rgba(255, 93, 108, 0.5);
-        }
-
-        .status-dot.connected {
-            background: var(--green);
-            box-shadow: 0 0 10px rgba(57, 217, 138, 0.55);
-        }
-
-        .header-stat {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .header-stat strong {
-            color: var(--text);
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* =========================================================
-           MAIN
-           ========================================================= */
-
-        main {
-            width: 100%;
-            padding: 18px;
-        }
-
-        .dashboard {
-            width: 100%;
-            max-width: 1800px;
-            margin: 0 auto;
-
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            grid-template-rows: auto minmax(500px, 1fr);
-            gap: 14px;
-        }
-
-        /* =========================================================
-           COMMON PANEL
-           ========================================================= */
-
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            min-width: 0;
-        }
-
-        .panel-header {
-            height: 43px;
-            padding: 0 15px;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            border-bottom: 1px solid var(--border);
-            background: var(--panel-2);
-        }
-
-        .panel-title {
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .panel-subtitle {
-            color: var(--muted);
-            font-size: 10px;
-        }
-
-        /* =========================================================
-           TOP CARDS
-           ========================================================= */
-
-        .metric-card {
-            min-height: 150px;
-            padding: 17px;
-
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .metric-title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            color: var(--muted);
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .metric-icon {
-            color: var(--blue);
-            font-size: 15px;
-        }
-
-        .metric-value {
-            margin-top: 12px;
-
-            font-size: clamp(28px, 3vw, 42px);
-            font-weight: 700;
-            line-height: 1;
-
-            font-variant-numeric: tabular-nums;
-            letter-spacing: -0.04em;
-        }
-
-        .metric-unit {
-            margin-left: 5px;
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 500;
-            letter-spacing: 0;
-        }
-
-        .metric-secondary {
-            margin-top: 12px;
-
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        .metric-secondary strong {
-            color: var(--text);
-            font-weight: 600;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* =========================================================
-           CONNECTION HEALTH
-           ========================================================= */
-
-        .health-card {
-            min-height: 150px;
-            padding: 17px;
-        }
-
-        .health-main {
-            margin-top: 15px;
-
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .health-indicator {
-            width: 12px;
-            height: 12px;
-            flex: 0 0 12px;
-
-            border-radius: 50%;
-            background: var(--red);
-        }
-
-        .health-indicator.ok {
-            background: var(--green);
-            box-shadow: 0 0 12px rgba(57, 217, 138, 0.5);
-        }
-
-        .health-indicator.warning {
-            background: var(--yellow);
-            box-shadow: 0 0 12px rgba(245, 196, 81, 0.45);
-        }
-
-        .health-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .health-text strong {
-            font-size: 18px;
-        }
-
-        .health-text span {
-            margin-top: 3px;
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        .health-stats {
-            margin-top: 17px;
-
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-        }
-
-        .health-stat {
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background: #0d1218;
-        }
-
-        .health-stat-label {
-            color: var(--muted);
-            font-size: 9px;
-            text-transform: uppercase;
-        }
-
-        .health-stat-value {
-            margin-top: 4px;
-            font-size: 13px;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* =========================================================
-           BOTTOM AREA
-           ========================================================= */
-
-        .map-panel {
-            grid-column: span 2;
-            min-height: 500px;
-
-            display: flex;
-            flex-direction: column;
-        }
-
-        .log-panel {
-            grid-column: span 1;
-            min-height: 500px;
-
-            display: flex;
-            flex-direction: column;
-        }
-
-        .frame-panel {
-            grid-column: span 1;
-            min-height: 500px;
-
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* =========================================================
-           MAP
-           ========================================================= */
-
-        .map-content {
-            position: relative;
-            flex: 1;
-            min-height: 0;
-            background:
-                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
-                #0b1016;
-
-            background-size: 45px 45px;
-            overflow: hidden;
-        }
-
-        .map-content::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    transparent 48%,
-                    rgba(53, 214, 232, 0.07) 49%,
-                    rgba(53, 214, 232, 0.07) 51%,
-                    transparent 52%
-                );
-
-            pointer-events: none;
-        }
-
-        .map-placeholder {
-            position: absolute;
-            inset: 0;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            color: #384554;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-
-            pointer-events: none;
-        }
-
-        .map-placeholder[hidden] {
-            display: none;
-        }
-
-        .map-position {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-
-            width: 17px;
-            height: 17px;
-
-            transform: translate(-50%, -50%);
-
-            border-radius: 50%;
-            background: var(--red);
-            border: 3px solid #fff;
-
-            box-shadow:
-                0 0 0 8px rgba(255, 93, 108, 0.12),
-                0 0 22px rgba(255, 93, 108, 0.7);
-
-            display: none;
-        }
-
-        .map-position.visible {
-            display: block;
-        }
-
-        .map-position::after {
-            content: "";
-
-            position: absolute;
-            width: 80px;
-            height: 80px;
-
-            left: 50%;
-            top: 50%;
-
-            transform: translate(-50%, -50%);
-
-            border: 1px solid rgba(255, 93, 108, 0.2);
-            border-radius: 50%;
-        }
-
-        .map-info {
-            position: absolute;
-            left: 14px;
-            bottom: 14px;
-
-            padding: 10px 12px;
-
-            border: 1px solid var(--border);
-            border-radius: 7px;
-
-            background: rgba(8, 11, 16, 0.88);
-            backdrop-filter: blur(5px);
-
-            font-size: 11px;
-        }
-
-        .map-info-row {
-            display: flex;
-            gap: 10px;
-            margin: 3px 0;
-        }
-
-        .map-info-label {
-            width: 70px;
-            color: var(--muted);
-        }
-
-        .map-info-value {
-            color: var(--text);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .map-top-info {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-
-            display: flex;
-            gap: 8px;
-        }
-
-        .map-badge {
-            padding: 6px 9px;
-
-            border: 1px solid var(--border);
-            border-radius: 6px;
-
-            background: rgba(8, 11, 16, 0.88);
-            color: var(--muted);
-
-            font-size: 10px;
-        }
-
-        .map-badge strong {
-            color: var(--text);
-        }
-
-        /* =========================================================
-           LOG
-           ========================================================= */
-
-        .log-content {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-
-            padding: 8px;
-        }
-
-        .log-empty {
-            height: 100%;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        .log-entry {
-            padding: 9px 8px;
-            border-bottom: 1px solid rgba(37, 45, 56, 0.7);
-        }
-
-        .log-entry:last-child {
-            border-bottom: 0;
-        }
-
-        .log-time {
-            color: var(--muted);
-            font-size: 9px;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .log-message {
-            margin-top: 4px;
-            font-size: 11px;
-            line-height: 1.35;
-        }
-
-        .log-entry.info .log-message {
-            color: var(--text);
-        }
-
-        .log-entry.success .log-message {
-            color: var(--green);
-        }
-
-        .log-entry.warning .log-message {
-            color: var(--yellow);
-        }
-
-        .log-entry.error .log-message {
-            color: var(--red);
-        }
-
-        /* =========================================================
-           FRAME
-           ========================================================= */
-
-        .frame-content {
-            flex: 1;
-            min-height: 0;
-
-            display: flex;
-            flex-direction: column;
-        }
-
-        .frame-meta {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
-            padding: 12px;
-        }
-
-        .frame-field {
-            padding: 9px;
-
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background: #0d1218;
-        }
-
-        .frame-field-label {
-            color: var(--muted);
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        .frame-field-value {
-            margin-top: 4px;
-
-            font-size: 12px;
-            font-weight: 700;
-
-            font-variant-numeric: tabular-nums;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .frame-fields-wrap {
-            flex: 1;
-            min-height: 0;
-            margin: 0 12px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background: #090d12;
-            overflow: auto;
-        }
-
-        .frame-fields-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .frame-fields-table th,
-        .frame-fields-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-
-        .frame-fields-table th {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background: var(--panel-2);
-            color: var(--muted);
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        .frame-fields-table td {
-            font-size: 10px;
-        }
-
-        .frame-fields-table td:first-child,
-        .frame-fields-table td:nth-child(2) {
-            font-family: "Cascadia Code", Consolas, monospace;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .telemetry-empty {
-            color: var(--muted);
-            text-align: center !important;
-        }
-
-        .map-trail-svg {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            width: 100%;
-            height: 100%;
-        }
-
-        #gpsTrajectory {
-            fill: none;
-            stroke: var(--cyan);
-            stroke-width: 4;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            vector-effect: non-scaling-stroke;
-        }
-
-        #gpsStart {
-            fill: var(--green);
-            stroke: #fff;
-            stroke-width: 2;
-            visibility: hidden;
-        }
-
-        #gpsCurrent {
-            fill: var(--red);
-            stroke: #fff;
-            stroke-width: 3;
-            visibility: hidden;
-            filter: drop-shadow(0 0 7px rgba(255, 93, 108, 0.8));
-        }
-
-        .map-top-info,
-        .map-info {
-            z-index: 2;
-        }
-
-        /* =========================================================
-           SCROLLBARS
-           ========================================================= */
-
-        ::-webkit-scrollbar {
-            width: 7px;
-            height: 7px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #0a0e13;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #2b3440;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3b4755;
-        }
-
-        /* =========================================================
-           RESPONSIVE
-           ========================================================= */
-
-        @media (max-width: 1200px) {
-            .dashboard {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                grid-template-rows: auto;
-            }
-
-            .map-panel {
-                grid-column: span 2;
-            }
-
-            .log-panel,
-            .frame-panel {
-                grid-column: span 1;
-            }
-        }
-
-        @media (max-width: 760px) {
-            .topbar {
-                height: auto;
-                min-height: 64px;
-                padding: 12px 14px;
-
-                align-items: flex-start;
-                gap: 12px;
-            }
-
-            .header-status {
-                gap: 10px;
-                flex-wrap: wrap;
-                justify-content: flex-end;
-            }
-
-            .header-stat {
-                display: none;
-            }
-
-            main {
-                padding: 10px;
-            }
-
-            .dashboard {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .map-panel,
-            .log-panel,
-            .frame-panel {
-                grid-column: span 1;
-            }
-
-            .map-panel,
-            .log-panel,
-            .frame-panel {
-                min-height: 400px;
-            }
-
-            .frame-meta {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .metric-card,
-            .health-card {
-                min-height: 135px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Estación Terrena de Telemetría</title>
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+>
+
+<style>
+
+:root {
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --black: #000000;
+    --gray: #333333;
+    --light-gray: #eeeeee;
+    --ok: #087a3b;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+
+    background: #ffffff;
+    color: #000000;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+body {
+    background: #ffffff;
+}
+
+/* =========================================================
+   APP
+   ========================================================= */
+
+.app {
+
+    width: 100%;
+    min-height: 100vh;
+
+    padding: 10px 14px;
+
+    display: grid;
+
+    grid-template-rows:
+        64px
+        minmax(0, 1fr)
+        24px;
+
+    gap: 8px;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+header {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 6px;
+
+    border-bottom: 3px solid #000000;
+}
+
+.brand {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.brand-icon {
+
+    font-size: 22px;
+
+    color: #000000;
+}
+
+.brand h1 {
+
+    margin: 0;
+
+    font-size: 21px;
+
+    font-weight: 900;
+
+    letter-spacing: 0;
+}
+
+.header-right {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 25px;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+.flight-clock {
+
+    font-size: 18px;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.link-status {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    font-weight: 900;
+}
+
+.dot {
+
+    width: 11px;
+    height: 11px;
+
+    border-radius: 50%;
+
+    background: #a00000;
+
+    border: 2px solid #000000;
+}
+
+.dot.online {
+    background: #087a3b;
+}
+
+.dot.offline {
+    background: #a00000;
+}
+
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+.dashboard {
+
+    min-height: 680px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    grid-template-rows:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 8px;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.card {
+
+    min-width: 0;
+    min-height: 0;
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 2px solid #000000;
+
+    border-radius: 2px;
+
+    box-shadow: none;
+
+    padding: 13px;
+}
+
+.card-title {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: #000000;
+
+    font-size: 14px;
+
+    font-weight: 900;
+
+    margin-bottom: 12px;
+
+    border-bottom: 2px solid #000000;
+
+    padding-bottom: 7px;
+}
+
+.icon {
+
+    color: #000000;
+
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   VALUES
+   ========================================================= */
+
+.main-value {
+
+    font-size: 42px;
+
+    line-height: 1;
+
+    font-weight: 900;
+
+    letter-spacing: -1px;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.unit {
+
+    color: #000000;
+
+    font-size: 14px;
+
+    margin-left: 4px;
+
+    font-weight: 800;
+}
+
+.sub {
+
+    color: #333333;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   GENERIC METRICS
+   ========================================================= */
+
+.metric-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 6px 0;
+
+    border-bottom: 1px solid #000000;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-row:last-child {
+
+    border-bottom: none;
+}
+
+.metric-label {
+
+    color: #222222;
+}
+
+
+/* =========================================================
+   SENSOR TREND
+   ========================================================= */
+
+.trend {
+
+    height: 70px;
+
+    margin-top: 11px;
+
+    border-top: 1px solid #000000;
+
+    border-bottom: 1px solid #000000;
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+.trend svg {
+
+    width: 100%;
+    height: 100%;
+}
+
+.trend polyline {
+
+    stroke: #000000 !important;
+}
+
+
+/* =========================================================
+   ACCELERATION
+   ========================================================= */
+
+.accel-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 7px;
+
+    height: calc(100% - 34px);
+}
+
+.axis {
+
+    background: #ffffff;
+
+    border: 2px solid #000000;
+
+    border-radius: 2px;
+
+    padding: 9px;
+    position: relative;
+}
+
+.axis-chart {
+    width: 100%;
+    height: 46px;
+    display: block;
+}
+
+.axis-chart polyline {
+    fill: none;
+    stroke: #000;
+    stroke-width: 2;
+}
+
+.axis-chart {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 5px;
+    width: calc(100% - 16px);
+}
+
+. .axis strong {
+    display: block;
+
+    font-size: 12px;
+
+    margin-bottom: 5px;
+}
+
+.axis span {
+
+    font-size: 21px;
+
+    font-weight: 900;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.magnitude {
+
+    grid-column: 1 / -1;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 8px 2px;
+
+    border-top: 2px solid #000000;
+}
+
+
+/* =========================================================
+   CONNECTION
+   ========================================================= */
+
+.connected {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    color: #000000;
+
+    font-weight: 900;
+
+    margin: 3px 0 10px;
+}
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+.map-card {
+
+    grid-column: 1 / span 2;
+}
+
+.map {
+
+    height: calc(100% - 34px);
+
+    min-height: 0;
+
+    border: 2px solid #000000;
+
+    border-radius: 2px;
+
+    overflow: hidden;
+
+    position: relative;
+
+    background: #eeeeee;
+}
+
+.leaflet-map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.map-info {
+
+    position: absolute;
+
+    top: 10px;
+    left: 10px;
+
+    background: #ffffff;
+
+    border: 2px solid #000000;
+
+    border-radius: 2px;
+
+    padding: 8px 10px;
+
+    font-size: 11px;
+
+    line-height: 1.65;
+
+    font-weight: 800;
+    z-index: 500;
+}
+
+.map-position {
+
+    position: absolute;
+
+    left: 52%;
+    top: 54%;
+
+    width: 24px;
+    height: 24px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    border: 4px solid #000000;
+}
+
+.map-position::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 5px;
+    top: -12px;
+
+    border-left:
+        5px solid transparent;
+
+    border-right:
+        5px solid transparent;
+
+    border-bottom:
+        8px solid #000000;
+}
+
+
+/* =========================================================
+   MILESTONES
+   ========================================================= */
+
+.milestones {
+
+    height: calc(100% - 34px);
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-height: 0;
+}
+
+.current-milestone {
+
+    border: 2px solid #000000;
+
+    background: #ffffff;
+
+    border-radius: 2px;
+
+    padding: 9px;
+
+    margin-bottom: 7px;
+}
+
+.current-milestone .label {
+
+    color: #000000;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    margin-bottom: 4px;
+}
+
+.current-milestone strong {
+
+    font-size: 17px;
+}
+
+.log {
+
+    flex: 1;
+
+    overflow-y: auto;
+}
+
+.log-row {
+
+    display: grid;
+
+    grid-template-columns:
+        58px
+        12px
+        1fr;
+
+    gap: 7px;
+
+    align-items: center;
+
+    padding: 8px 0;
+
+    border-bottom: 1px solid #000000;
+
+    font-size: 12px;
+
+    font-weight: 800;
+}
+
+.log-time {
+
+    color: #222222;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.log-dot {
+
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background: #000000 !important;
+
+    border: 1px solid #000000;
+}
+
+
+/* =========================================================
+   FRAME
+   ========================================================= */
+
+.frame-card .metric-row {
+
+    padding: 7px 0;
+}
+
+.frame-raw {
+    max-height: 90px;
+    overflow: auto;
+    padding: 7px;
+    margin-top: 8px;
+    border: 1px solid #000;
+    font: 10px/1.4 monospace;
+    overflow-wrap: anywhere;
+}
+
+.ok {
+
+    color: #087a3b;
+
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+footer {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 6px;
+
+    color: #222222;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.footer-group {
+
+    display: flex;
+
+    gap: 18px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+    .main-value {
+
+        font-size: 32px;
+    }
+
+    .card {
+
+        padding: 10px;
+    }
+
+    .app {
+        min-height: 100vh;
+        height: auto;
+    }
+
+    .dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: none;
+        grid-auto-rows: minmax(300px, auto);
+    }
+
+    .map-card {
+        grid-column: 1 / -1;
+        min-height: 460px;
+    }
+
+    .card {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 680px) {
+    .app {
+        padding: 8px;
+        grid-template-rows: auto 1fr auto;
+    }
+
+    header {
+        min-height: 54px;
+        gap: 10px;
+    }
+
+    header h1 {
+        font-size: 15px;
+    }
+
+    .header-right {
+        gap: 10px;
+        font-size: 10px;
+    }
+
+    .dashboard {
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: minmax(270px, auto);
+    }
+
+    .map-card {
+        grid-column: auto;
+        min-height: 390px;
+    }
+
+    .card {
+        min-height: 270px;
+    }
+
+    footer {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+}
+
+</style>
 </head>
 
 <body>
 
-<header class="topbar">
+<div class="app">
 
-    <div class="brand">
-        <img
-            class="brand-logo"
-            src="/frontend/assets/invenciones-espaciales.png"
-            alt="Invenciones Espaciales"
-        >
-    </div>
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
 
-    <div class="header-status">
+    <header>
 
-        <div class="connection">
-            <span id="connectionDot" class="status-dot"></span>
-            <span id="connectionText">DISCONNECTED</span>
+        <div class="brand">
+
+            <img
+                class="brand-icon"
+                src="/frontend/assets/invenciones-espaciales.png"
+                alt="Invenciones Espaciales"
+                style="width:48px;height:48px;object-fit:contain"
+            >
+
+            <h1>
+                ESTACIÓN TERRENA
+            </h1>
+
         </div>
 
-        <div class="header-stat">
-            T+
-            <strong id="headerTime">--:--:--</strong>
+
+        <div class="header-right">
+
+            <div class="flight-clock">
+
+                T+
+                <span id="clock">
+                    00:03:42
+                </span>
+
+            </div>
+
+
+            <div class="link-status">
+
+                <span class="dot" id="linkDot"></span>
+                <span id="linkStatus">DESCONECTADO</span>
+
+            </div>
+
+
+            <div>
+                ▂▅▇
+            </div>
+
         </div>
 
-    </div>
-
-</header>
+    </header>
 
 
-<main>
+    <!-- =====================================================
+         DASHBOARD
+         ===================================================== -->
 
-    <div class="dashboard">
+    <main class="dashboard">
 
-        <!-- =====================================================
-             FILA SUPERIOR
-             ===================================================== -->
 
-        <!-- BARÓMETRO -->
-        <section class="panel metric-card">
+        <!-- =================================================
+             BARÓMETRO
+             ================================================= -->
 
-            <div class="metric-title">
-                <span>Barómetro</span>
-                <span class="metric-icon">⌁</span>
+        <section class="card">
+
+            <div class="card-title">
+
+                <span class="icon">
+                    ◉
+                </span>
+
+                BARÓMETRO
+
             </div>
+
 
             <div>
-                <div class="metric-value">
-                    <span id="barometerPressure">---</span>
-                    <span class="metric-unit">hPa</span>
-                </div>
 
-                <div class="metric-secondary">
-                    <span>
-                        TEMP
-                        <strong id="barometerTemp">--.- °C</strong>
-                    </span>
+                <span
+                    class="main-value"
+                    id="pressure"
+                >
+                    ---
+                </span>
 
-                    <span>
-                        TEND
-                        <strong id="barometerTrend">---</strong>
-                    </span>
-
-                    <span>
-                        MIN
-                        <strong id="barometerMin">--- hPa</strong>
-                    </span>
-
-                    <span>
-                        MAX
-                        <strong id="barometerMax">--- hPa</strong>
-                    </span>
-                </div>
-            </div>
-
-        </section>
-
-
-        <!-- ALTITUD -->
-        <section class="panel metric-card">
-
-            <div class="metric-title">
-                <span>Altitud</span>
-                <span class="metric-icon">↟</span>
-            </div>
-
-            <div>
-                <div class="metric-value">
-                    <span id="altitudeValue">---</span>
-                    <span class="metric-unit">m</span>
-                </div>
-
-                <div class="metric-secondary">
-                    <span>
-                        MÁX
-                        <strong id="altitudeMax">--- m</strong>
-                    </span>
-
-                    <span>
-                        V/S
-                        <strong id="verticalSpeed">--- m/s</strong>
-                    </span>
-                </div>
-            </div>
-
-        </section>
-
-
-        <!-- ACELERACIÓN -->
-        <section class="panel metric-card">
-
-            <div class="metric-title">
-                <span>Aceleración</span>
-                <span class="metric-icon">✦</span>
-            </div>
-
-            <div>
-                <div class="metric-value">
-                    <span id="accelMagnitude">---</span>
-                    <span class="metric-unit">g</span>
-                </div>
-
-                <div class="metric-secondary">
-                    <span>
-                        X
-                        <strong id="accelX">---</strong>
-                    </span>
-
-                    <span>
-                        Y
-                        <strong id="accelY">---</strong>
-                    </span>
-
-                    <span>
-                        Z
-                        <strong id="accelZ">---</strong>
-                    </span>
-                </div>
-            </div>
-
-        </section>
-
-
-        <!-- SALUD DE CONEXIÓN -->
-        <section class="panel health-card">
-
-            <div class="metric-title">
-                <span>Salud de conexión</span>
-                <span class="metric-icon">●</span>
-            </div>
-
-            <div class="health-main">
-
-                <span id="healthIndicator" class="health-indicator"></span>
-
-                <div class="health-text">
-                    <strong id="healthStatus">OFFLINE</strong>
-                    <span id="healthDetail">Esperando conexión...</span>
-                </div>
+                <span class="unit">
+                    hPa
+                </span>
 
             </div>
 
-            <div class="health-stats">
 
-                <div class="health-stat">
-                    <div class="health-stat-label">RSSI</div>
-                    <div class="health-stat-value" id="healthRssi">-- dBm</div>
-                </div>
+            <div style="margin-top:10px">
 
-                <div class="health-stat">
-                    <div class="health-stat-label">SNR</div>
-                    <div class="health-stat-value" id="healthSnr">-- dB</div>
-                </div>
+                <span id="pressureChange">--- hPa</span>
 
-                <div class="health-stat">
-                    <div class="health-stat-label">Frames recibidos</div>
-                    <div class="health-stat-value" id="healthReceived">0</div>
-                </div>
-
-                <div class="health-stat">
-                    <div class="health-stat-label">Frames perdidos</div>
-                    <div class="health-stat-value" id="lostPackets">0</div>
-                </div>
-
-                <div class="health-stat">
-                    <div class="health-stat-label">Pérdida</div>
-                    <div class="health-stat-value" id="healthLoss">0.00 %</div>
-                </div>
-
-                <div class="health-stat">
-                    <div class="health-stat-label">Tasa RX</div>
-                    <div class="health-stat-value" id="healthRate">-- Hz</div>
-                </div>
-
-                <div class="health-stat">
-                    <div class="health-stat-label">Último paquete</div>
-                    <div class="health-stat-value" id="healthLastPacket">--</div>
-                </div>
+                <span class="sub">
+                    &nbsp; variación
+                </span>
 
             </div>
 
-        </section>
 
-
-        <!-- =====================================================
-             FILA INFERIOR
-             ===================================================== -->
-
-        <!-- GPS / MAPA - 2 COLUMNAS -->
-        <section class="panel map-panel">
-
-            <div class="panel-header">
-
-                <div class="panel-title">
-                    GPS / Mapa
-                </div>
-
-                <div class="panel-subtitle">
-                    <span id="gpsFixStatus">NO FIX</span>
-                </div>
-
-            </div>
-
-            <div class="map-content">
-
-                <div class="map-placeholder" id="mapPlaceholder">
-                    Esperando posición GPS
-                </div>
+            <div class="trend">
 
                 <svg
-                    class="map-trail-svg"
-                    viewBox="0 0 1000 600"
+                    viewBox="0 0 500 100"
                     preserveAspectRatio="none"
-                    aria-label="Trayectoria GPS"
                 >
-                    <polyline id="gpsTrajectory" points=""></polyline>
-                    <circle id="gpsStart" cx="0" cy="0" r="8"></circle>
-                    <circle id="gpsCurrent" cx="0" cy="0" r="9"></circle>
+
+                    <polyline id="pressureTrend" points=""
+                        fill="none"
+                        stroke="#000"
+                        stroke-width="3"
+                    />
+
                 </svg>
 
-                <div class="map-top-info">
+            </div>
 
-                    <div class="map-badge">
-                        SAT <strong id="gpsSatellites">--</strong>
-                    </div>
 
-                    <div class="map-badge">
-                        HDOP <strong id="gpsHdop">--</strong>
-                    </div>
+            <div
+                style="
+                display:flex;
+                justify-content:space-between;
+                margin-top:10px;
+                "
+            >
 
-                    <div class="map-badge">
-                        FIX <strong id="gpsFix">--</strong>
-                    </div>
+                <span class="sub">
+                    MÍN <span id="pressureMin">--- hPa</span>
+                </span>
+
+                <span class="sub">
+                    MÁX <span id="pressureMax">--- hPa</span>
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ALTITUD
+             ================================================= -->
+
+        <section class="card">
+
+            <div class="card-title">
+
+                <span class="icon">
+                    ▲
+                </span>
+
+                ALTITUD
+
+            </div>
+
+
+            <div>
+
+                <span
+                    class="main-value"
+                    id="altitude"
+                >
+                    ---
+                </span>
+
+                <span class="unit">
+                    m
+                </span>
+
+            </div>
+
+
+            <div style="margin-top:10px">
+
+                <span id="verticalSpeed">--- m/s</span>
+
+                <span class="sub">
+                    &nbsp; velocidad vertical
+                </span>
+
+            </div>
+
+
+            <div
+                style="
+                margin-top:12px
+                "
+                class="sub"
+            >
+
+                MÁX
+
+                <b>
+                    <span id="altitudeMax">--- m</span>
+                </b>
+
+            </div>
+
+
+            <div class="trend">
+
+                <svg
+                    viewBox="0 0 500 100"
+                    preserveAspectRatio="none"
+                >
+
+                    <polyline id="altitudeTrend" points=""
+                        fill="none"
+                        stroke="#000"
+                        stroke-width="3"
+                    />
+
+                </svg>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ACELERACIÓN
+             ================================================= -->
+
+        <section class="card">
+
+            <div class="card-title">
+
+                <span class="icon">
+                    ✣
+                </span>
+
+                ACELERACIÓN
+
+            </div>
+
+
+            <div class="accel-grid">
+
+
+                <div class="axis">
+
+                    <strong>
+                        X
+                    </strong>
+
+                    <span id="ax">
+                        ---
+                    </span>
+
+                    <span class="unit">
+                        g
+                    </span>
+                    <svg class="axis-chart" viewBox="0 0 200 46" preserveAspectRatio="none">
+                        <polyline id="accelXChart" points=""></polyline>
+                    </svg>
 
                 </div>
+
+
+                <div class="axis">
+
+                    <strong>
+                        Y
+                    </strong>
+
+                    <span id="ay">
+                        ---
+                    </span>
+
+                    <span class="unit">
+                        g
+                    </span>
+                    <svg class="axis-chart" viewBox="0 0 200 46" preserveAspectRatio="none">
+                        <polyline id="accelYChart" points=""></polyline>
+                    </svg>
+
+                </div>
+
+
+                <div class="axis">
+
+                    <strong>
+                        Z
+                    </strong>
+
+                    <span id="az">
+                        ---
+                    </span>
+
+                    <span class="unit">
+                        g
+                    </span>
+                    <svg class="axis-chart" viewBox="0 0 200 46" preserveAspectRatio="none">
+                        <polyline id="accelZChart" points=""></polyline>
+                    </svg>
+
+                </div>
+
+
+                <div class="magnitude">
+
+                    <span class="sub">
+                        MAGNITUD
+                    </span>
+
+                    <strong
+                        id="amag"
+                        style="font-size:22px"
+                    >
+                        --- g
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SALUD DE CONEXIÓN
+             ================================================= -->
+
+        <section class="card">
+
+            <div class="card-title">
+
+                <span class="icon">
+                    ▂▅▇
+                </span>
+
+                SALUD DE CONEXIÓN
+
+            </div>
+
+
+            <div class="connected">
+
+                <span class="dot" id="connectionDot"></span>
+                <span id="connectionLabel">DESCONECTADO</span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    RSSI
+                </span>
+
+                <span id="rssi">
+                    ---
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    SNR
+                </span>
+
+                <span id="snr">
+                    ---
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    PACKETS
+                </span>
+
+                <span id="packets">
+                    0
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    LOST
+                </span>
+
+                <span id="lostPackets">
+                    0
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    LOSS
+                </span>
+
+                <span id="lossPercent">
+                    0.00 %
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    LAST PACKET
+                </span>
+
+                <span id="lastPacketAge">
+                    --
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    RX RATE
+                </span>
+
+                <span id="rxRate">
+                    --
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             GPS / MAPA
+             ================================================= -->
+
+        <section class="card map-card">
+
+            <div class="card-title">
+
+                <span class="icon">
+                    ⌖
+                </span>
+
+                GPS / MAPA
+
+            </div>
+
+
+            <div class="map" id="mapContainer">
+
+                <div
+                    class="leaflet-map"
+                    id="gpsMap"
+                    aria-label="Mapa interactivo de trayectoria GPS"
+                ></div>
+
 
                 <div class="map-info">
 
-                    <div class="map-info-row">
-                        <span class="map-info-label">LAT</span>
-                        <span class="map-info-value" id="gpsLatitude">
-                            ---
-                        </span>
+                    LAT&nbsp;&nbsp;
+
+                    <b id="lat">
+                        ---
+                    </b>
+
+                    <br>
+
+                    LON&nbsp;&nbsp;
+
+                    <b id="lon">
+                        ---
+                    </b>
+
+                    <br>
+
+                    ALT&nbsp;&nbsp;
+
+                    <b id="mapAlt">
+                        --- m
+                    </b>
+
+                    <br>
+
+                    SAT&nbsp;&nbsp;
+
+                    <b id="satellites">
+                        --
+                    </b>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             LOG DE HITOS
+             ================================================= -->
+
+        <section class="card">
+
+            <div class="card-title">
+
+                <span class="icon">
+                    ⚑
+                </span>
+
+                LOG DE HITOS
+
+            </div>
+
+
+            <div class="milestones">
+
+
+                <div class="current-milestone">
+
+                    <div class="label">
+                        ACTUAL
                     </div>
 
-                    <div class="map-info-row">
-                        <span class="map-info-label">LON</span>
-                        <span class="map-info-value" id="gpsLongitude">
-                            ---
-                        </span>
-                    </div>
+                    <strong id="currentMilestone">—</strong>
 
-                    <div class="map-info-row">
-                        <span class="map-info-label">ALT</span>
-                        <span class="map-info-value" id="gpsAltitude">
-                            --- m
-                        </span>
-                    </div>
+                    <span
+                        style="
+                        float:right;
+                        color:#222;
+                        font-size:12px;
+                        "
+                    >
+                        <span id="milestoneTime">T+ --:--:--</span>
+                    </span>
 
-                    <div class="map-info-row">
-                        <span class="map-info-label">SPEED</span>
-                        <span class="map-info-value" id="gpsSpeed">
-                            --- m/s
-                        </span>
-                    </div>
+                </div>
 
-                    <div class="map-info-row">
-                        <span class="map-info-label">COURSE</span>
-                        <span class="map-info-value" id="gpsCourse">
-                            --- °
-                        </span>
-                    </div>
 
+                <div class="log" id="eventLog" aria-live="polite">
+                    <div class="log-row" id="logEmpty">Esperando eventos...</div>
                 </div>
 
             </div>
@@ -1085,1408 +1323,562 @@
         </section>
 
 
-        <!-- LOG DE HITOS -->
-        <section class="panel log-panel">
+        <!-- =================================================
+             DATOS DE FRAME
+             ================================================= -->
 
-            <div class="panel-header">
+        <section class="card frame-card">
 
-                <div class="panel-title">
-                    Log de hitos
-                </div>
+            <div class="card-title">
 
-                <div class="panel-subtitle">
-                    EVENTOS
-                </div>
+                <span class="icon">
+                    ▤
+                </span>
+
+                DATOS DE FRAME
 
             </div>
 
-            <div id="milestoneLog" class="log-content">
 
-                <div id="logEmpty" class="log-empty">
-                    Sin eventos todavía
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    SEQ
+                </span>
+
+                <strong id="seq">
+                    ---
+                </strong>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    TIMESTAMP
+                </span>
+
+                <span id="timestamp">
+                    ---
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    SIZE
+                </span>
+
+                <span id="frameSize">
+                    ---
+                </span>
+
+            </div>
+
+
+            <div class="metric-row">
+
+                <span class="metric-label">
+                    CRC
+                </span>
+
+                <span class="ok" id="crcStatus">
+                    ---
+                </span>
+
+            </div>
+
+
+            <div
+                style="
+                margin-top:13px;
+                padding-top:10px;
+                border-top:2px solid #000;
+                "
+            >
+
+                <div
+                    style="
+                    font-size:13px;
+                    font-weight:900;
+                    margin-bottom:8px;
+                    "
+                >
+                    FRAMES
                 </div>
+
+
+                <div class="metric-row">
+
+                    <span class="metric-label">
+                        VÁLIDOS
+                    </span>
+
+                    <span id="valid">
+                        0
+                    </span>
+
+                </div>
+
+
+                <div class="metric-row">
+
+                    <span class="metric-label">
+                        INVÁLIDOS
+                    </span>
+
+                    <span id="invalid">
+                        0
+                    </span>
+
+                </div>
+
+                <div class="metric-row">
+                    <span class="metric-label">CRC RX</span>
+                    <span id="crcValue">---</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">TIPO DE TRAMA</span>
+                    <span id="frameType">---</span>
+                </div>
+                <div class="frame-raw" id="rawFrame">Esperando frame válido...</div>
+                <div class="frame-raw" id="frameDetails">---</div>
 
             </div>
 
         </section>
 
-
-        <!-- FRAME -->
-        <section class="panel frame-panel">
-
-            <div class="panel-header">
-
-                <div class="panel-title">
-                    Frame
-                </div>
-
-                <div class="panel-subtitle">
-                    ÚLTIMO RECIBIDO
-                </div>
-
-            </div>
-
-            <div class="frame-content">
-
-                <div class="frame-meta">
-
-                    <div class="frame-field">
-                        <div class="frame-field-label">Sequence</div>
-                        <div
-                            class="frame-field-value"
-                            id="frameSequence"
-                        >
-                            ---
-                        </div>
-                    </div>
-
-                    <div class="frame-field">
-                        <div class="frame-field-label">Timestamp</div>
-                        <div class="frame-field-value" id="frameTimestamp">
-                            ---
-                        </div>
-                    </div>
-
-                    <div class="frame-field">
-                        <div class="frame-field-label">Size</div>
-                        <div
-                            class="frame-field-value"
-                            id="frameLength"
-                        >
-                            ---
-                        </div>
-                    </div>
-
-                    <div class="frame-field">
-                        <div class="frame-field-label">Frames válidos</div>
-                        <div class="frame-field-value" id="frameValid">0</div>
-                    </div>
-
-                    <div class="frame-field">
-                        <div class="frame-field-label">Frames inválidos</div>
-                        <div class="frame-field-value" id="frameInvalid">0</div>
-                    </div>
-
-                    <div class="frame-field">
-                        <div class="frame-field-label">CRC</div>
-                        <div
-                            class="frame-field-value"
-                            id="frameCrc"
-                        >
-                            ---
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="frame-fields-wrap">
-                    <table class="frame-fields-table">
-                    <thead>
-                        <tr>
-                            <th>Campo</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="telemetryFields">
-                        <tr>
-                            <td colspan="2" class="telemetry-empty">
-                                Esperando telemetría...
-                            </td>
-                        </tr>
-                    </tbody>
-                    </table>
-                </div>
-
-            </div>
-
-        </section>
-
-    </div>
-
-</main>
+    </main>
 
 
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+
+    <footer>
+
+        <div class="footer-group">
+
+            <span>
+                UART:
+                <b>
+                    <span id="serialConfig">UART -- @ --</span>
+                </b>
+            </span>
+
+            <span>
+                WS:
+                <b class="ok" id="wsState">
+                    DESCONECTADO
+                </b>
+            </span>
+
+        </div>
+
+
+        <div class="footer-group">
+
+            <span>
+                RX:
+                <b id="rx">
+                    0
+                </b>
+            </span>
+
+            <span>
+                LOST:
+                <b id="footerLost">
+                    0
+                </b>
+            </span>
+
+            <span>
+                CRC:
+                <b class="ok" id="footerCrc">
+                    ---
+                </b>
+            </span>
+
+        </div>
+
+    </footer>
+
+</div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
 <script>
 "use strict";
 
-/* =============================================================
-   ESTADO
-   ============================================================= */
-
+const $ = id => document.getElementById(id);
 const state = {
-    ws: null,
-    connected: false,
-    lossPercent: 0,
-
-    rx: 0,
-    lost: 0,
-
-    lastSequence: null,
-    altitudeMax: null,
-    pressureMin: null,
-    pressureMax: null,
-    lastPressure: null,
-    sessionStartedAt: Date.now(),
+    startedAt: Date.now(),
     lastPacketAt: null,
+    missionTimestamp: null,
+    missionTimestampAt: null,
     packetTimes: [],
-    gpsTrail: [],
-
-    lastTelemetry: null,
-
+    pressure: [],
+    altitude: [],
+    accelX: [],
+    accelY: [],
+    accelZ: [],
+    maxAltitude: null,
+    lastPressure: null,
+    lastStatus: null,
+    sequence: null,
+    connected: false,
+    socket: null,
     reconnectTimer: null,
     reconnectDelay: 1000,
-
-    milestones: []
+    map: null,
+    marker: null,
+    startMarker: null,
+    route: null,
+    routePoints: []
 };
 
-
-/* =============================================================
-   HELPERS
-   ============================================================= */
-
-function $(id) {
-    return document.getElementById(id);
-}
-
+const statusLabels = {
+    0: "Standby",
+    1: "Pre-launch",
+    2: "Motor encendido / Ascenso",
+    3: "Apogeo",
+    4: "Descenso",
+    5: "Aterrizaje"
+};
 
 function setText(id, value) {
     const element = $(id);
-
-    if (element) {
-        element.textContent = value;
-    }
+    if (element) element.textContent = value;
 }
 
-
-function numberValue(value, decimals = 2) {
-
-    if (value === null || value === undefined || value === "") {
-        return null;
-    }
-
+function formatNumber(value, decimals = 2) {
     const number = Number(value);
-
-    if (!Number.isFinite(number)) {
-        return null;
-    }
-
-    return number.toFixed(decimals);
+    return Number.isFinite(number)
+        ? new Intl.NumberFormat("es-AR", { maximumFractionDigits: decimals }).format(number)
+        : "---";
 }
-
-
-function firstValue(object, names, fallback = null) {
-
-    if (!object || typeof object !== "object") {
-        return fallback;
-    }
-
-    for (const name of names) {
-
-        if (
-            Object.prototype.hasOwnProperty.call(object, name) &&
-            object[name] !== null &&
-            object[name] !== undefined
-        ) {
-            return object[name];
-        }
-    }
-
-    return fallback;
-}
-
-
-function formatNumber(value, decimals = 2, suffix = "") {
-
-    const formatted = numberValue(value, decimals);
-
-    if (formatted === null) {
-        return "---";
-    }
-
-    return formatted + suffix;
-}
-
-
-function formatTime(date = new Date()) {
-
-    return date.toLocaleTimeString("es-AR", {
-        hour12: false
-    });
-}
-
 
 function formatElapsed(milliseconds) {
     const seconds = Math.max(0, Math.floor(milliseconds / 1000));
-    const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
-    const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
-    const remainder = String(seconds % 60).padStart(2, "0");
-    return `${hours}:${minutes}:${remainder}`;
+    const pad = value => String(value).padStart(2, "0");
+    return `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`;
 }
 
-
-/* =============================================================
-   CONNECTION UI
-   ============================================================= */
-
-function updateConnectionUI() {
-
-    const dot = $("connectionDot");
-    const text = $("connectionText");
-
-    const indicator = $("healthIndicator");
-    const healthStatus = $("healthStatus");
-    const healthDetail = $("healthDetail");
-
-    if (state.connected) {
-
-        dot.classList.add("connected");
-        if (state.lossPercent > 0) {
-            text.textContent = "DEGRADED";
-            indicator.className = "health-indicator warning";
-            healthStatus.textContent = "DEGRADED";
-            healthDetail.textContent = `Pérdida ${state.lossPercent.toFixed(2)} %`;
-        } else {
-            text.textContent = "CONNECTED";
-            indicator.className = "health-indicator ok";
-            healthStatus.textContent = "ONLINE";
-            healthDetail.textContent = "Telemetría recibida";
-        }
-
-    } else {
-
-        dot.classList.remove("connected");
-        text.textContent = "DISCONNECTED";
-
-        indicator.className = "health-indicator";
-
-        healthStatus.textContent = "OFFLINE";
-        healthDetail.textContent = "Esperando conexión...";
-
+function missionTime() {
+    if (state.missionTimestamp === null) {
+        return Date.now() - state.startedAt;
     }
-
-    setText("lostPackets", state.lost);
+    return state.missionTimestamp + Date.now() - state.missionTimestampAt;
 }
-
-
-function setConnected(value) {
-
-    state.connected = Boolean(value);
-
-    updateConnectionUI();
-}
-
-
-/* =============================================================
-   REST API
-   ============================================================= */
-
-async function loadStatus() {
-
-    try {
-
-        const response = await fetch("/api/status", {
-            cache: "no-store"
-        });
-
-        if (!response.ok) {
-            throw new Error("HTTP " + response.status);
-        }
-
-        const data = await response.json();
-
-        updateStatus(data);
-
-    } catch (error) {
-
-        console.warn("No se pudo obtener /api/status:", error);
-    }
-}
-
-
-function updateStatus(data) {
-
-    if (!data || typeof data !== "object") {
-        return;
-    }
-
-    if (typeof data.connected === "boolean") {
-        setConnected(data.connected);
-    }
-
-    const rx = firstValue(data, ["frames_received", "rx", "received"]);
-
-    if (rx !== null) {
-
-        const n = Number(rx);
-
-        if (Number.isFinite(n)) {
-            state.rx = n;
-        }
-    }
-
-
-    const lost = firstValue(data, ["lost", "lost_packets", "packets_lost"]);
-
-    if (lost !== null) {
-
-        const n = Number(lost);
-
-        if (Number.isFinite(n)) {
-            state.lost = n;
-        }
-    }
-
-    const statistics = data.statistics;
-    if (statistics && typeof statistics === "object") {
-        updateStatistics(statistics);
-    }
-
-    updateConnectionUI();
-}
-
-
-/* =============================================================
-   WEBSOCKET
-   ============================================================= */
-
-function connectWebSocket() {
-
-    if (
-        state.ws &&
-        (
-            state.ws.readyState === WebSocket.OPEN ||
-            state.ws.readyState === WebSocket.CONNECTING
-        )
-    ) {
-        return;
-    }
-
-    const protocol =
-        window.location.protocol === "https:"
-            ? "wss:"
-            : "ws:";
-
-    const url =
-        protocol +
-        "//" +
-        window.location.host +
-        "/ws";
-
-    console.log("Conectando WebSocket:", url);
-
-    try {
-
-        state.ws = new WebSocket(url);
-
-    } catch (error) {
-
-        console.error("WebSocket error:", error);
-        scheduleReconnect();
-
-        return;
-    }
-
-
-    state.ws.onopen = function () {
-
-        console.log("WebSocket conectado");
-
-        state.reconnectDelay = 1000;
-
-        setConnected(true);
-
-        addMilestone(
-            "Conexión WebSocket establecida",
-            "success"
-        );
-    };
-
-
-    state.ws.onmessage = function (event) {
-
-        handleWebSocketMessage(event.data);
-    };
-
-
-    state.ws.onerror = function (error) {
-
-        console.warn("WebSocket error:", error);
-    };
-
-
-    state.ws.onclose = function () {
-
-        console.warn("WebSocket cerrado");
-
-        setConnected(false);
-
-        addMilestone(
-            "Conexión WebSocket perdida",
-            "warning"
-        );
-
-        scheduleReconnect();
-    };
-}
-
-
-function scheduleReconnect() {
-
-    if (state.reconnectTimer) {
-        return;
-    }
-
-    state.reconnectTimer = setTimeout(
-        function () {
-
-            state.reconnectTimer = null;
-
-            connectWebSocket();
-
-        },
-        state.reconnectDelay
-    );
-
-    state.reconnectDelay = Math.min(
-        state.reconnectDelay * 2,
-        10000
-    );
-}
-
-
-/* =============================================================
-   WEBSOCKET MESSAGE
-   ============================================================= */
-
-function handleWebSocketMessage(raw) {
-
-    state.rx++;
-    state.lastPacketAt = Date.now();
-    state.packetTimes.push(state.lastPacketAt);
-    state.packetTimes = state.packetTimes.filter(
-        timestamp => state.lastPacketAt - timestamp <= 5000
-    );
-
-    let data = raw;
-
-    if (typeof raw === "string") {
-
-        try {
-            data = JSON.parse(raw);
-        } catch {
-            data = {
-                raw: raw
-            };
-        }
-    }
-
-    processTelemetry(data);
-    if (data && typeof data === "object" && data.statistics) {
-        updateStatistics(data.statistics);
-    }
-
-    updateFrame(data, raw);
-
-}
-
-
-/* =============================================================
-   TELEMETRY
-   ============================================================= */
-
-function processTelemetry(data) {
-
-    if (!data || typeof data !== "object") {
-        return;
-    }
-
-    if (data.type === "connection") {
-        if (typeof data.connected === "boolean") {
-            setConnected(data.connected);
-        }
-        return;
-    }
-
-    state.lastTelemetry = data;
-
-
-    /*
-     * El backend puede enviar los datos directamente
-     * o dentro de telemetry/data/payload.
-     */
-
-    const telemetry =
-        firstValue(
-            data,
-            ["telemetry", "data", "payload"],
-            data
-        );
-
-
-    if (
-        telemetry &&
-        typeof telemetry === "object"
-    ) {
-        updateBarometer(telemetry);
-        updateAltitude(telemetry);
-        updateAcceleration(telemetry);
-        updateGps(telemetry);
-        updateTelemetryFields(telemetry);
-        updateSequence(telemetry);
-    }
-
-    const radio = firstValue(data, ["radio", "link"], data);
-    updateLinkMetrics(radio);
-}
-
-
-/* =============================================================
-   BARÓMETRO
-   ============================================================= */
-
-function updateBarometer(data) {
-
-    const pressure = firstValue(
-        data,
-        [
-            "baro_pressure",
-            "barometer_pressure",
-            "pressure_hpa"
-        ]
-    );
-    const pressurePa = data.pressure;
-
-    const temperature = firstValue(
-        data,
-        [
-            "pressure_temperature",
-            "baro_temperature",
-            "barometer_temperature",
-            "temperature"
-        ]
-    );
-
-
-    if (pressurePa !== null && pressurePa !== undefined) {
-        const pressureHpa = Number(pressurePa) / 100;
-        setText(
-            "barometerPressure",
-            formatNumber(pressureHpa, 1)
-        );
-        updatePressureExtremes(pressureHpa);
-    } else if (pressure !== null) {
-        setText("barometerPressure", formatNumber(pressure, 1));
-        const pressureValue = Number(pressure);
-        updatePressureExtremes(pressureValue);
-    }
-
-
-    if (temperature !== null) {
-
-        setText(
-            "barometerTemp",
-            formatNumber(temperature, 1, " °C")
-        );
-    }
-}
-
-
-function updatePressureExtremes(pressure) {
-    if (!Number.isFinite(pressure)) {
-        return;
-    }
-    state.pressureMin = state.pressureMin === null
-        ? pressure
-        : Math.min(state.pressureMin, pressure);
-    state.pressureMax = state.pressureMax === null
-        ? pressure
-        : Math.max(state.pressureMax, pressure);
-    setText("barometerMin", `${state.pressureMin.toFixed(1)} hPa`);
-    setText("barometerMax", `${state.pressureMax.toFixed(1)} hPa`);
-
-    if (state.lastPressure !== null) {
-        const change = pressure - state.lastPressure;
-        const direction = change > 0 ? "↑" : change < 0 ? "↓" : "→";
-        setText("barometerTrend", `${direction} ${Math.abs(change).toFixed(2)} hPa`);
-    }
-    state.lastPressure = pressure;
-}
-
-
-/* =============================================================
-   ALTITUD
-   ============================================================= */
-
-function updateAltitude(data) {
-
-    const altitude = firstValue(
-        data,
-        [
-            "altitude",
-            "alt",
-            "altitude_m",
-            "barometric_altitude"
-        ]
-    );
-
-
-    if (altitude !== null) {
-
-        const numericAltitude = Number(altitude);
-
-        if (Number.isFinite(numericAltitude)) {
-
-            setText(
-                "altitudeValue",
-                numericAltitude.toFixed(1)
-            );
-
-            if (
-                state.altitudeMax === null ||
-                numericAltitude > state.altitudeMax
-            ) {
-
-                state.altitudeMax = numericAltitude;
-
-                setText(
-                    "altitudeMax",
-                    numericAltitude.toFixed(1) + " m"
-                );
-            }
-        }
-    }
-
-
-    const verticalSpeed = firstValue(
-        data,
-        [
-            "vertical_speed",
-            "climb_rate",
-            "vz",
-            "vertical_velocity"
-        ]
-    );
-
-
-    if (verticalSpeed !== null) {
-
-        setText(
-            "verticalSpeed",
-            formatNumber(verticalSpeed, 2, " m/s")
-        );
-    }
-}
-
-
-/* =============================================================
-   ACELERACIÓN
-   ============================================================= */
-
-function updateAcceleration(data) {
-
-    const x = firstValue(
-        data,
-        [
-            "accel_x",
-            "acceleration_x",
-            "ax"
-        ]
-    );
-
-    const y = firstValue(
-        data,
-        [
-            "accel_y",
-            "acceleration_y",
-            "ay"
-        ]
-    );
-
-    const z = firstValue(
-        data,
-        [
-            "accel_z",
-            "acceleration_z",
-            "az"
-        ]
-    );
-
-
-    if (x !== null) {
-        setText("accelX", formatNumber(x, 3));
-    }
-
-    if (y !== null) {
-        setText("accelY", formatNumber(y, 3));
-    }
-
-    if (z !== null) {
-        setText("accelZ", formatNumber(z, 3));
-    }
-
-
-    const magnitude = firstValue(
-        data,
-        [
-            "acceleration",
-            "accel",
-            "acceleration_magnitude",
-            "accel_magnitude"
-        ]
-    );
-
-
-    if (magnitude !== null) {
-
-        setText(
-            "accelMagnitude",
-            formatNumber(magnitude, 3)
-        );
-
-    } else if (
-        x !== null &&
-        y !== null &&
-        z !== null
-    ) {
-
-        const ax = Number(x);
-        const ay = Number(y);
-        const az = Number(z);
-
-        if (
-            Number.isFinite(ax) &&
-            Number.isFinite(ay) &&
-            Number.isFinite(az)
-        ) {
-
-            const mag =
-                Math.sqrt(
-                    ax * ax +
-                    ay * ay +
-                    az * az
-                );
-
-            setText(
-                "accelMagnitude",
-                mag.toFixed(3)
-            );
-        }
-    }
-}
-
-
-/* =============================================================
-   GPS
-   ============================================================= */
-
-function updateGps(data) {
-
-    const latitude = firstValue(
-        data,
-        [
-            "latitude",
-            "lat",
-            "gps_latitude",
-            "gps_lat"
-        ]
-    );
-
-    const longitude = firstValue(
-        data,
-        [
-            "longitude",
-            "lon",
-            "lng",
-            "gps_longitude",
-            "gps_lon"
-        ]
-    );
-
-
-    if (latitude !== null) {
-
-        setText(
-            "gpsLatitude",
-            formatNumber(latitude, 6)
-        );
-    }
-
-
-    if (longitude !== null) {
-
-        setText(
-            "gpsLongitude",
-            formatNumber(longitude, 6)
-        );
-    }
-
-
-    const gpsAltitude = firstValue(
-        data,
-        [
-            "gps_altitude",
-            "gps_alt",
-            "altitude"
-        ]
-    );
-
-
-    if (gpsAltitude !== null) {
-
-        setText(
-            "gpsAltitude",
-            formatNumber(gpsAltitude, 1, " m")
-        );
-    }
-
-
-    const speed = firstValue(
-        data,
-        [
-            "gps_speed",
-            "ground_speed",
-            "speed"
-        ]
-    );
-
-
-    if (speed !== null) {
-
-        setText(
-            "gpsSpeed",
-            formatNumber(speed, 2, " m/s")
-        );
-    }
-
-
-    const course = firstValue(
-        data,
-        [
-            "gps_course",
-            "course",
-            "heading"
-        ]
-    );
-
-
-    if (course !== null) {
-
-        setText(
-            "gpsCourse",
-            formatNumber(course, 1, " °")
-        );
-    }
-
-
-    const satellites = firstValue(
-        data,
-        [
-            "satellites",
-            "gps_satellites",
-            "gps_sats"
-        ]
-    );
-
-
-    if (satellites !== null) {
-
-        setText(
-            "gpsSatellites",
-            satellites
-        );
-    }
-
-
-    const hdop = firstValue(
-        data,
-        [
-            "hdop",
-            "gps_hdop"
-        ]
-    );
-
-
-    if (hdop !== null) {
-
-        setText(
-            "gpsHdop",
-            formatNumber(hdop, 1)
-        );
-    }
-
-
-    const fix = firstValue(
-        data,
-        [
-            "gps_fix",
-            "fix",
-            "fix_type"
-        ]
-    );
-
-
-    if (fix !== null) {
-
-        setText(
-            "gpsFix",
-            fix
-        );
-
-        setText(
-            "gpsFixStatus",
-            String(fix).toUpperCase()
-        );
-    }
-
-
-    if (
-        latitude !== null &&
-        longitude !== null
-    ) {
-
-        const lat = Number(latitude);
-        const lon = Number(longitude);
-
-        if (
-            Number.isFinite(lat) &&
-            Number.isFinite(lon)
-        ) {
-            state.gpsTrail.push({ latitude: lat, longitude: lon });
-            if (state.gpsTrail.length > 250) {
-                state.gpsTrail.shift();
-            }
-            renderGpsTrail();
-            setText("gpsFixStatus", "GPS POSICIÓN RECIBIDA");
-            $("mapPlaceholder").hidden = true;
-        }
-    }
-}
-
-
-function renderGpsTrail() {
-    if (state.gpsTrail.length === 0) {
-        return;
-    }
-
-    const latitudes = state.gpsTrail.map(point => point.latitude);
-    const longitudes = state.gpsTrail.map(point => point.longitude);
-    const minLat = Math.min(...latitudes);
-    const maxLat = Math.max(...latitudes);
-    const minLon = Math.min(...longitudes);
-    const maxLon = Math.max(...longitudes);
-    const latRange = maxLat - minLat;
-    const lonRange = maxLon - minLon;
-    const pointToSvg = point => ({
-        x: lonRange === 0
-            ? 500
-            : 40 + ((point.longitude - minLon) / lonRange) * 920,
-        y: latRange === 0
-            ? 300
-            : 40 + ((maxLat - point.latitude) / latRange) * 520
-    });
-    const coordinates = state.gpsTrail.map(pointToSvg);
-    $("gpsTrajectory").setAttribute(
-        "points",
-        coordinates.map(point => `${point.x},${point.y}`).join(" ")
-    );
-    const start = coordinates[0];
-    const current = coordinates[coordinates.length - 1];
-    for (const [id, point] of [["gpsStart", start], ["gpsCurrent", current]]) {
-        const marker = $(id);
-        marker.setAttribute("cx", point.x);
-        marker.setAttribute("cy", point.y);
-        marker.setAttribute("visibility", "visible");
-    }
-}
-
-
-/* =============================================================
-   SEQUENCE / PACKETS
-   ============================================================= */
-
-function updateSequence(data) {
-
-    const sequence = firstValue(
-        data,
-        [
-            "frame_number",
-            "sequence",
-            "seq",
-            "sequence_number",
-            "packet_sequence"
-        ]
-    );
-
-    if (sequence === null) {
-        return;
-    }
-
-    const current = Number(sequence);
-
-    if (!Number.isFinite(current)) {
-        return;
-    }
-
-
-    if (state.lastSequence !== null) {
-
-        const previous = state.lastSequence;
-
-        const difference = current - previous;
-
-        if (difference > 1) {
-
-            const lost = difference - 1;
-
-            state.lost += lost;
-
-            setText(
-                "lostPackets",
-                state.lost
-            );
-
-            addMilestone(
-                `Pérdida de ${lost} frame${lost > 1 ? "s" : ""}`,
-                "warning"
-            );
-        }
-    }
-
-
-    state.lastSequence = current;
-}
-
-
-/* =============================================================
-   FRAME
-   ============================================================= */
-
-function updateFrame(data, raw) {
-
-    if (!data || typeof data !== "object") {
-        return;
-    }
-
-    if (data.type === "connection") {
-        return;
-    }
-
-    const telemetry = firstValue(
-        data,
-        ["telemetry", "data", "payload"],
-        data
-    );
-
-    const sequence = firstValue(
-        telemetry,
-        [
-            "frame_number",
-            "sequence",
-            "seq",
-            "sequence_number",
-            "packet_sequence"
-        ]
-    );
-
-    const length = firstValue(
-        data,
-        [
-            "length",
-            "packet_length",
-            "size"
-        ]
-    );
-
-    const crc = firstValue(
-        data,
-        [
-            "crc_valid",
-            "crc",
-            "crc16",
-            "crc_ok"
-        ]
-    );
-
-
-    if (sequence !== null) {
-        setText("frameSequence", sequence);
-    }
-
-    if (length !== null) {
-        setText("frameLength", length + " bytes");
-    } else if (data.frame_length !== undefined) {
-        setText("frameLength", `${data.frame_length} bytes`);
-    } else {
-        setText("frameLength", "---");
-    }
-
-    const timestamp = firstValue(telemetry, ["timestamp"]);
-    setText(
-        "frameTimestamp",
-        timestamp === null ? "---" : `${timestamp} ms`
-    );
-
-    if (crc !== null) {
-
-        if (typeof crc === "boolean") {
-            setText(
-                "frameCrc",
-                crc ? "OK" : "ERROR"
-            );
-        } else {
-            setText("frameCrc", crc);
-        }
-    } else if (data.type === "telemetry") {
-        setText("frameCrc", "OK");
-    } else {
-        setText("frameCrc", "---");
-    }
-
-
-    const statistics = data.statistics || {};
-    updateStatistics(statistics);
-    updateLinkMetrics(data);
-
-    if (telemetry && typeof telemetry === "object") {
-        updateTelemetryFields(telemetry);
-    }
-}
-
-
-const telemetryUnits = {
-    timestamp: "ms",
-    accel_x: "g",
-    accel_y: "g",
-    accel_z: "g",
-    pressure: "Pa",
-    latitude: "deg",
-    longitude: "deg",
-    altitude: "m"
-};
-
-
-function displayTelemetryValue(value) {
-    if (value === null || value === undefined) {
-        return "---";
-    }
-
-    if (typeof value === "number" && Number.isFinite(value)) {
-        return new Intl.NumberFormat("es", {
-            maximumFractionDigits: 6
-        }).format(value);
-    }
-
-    if (typeof value === "object") {
-        return JSON.stringify(value);
-    }
-
-    return String(value);
-}
-
-
-function updateTelemetryFields(data) {
-    const body = $("telemetryFields");
-    if (!body || !data || typeof data !== "object") {
-        return;
-    }
-
-    const fields = Object.entries(data).filter(
-        ([name, value]) =>
-            !name.endsWith("_label") &&
-            (value === null || ["string", "number", "boolean"].includes(typeof value))
-    );
-
-    body.replaceChildren();
-
-    if (fields.length === 0) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-        cell.colSpan = 2;
-        cell.className = "telemetry-empty";
-        cell.textContent = "No hay campos de telemetría disponibles.";
-        row.appendChild(cell);
-        body.appendChild(row);
-        return;
-    }
-
-    for (const [name, value] of fields) {
-        const row = document.createElement("tr");
-        const label = data[`${name}_label`];
-        const unit = telemetryUnits[name];
-        const formattedValue = displayTelemetryValue(value);
-        const valueText = unit
-            ? `${formattedValue} ${unit}`
-            : formattedValue;
-        const labelText = label === null || label === undefined
-            ? ""
-            : ` · ${label}`;
-
-        for (const text of [
-            name.replaceAll("_", " "),
-            `${valueText}${labelText}`
-        ]) {
-            const cell = document.createElement("td");
-            cell.textContent = text;
-            row.appendChild(cell);
-        }
-
-        body.appendChild(row);
-    }
-}
-
-
-function updateStatistics(statistics) {
-    setText("frameValid", statistics.received ?? "---");
-    setText("healthReceived", statistics.received ?? "---");
-    setText("frameInvalid", statistics.invalid ?? "---");
-    setText("lostPackets", statistics.lost ?? state.lost);
-    setText(
-        "healthLoss",
-        statistics.loss_percent === undefined
-            ? "---"
-            : `${Number(statistics.loss_percent).toFixed(2)} %`
-    );
-    if (statistics.loss_percent !== undefined) {
-        state.lossPercent = Number(statistics.loss_percent) || 0;
-        updateConnectionUI();
-    }
-    if (statistics.lost !== undefined) {
-        state.lost = Number(statistics.lost) || 0;
-    }
-}
-
-
-function updateLinkMetrics(data) {
-    const rssi = firstValue(data, ["rssi", "RSSI"]);
-    const snr = firstValue(data, ["snr", "SNR"]);
-    if (rssi !== null) {
-        setText("healthRssi", `${rssi} dBm`);
-    }
-    if (snr !== null) {
-        setText("healthSnr", `${snr} dB`);
-    }
-}
-
-
-/* =============================================================
-   LOG DE HITOS
-   ============================================================= */
-
-function addMilestone(message, type = "info") {
-
-    const container = $("milestoneLog");
-    const empty = $("logEmpty");
-
-    if (empty) {
-        empty.remove();
-    }
-
-
-    const entry = document.createElement("div");
-
-    entry.className =
-        "log-entry " +
-        type;
-
-
-    const time = document.createElement("div");
-
-    time.className = "log-time";
-    time.textContent = formatTime();
-
-
-    const text = document.createElement("div");
-
-    text.className = "log-message";
-    text.textContent = message;
-
-
-    entry.appendChild(time);
-    entry.appendChild(text);
-
-
-    container.prepend(entry);
-
-
-    while (container.children.length > 100) {
-        container.lastElementChild.remove();
-    }
-
-
-    state.milestones.unshift({
-        time: new Date(),
-        message,
-        type
-    });
-}
-
-
-/* =============================================================
-   CLOCK
-   ============================================================= */
 
 function updateClock() {
+    const elapsed = missionTime();
+    setText("clock", formatElapsed(elapsed));
+    setText("milestoneTime", `T+ ${formatElapsed(elapsed)}`);
 
-    setText(
-        "headerTime",
-        formatElapsed(Date.now() - state.sessionStartedAt)
-    );
     if (state.lastPacketAt === null) {
-        setText("healthLastPacket", "--");
+        setText("lastPacketAge", "--");
     } else {
-        setText(
-            "healthLastPacket",
-            `${((Date.now() - state.lastPacketAt) / 1000).toFixed(1)} s`
-        );
+        setText("lastPacketAge", `${((Date.now() - state.lastPacketAt) / 1000).toFixed(1)} s`);
     }
+
     const cutoff = Date.now() - 5000;
-    state.packetTimes = state.packetTimes.filter(timestamp => timestamp >= cutoff);
-    const rate = state.packetTimes.length > 1
-        ? (state.packetTimes.length - 1) /
-            ((state.packetTimes[state.packetTimes.length - 1] - state.packetTimes[0]) / 1000)
-        : null;
-    setText(
-        "healthRate",
-        rate === null ? "-- Hz" : `${rate.toFixed(1)} Hz`
-    );
+    state.packetTimes = state.packetTimes.filter(time => time >= cutoff);
+    const interval = state.packetTimes.length > 1
+        ? (state.packetTimes.at(-1) - state.packetTimes[0]) / 1000
+        : 0;
+    const rate = interval > 0 ? (state.packetTimes.length - 1) / interval : 0;
+    setText("rxRate", `${rate.toFixed(1)} Hz`);
 }
 
-
-/* =============================================================
-   INIT
-   ============================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        updateConnectionUI();
-
-        updateClock();
-
-        setInterval(
-            updateClock,
-            1000
-        );
-
-
-        loadStatus();
-
-        setInterval(
-            loadStatus,
-            5000
-        );
-
-
-        addMilestone(
-            "Ground Station iniciada",
-            "info"
-        );
-
-
-        connectWebSocket();
+function setConnection(connected) {
+    const changed = state.connected !== connected;
+    state.connected = connected;
+    for (const id of ["linkDot", "connectionDot"]) {
+        $(id).classList.toggle("online", connected);
+        $(id).classList.toggle("offline", !connected);
     }
-);
+    setText("linkStatus", connected ? "LINK CONNECTED" : "LINK DISCONNECTED");
+    setText("connectionLabel", connected ? "CONECTADO" : "DESCONECTADO");
+    setText("wsState", connected ? "CONECTADO" : "DESCONECTADO");
+    $("wsState").classList.toggle("ok", connected);
+    if (changed) addEvent(connected ? "WebSocket conectado" : "WebSocket desconectado");
+}
+
+function initMap() {
+    if (!window.L) {
+        addEvent("No se pudo cargar Leaflet; mapa GPS no disponible");
+        return;
+    }
+    state.map = L.map("gpsMap", { zoomControl: true }).setView([-34.6, -58.65], 5);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(state.map);
+    state.route = L.polyline([], { color: "#111", weight: 4 }).addTo(state.map);
+    setTimeout(() => state.map.invalidateSize(), 100);
+}
+
+function pushHistory(key, value) {
+    if (value === null || value === undefined || !Number.isFinite(Number(value))) return;
+    state[key].push(Number(value));
+    if (state[key].length > 60) state[key].shift();
+}
+
+function drawChart(id, values) {
+    const line = $(id);
+    if (!line || values.length < 2) return;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const points = values.map((value, index) => {
+        const x = index * 500 / (values.length - 1);
+        const y = 94 - ((value - min) / range) * 84;
+        return `${x},${y}`;
+    });
+    line.setAttribute("points", points.join(" "));
+}
+
+function addEvent(message) {
+    const log = $("eventLog");
+    const empty = $("logEmpty");
+    if (empty) empty.remove();
+
+    const row = document.createElement("div");
+    row.className = "log-row";
+    const time = document.createElement("span");
+    time.className = "log-time";
+    time.textContent = formatElapsed(missionTime());
+    const dot = document.createElement("span");
+    dot.className = "log-dot";
+    const text = document.createElement("span");
+    text.textContent = message;
+    row.append(time, dot, text);
+    log.prepend(row);
+    while (log.children.length > 100) log.lastElementChild.remove();
+    setText("currentMilestone", message);
+}
+
+function updateMap(data) {
+    const lat = Number(data.latitude);
+    const lon = Number(data.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) ||
+        Math.abs(lat) > 90 || Math.abs(lon) > 180 || !state.map) return;
+    const point = [lat, lon];
+    state.routePoints.push(point);
+    if (state.routePoints.length > 2000) state.routePoints.shift();
+    state.route.setLatLngs(state.routePoints);
+    if (!state.startMarker) {
+        state.startMarker = L.circleMarker(point, {
+            radius: 6, color: "#087a3b", fillColor: "#087a3b", fillOpacity: 1
+        }).addTo(state.map).bindTooltip("Inicio");
+    }
+    if (!state.marker) {
+        state.marker = L.circleMarker(point, {
+            radius: 7, color: "#000", fillColor: "#fff", fillOpacity: 1, weight: 3
+        }).addTo(state.map);
+        state.map.setView(point, 15);
+    } else {
+        state.marker.setLatLng(point);
+    }
+    setText("lat", formatNumber(lat, 6));
+    setText("lon", formatNumber(lon, 6));
+    if (state.routePoints.length > 1) state.map.panTo(point, { animate: false });
+}
+
+function updateTelemetry(message) {
+    const data = message.data || message.telemetry || {};
+    if (!data || typeof data !== "object") return;
+
+    state.lastPacketAt = Date.now();
+    state.packetTimes.push(state.lastPacketAt);
+    state.packetTimes = state.packetTimes.filter(time => time >= state.lastPacketAt - 5000);
+    setText("rx", Number(message.statistics?.received ?? Number($("rx").textContent) + 1).toLocaleString("es-AR"));
+    setText("packets", $("rx").textContent);
+
+    if (Number.isFinite(Number(data.timestamp))) {
+        state.missionTimestamp = Number(data.timestamp);
+        state.missionTimestampAt = Date.now();
+        setText("timestamp", `${formatNumber(data.timestamp, 0)} ms`);
+    }
+    if (data.frame_number !== undefined) {
+        state.sequence = Number(data.frame_number);
+        setText("seq", data.frame_number);
+    }
+    if (state.sequence !== null) {
+        const previous = state.previousSequence;
+        if (previous !== undefined) {
+            const missed = (state.sequence - previous + 65536) % 65536 - 1;
+            if (missed > 0) addEvent(`${missed} paquete(s) perdido(s)`);
+        }
+        state.previousSequence = state.sequence;
+    }
+
+    if (data.pressure !== undefined) {
+        const hpa = Number(data.pressure) / 100;
+        setText("pressure", formatNumber(hpa, 2));
+        pushHistory("pressure", hpa);
+        drawChart("pressureTrend", state.pressure);
+        if (state.lastPressure !== null) {
+            const change = hpa - state.lastPressure;
+            setText("pressureChange", `${change >= 0 ? "+" : ""}${formatNumber(change, 2)} hPa`);
+        }
+        state.lastPressure = hpa;
+        const min = Math.min(...state.pressure);
+        const max = Math.max(...state.pressure);
+        setText("pressureMin", `${formatNumber(min, 2)} hPa`);
+        setText("pressureMax", `${formatNumber(max, 2)} hPa`);
+    }
+
+    const altitude = Number(data.altitude);
+    if (Number.isFinite(altitude)) {
+        setText("altitude", formatNumber(altitude, 1));
+        setText("mapAlt", `${formatNumber(altitude, 1)} m`);
+        state.maxAltitude = state.maxAltitude === null ? altitude : Math.max(state.maxAltitude, altitude);
+        setText("altitudeMax", `${formatNumber(state.maxAltitude, 1)} m`);
+        pushHistory("altitude", altitude);
+        drawChart("altitudeTrend", state.altitude);
+        const suppliedSpeed = data.vertical_speed ?? data.climb_rate;
+        if (suppliedSpeed !== undefined) {
+            setText("verticalSpeed", `${formatNumber(suppliedSpeed, 2)} m/s`);
+        } else if (state.altitude.length > 1) {
+            const dt = Number(data.timestamp) / 1000;
+            const priorTimestamp = state.previousTimestamp;
+            if (Number.isFinite(dt) && priorTimestamp !== undefined && dt > priorTimestamp) {
+                const speed = (altitude - state.previousAltitude) / (dt - priorTimestamp);
+                setText("verticalSpeed", `${formatNumber(speed, 2)} m/s`);
+            }
+            state.previousTimestamp = dt;
+            state.previousAltitude = altitude;
+        }
+    }
+
+    const axes = [
+        ["accel_x", "ax", "accelX", "accelXChart"],
+        ["accel_y", "ay", "accelY", "accelYChart"],
+        ["accel_z", "az", "accelZ", "accelZChart"]
+    ];
+    const axisValues = [];
+    for (const [key, valueId, historyKey, chartId] of axes) {
+        if (data[key] === undefined) continue;
+        const value = Number(data[key]);
+        setText(valueId, `${value >= 0 ? "+" : ""}${formatNumber(value, 3)}`);
+        pushHistory(historyKey, value);
+        drawChart(chartId, state[historyKey]);
+        axisValues.push(value);
+    }
+    if (axisValues.length === 3) {
+        const magnitude = Math.sqrt(axisValues.reduce((sum, value) => sum + value * value, 0));
+        setText("amag", `${formatNumber(magnitude, 3)} g`);
+    }
+
+    updateMap(data);
+    const status = data.status_label ?? statusLabels[data.status];
+    if (status) {
+        setText("currentMilestone", status);
+        if (state.lastStatus !== status) addEvent(status);
+        state.lastStatus = status;
+    }
+
+    const rssi = message.rssi ?? message.radio?.rssi ?? data.rssi;
+    const snr = message.snr ?? message.radio?.snr ?? data.snr;
+    if (rssi !== undefined) setText("rssi", `${rssi} dBm`);
+    if (snr !== undefined) setText("snr", `${snr} dB`);
+
+    const detail = Object.entries(data)
+        .filter(([key]) => !key.endsWith("_label"))
+        .map(([key, value]) => `${key}: ${value}${data[`${key}_label`] ? ` (${data[`${key}_label`]})` : ""}`)
+        .join("\n");
+    setText("frameDetails", detail || "---");
+    if (message.raw_hex) setText("rawFrame", message.raw_hex);
+    setText("frameType", data.frame_type === undefined ? "---" : `0x${Number(data.frame_type).toString(16).padStart(2, "0").toUpperCase()}`);
+    setText("frameSize", `${message.frame_length ?? "---"} B`);
+    setText("crcStatus", message.crc_valid ? "● OK" : "● ERROR");
+    setText("footerCrc", message.crc_valid ? "OK" : "ERROR");
+    setText("crcValue", message.crc_value ?? "---");
+    setConnection(true);
+    updateStatistics(message.statistics || {});
+}
+
+function updateStatistics(stats) {
+    const received = Number(stats.received ?? stats.frames_received ?? 0);
+    const lost = Number(stats.lost ?? 0);
+    const invalid = Number(stats.invalid ?? 0);
+    const loss = Number(stats.loss_percent ?? 0);
+    setText("packets", received.toLocaleString("es-AR"));
+    setText("rx", received.toLocaleString("es-AR"));
+    setText("valid", received.toLocaleString("es-AR"));
+    setText("invalid", invalid.toLocaleString("es-AR"));
+    setText("lostPackets", lost.toLocaleString("es-AR"));
+    setText("footerLost", lost.toLocaleString("es-AR"));
+    setText("lossPercent", `${loss.toFixed(2)} %`);
+}
+
+function connect() {
+    if (state.socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(state.socket.readyState)) return;
+    const scheme = location.protocol === "https:" ? "wss:" : "ws:";
+    state.socket = new WebSocket(`${scheme}//${location.host}/ws/telemetry`);
+    state.socket.onopen = () => {
+        state.reconnectDelay = 1000;
+        setConnection(true);
+    };
+    state.socket.onmessage = event => {
+        let message;
+        try {
+            message = JSON.parse(event.data);
+        } catch (error) {
+            console.error("Mensaje WebSocket inválido", error);
+            return;
+        }
+        if (message.type === "connection") {
+            setConnection(Boolean(message.connected));
+        } else if (message.type === "telemetry") {
+            updateTelemetry(message);
+        } else if (message.type === "statistics") {
+            updateStatistics(message.statistics || {});
+        }
+    };
+    state.socket.onerror = error => console.error("WebSocket telemetry error", error);
+    state.socket.onclose = () => {
+        setConnection(false);
+        if (!state.reconnectTimer) {
+            state.reconnectTimer = setTimeout(() => {
+                state.reconnectTimer = null;
+                connect();
+            }, state.reconnectDelay);
+            state.reconnectDelay = Math.min(state.reconnectDelay * 2, 10000);
+        }
+    };
+}
+
+async function loadStatus() {
+    try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const status = await response.json();
+        setConnection(Boolean(status.connected));
+        updateStatistics(status.statistics || {});
+        if (status.serial_port) setText("serialConfig", `UART ${status.serial_port} @ ${status.baudrate}`);
+    } catch (error) {
+        console.warn("No se pudo leer estado de la estación", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    initMap();
+    loadStatus();
+    connect();
+    updateClock();
+    setInterval(updateClock, 250);
+    setInterval(loadStatus, 5000);
+});
 </script>
 
 </body>
