@@ -4,15 +4,15 @@
 
 El dashboard de la **Estación Terrena de Telemetría** debe presentar la información de telemetría de forma clara, compacta y orientada al monitoreo en tiempo real.
 
-La interfaz se organizará sobre una **grid de 4 columnas × 2 filas**, pero los componentes no estarán obligados a ocupar todos el mismo espacio.
+La interfaz usa una grilla de 12 columnas: paneles de 4 columnas arriba y
+paneles inferiores con anchos ajustados a su contenido.
 
 La intención es establecer una jerarquía visual:
 
 * **Métricas principales:** valores grandes y fáciles de identificar.
 * **Estado del enlace:** información crítica siempre visible.
-* **GPS / mapa:** componente visual dominante.
-* **Información técnica:** disponible sin competir con las métricas principales.
-* **Eventos:** visualización cronológica de hitos.
+* **GPS y coordenadas:** agrupados en el mismo panel.
+* **Eventos:** solo transiciones de etapa atravesadas por el cohete.
 
 ---
 
@@ -40,29 +40,18 @@ Ejemplo:
 
 ### Grid principal
 
-La zona de contenido utilizará una grid de **4 columnas × 2 filas**.
-
-No todos los tiles tendrán necesariamente el mismo ancho.
-
-| Tile              |      Ancho |   Alto |
-| ----------------- | ---------: | -----: |
-| Barómetro         |  1 columna | 1 fila |
-| Altitud           |  1 columna | 1 fila |
-| Aceleración       |  1 columna | 1 fila |
-| Salud de conexión |  1 columna | 1 fila |
-| GPS / Mapa        | 2 columnas | 1 fila |
-| Log de hitos      |  1 columna | 1 fila |
-| Datos de Frame    |  1 columna | 1 fila |
+La grilla principal tiene 12 columnas. Barómetro, altitud y aceleración ocupan
+4 columnas cada uno. En la siguiente fila mapa+coordenadas ocupa 6 columnas,
+y salud de conexión e hitos ocupan 3 columnas cada uno.
 
 La distribución resultante es:
 
 ```text
-┌──────────┬──────────┬──────────┬──────────┐
-│ BARÓMETRO│ ALTITUD  │ ACELER.  │ LINK     │
-├──────────┴──────────┼──────────┼──────────┤
-│                     │ LOG      │ FRAME    │
-│       GPS / MAP     │ HITOS    │ DATA     │
-└─────────────────────┴──────────┴──────────┘
+┌──────────┬──────────┬──────────┐
+│ BARÓMETRO│ ALTITUD  │ ACELER.  │
+├──────────┼──────────┼──────────┤
+│ MAPA + COORDENADAS │ SALUD │ HITOS │
+└────────────────────┴───────┴───────┘
 ```
 
 Esto permite que el mapa tenga mayor presencia visual sin sacrificar la densidad de información.
@@ -78,7 +67,6 @@ No se utilizará una tabla como elemento principal.
 ### Información
 
 * Presión actual
-* Temperatura
 * Variación de presión
 * Presión mínima
 * Presión máxima
@@ -91,8 +79,6 @@ BAROMETER
         1008.42
           hPa
 
-        24.3 °C
-
        ↓ 0.8 hPa
 
 MIN     1006.12
@@ -101,11 +87,7 @@ MAX     1012.83
 
 La presión actual debe tener mayor jerarquía visual que el resto de los datos.
 
-### Evolución futura
-
-Si se incorpora información histórica, podrá agregarse una **mini línea de tendencia**.
-
-El gráfico debe ser pequeño y secundario; no debe convertir el componente en un gráfico grande.
+La presión incluye una mini línea de tendencia.
 
 ---
 
@@ -170,11 +152,7 @@ ACCELERATION
 
 La magnitud total tendrá una jerarquía ligeramente superior a los valores individuales.
 
-### Evolución futura
-
-Podrá incorporarse una representación visual de los tres ejes.
-
-No es necesaria para la primera versión.
+Cada eje incluye una gráfica de tendencia.
 
 ---
 
@@ -185,11 +163,9 @@ El componente de salud del enlace debe proporcionar una visión inmediata del es
 ### Información
 
 * Estado de conexión
-* RSSI
-* SNR
-* Paquetes recibidos
-* Paquetes perdidos
-* Porcentaje de pérdida
+* Número del último paquete enviado (secuencia)
+* Cantidad de paquetes recibidos
+* Cantidad de paquetes perdidos
 * Tiempo desde el último paquete
 * Tasa de recepción
 
@@ -200,12 +176,9 @@ LINK HEALTH
 
 ● CONNECTED
 
-RSSI              -64 dBm
-SNR                 +9 dB
-
-PACKETS          18,452
+SENT (SEQ)       18,452
+RECEIVED         18,449
 LOST                  3
-LOSS              0.02 %
 
 LAST PACKET       0.1 s
 RX RATE          10.0 Hz
@@ -221,15 +194,13 @@ El indicador de estado utilizará una codificación visual:
 | Degradado    | Amarillo  |
 | Desconectado | Rojo      |
 
-El estado deberá ser identificable sin necesidad de interpretar los valores RSSI/SNR.
-
-Además, este componente deberá aprovechar los datos de **RSSI y SNR asociados a cada trama recibida**.
+El estado deberá ser identificable visualmente sin depender de otros valores.
 
 ---
 
 # 7. GPS / Mapa
 
-El mapa será el componente visual dominante del dashboard y ocupará **2 columnas**.
+El mapa y las coordenadas comparten un panel de **6/12 columnas**.
 
 ### Información
 
@@ -246,20 +217,12 @@ Debe mostrar:
 GPS / MAP
 
 ┌─────────────────────────────────────────────┐
-│                                             │
 │                     MAP                     │
+│                 ●────●                      │
 │                                             │
-│                         ●                   │
-│                       /                     │
-│                     /                       │
-│                   ●                         │
-│                                             │
+├─────────────────────────────────────────────┤
+│ LATITUD                 LONGITUD             │
 └─────────────────────────────────────────────┘
-
-LAT       -34.600123
-LON       -58.650421
-ALT       124.8 m
-SAT       11
 ```
 
 La posición GPS no debe implementarse como una imagen estática.
@@ -284,9 +247,11 @@ El mapa deberá ser interactivo cuando esta funcionalidad sea implementada.
 
 # 8. Log de hitos
 
-El componente de eventos mostrará los hitos registrados durante el vuelo o sesión de telemetría.
+El componente muestra solo los hitos que atraviesa el cohete durante el vuelo.
 
-Los eventos se representan como información temporal: **texto + timestamp**.
+Se registran únicamente las transiciones de etapa que atraviesa el cohete,
+representadas como **etapa + tiempo de misión**. No se incluyen conexión,
+pérdida de paquetes ni mensajes técnicos.
 
 ### Diseño
 
@@ -309,46 +274,19 @@ HITO 4
 
 ### Decisión de diseño
 
-No se utilizarán campos `STATE` ni `MODE` en este componente.
-
-Los hitos representan **eventos temporales**, por lo que el componente debe mantener una representación cronológica.
+El primer estado recibido solo inicializa la etapa actual; el log comienza al
+detectar una transición posterior.
 
 ---
 
-# 9. Datos de Frame
+# 9. Coordenadas GPS
 
-Este componente estará orientado a información técnica y debugging.
+Las coordenadas aparecen fuera del mapa en un panel propio:
 
-### Información
+* Latitud
+* Longitud
 
-* Número de secuencia
-* Timestamp
-* Tamaño de la trama
-* Estado del CRC
-* Cantidad de frames válidos
-* Cantidad de frames inválidos
-
-### Diseño
-
-```text
-FRAME
-
-SEQ             18452
-TIMESTAMP       182340 ms
-SIZE            53 B
-CRC             OK
-```
-
-Información adicional:
-
-```text
-VALID FRAMES    18452
-INVALID             2
-```
-
-Este componente debe tener menor jerarquía visual que las métricas de telemetría.
-
-Su objetivo principal es facilitar la validación y diagnóstico del sistema durante las pruebas.
+Los datos técnicos del frame no se muestran en el dashboard.
 
 ---
 
@@ -361,8 +299,8 @@ La interfaz debe priorizar la información en este orden:
 3. **Posición / mapa**
 4. **Aceleración**
 5. **Barómetro**
-6. **Eventos**
-7. **Información técnica de frames**
+6. **Eventos de vuelo**
+7. **Coordenadas GPS**
 
 Los valores principales deben utilizar tipografía grande y alto contraste.
 
@@ -413,16 +351,33 @@ sin tener que rediseñar completamente la estructura.
 La composición final queda definida como:
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│                         HEADER                               │
-├──────────┬──────────┬──────────┬──────────┤
-│ BARÓMETRO│ ALTITUD  │ ACELER.  │ LINK     │
-├──────────┴──────────┼──────────┼──────────┤
-│                     │          │          │
-│      GPS / MAP      │   LOG    │  FRAME   │
-│                     │  HITOS   │   DATA   │
-│                     │          │          │
-└─────────────────────┴──────────┴──────────┘
+┌──────────┬──────────┬──────────┐
+│ BARÓMETRO│ ALTITUD  │ ACELER.  │
+├──────────┼──────────┼──────────┤
+│ MAPA + COORDENADAS │ SALUD │ HITOS │
+└────────────────────┴───────┴───────┘
 ```
 
-La regla principal es **4 columnas × 2 filas con tiles de tamaño variable**, utilizando el espacio adicional para destacar aquellos componentes que aportan mayor valor operativo, especialmente **GPS / MAP** y **Altitud**.
+En pantallas amplias, mapa+coordenadas/salud/hitos tienen proporción 6/3/3.
+No hay panel de datos de frame.
+
+---
+
+# 13. Requisitos G7, G8 y G12
+
+* **G7:** altitud y aceleración XYZ se grafican en tiempo real. Batería y tasas
+  de giro quedan fuera hasta que exista una fuente definida.
+* **G8:** tiempo de misión, GPS, paquetes recibidos/perdidos y estado del vuelo
+  se muestran. Temperatura queda fuera por ahora.
+* **G12:** tema claro de alto contraste para uso bajo luz solar; textos de al
+  menos 14 pt y trazos/ejes de gráficos en negrita.
+
+Las actualizaciones visuales se limitan a 10 Hz y suavizan los valores para
+reducir saltos sin modificar los datos recibidos. Se mantiene fija la trama
+binaria actual de 30 bytes. Temperatura, batería, giroscopio, RSSI y SNR no se
+muestran ni se envían por ahora.
+
+Los gráficos conservan escala fija para comparar lecturas entre actualizaciones:
+presión **800–1100 hPa**, altitud **0–1200 m**, aceleración X/Y **−0,5 a +0,5 g**
+y Z **−1,5 a +4,5 g**. Cada gráfico etiqueta esos límites y el tiempo de misión
+correspondiente al primer y último dato visible.

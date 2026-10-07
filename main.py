@@ -848,6 +848,7 @@ class FrameBuffer:
         self.buffer = bytearray()
         self.invalid_frames = 0
         self.last_raw_frames: list[bytes] = []
+        self.resyncing = False
 
     def feed(
         self,
@@ -920,19 +921,28 @@ class FrameBuffer:
                 ]
             )
 
-            del self.buffer[
-                :frame_size
-            ]
-
             parsed = self.parser.parse(
                 raw_frame
             )
 
             if parsed is not None:
+                del self.buffer[:frame_size]
                 frames.append(parsed)
                 self.last_raw_frames.append(raw_frame)
+                self.resyncing = False
             else:
-                self.invalid_frames += 1
+                if not self.resyncing:
+                    self.invalid_frames += 1
+
+                if not sync and self.parser.config.crc_type:
+                    # Sin SYNC, una lectura UART que comienza a mitad de
+                    # paquete desplaza todos los frames. Deslizamos un byte
+                    # hasta recuperar un frame validado por CRC.
+                    del self.buffer[0]
+                    self.resyncing = True
+                else:
+                    del self.buffer[:frame_size]
+                    self.resyncing = False
 
         return frames
 
