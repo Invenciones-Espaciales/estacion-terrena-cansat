@@ -54,18 +54,21 @@ body {
 .app {
 
     width: 100%;
+    height: 100vh;
     min-height: 100vh;
 
-    padding: 10px 14px;
+    padding: 8px 12px;
 
     display: grid;
 
     grid-template-rows:
-        64px
         auto
-        24px;
+        1fr
+        auto;
 
-    gap: 8px;
+    gap: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 
@@ -80,7 +83,7 @@ header {
     align-items: center;
     justify-content: space-between;
 
-    padding: 0 6px;
+    padding: 0 6px 4px;
 
     border-bottom: 3px solid #000000;
 }
@@ -171,7 +174,10 @@ header {
 .dashboard {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 8px;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    height: 100%;
+    min-height: 0;
 }
 
 
@@ -183,7 +189,11 @@ header {
 
     grid-column: span 4;
     min-width: 0;
-    min-height: 320px;
+    min-height: 0;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
 
     overflow: hidden;
 
@@ -195,7 +205,7 @@ header {
 
     box-shadow: none;
 
-    padding: 13px;
+    padding: 10px 12px;
 }
 
 .card-title {
@@ -305,9 +315,10 @@ header {
 
 .trend {
 
-    height: 100px;
+    flex: 1;
+    min-height: 120px;
 
-    margin-top: 11px;
+    margin-top: 8px;
 
     border-top: 1px solid #000000;
 
@@ -371,25 +382,45 @@ header {
     stroke-dasharray: 5 5;
 }
 
+.axis-text {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    fill: #000;
+    user-select: none;
+}
+
+.axis-text-muted {
+    fill: #444;
+}
+
+.axis-tick {
+    stroke: #000;
+    stroke-width: 2;
+}
+
 
 /* =========================================================
    ACCELERATION
    ========================================================= */
 
 .accel-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 5px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: 4px;
 }
 
 .axis {
     display: grid;
     grid-template-columns: 30px 88px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    min-height: 112px;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
     border-bottom: 2px solid #000;
-    padding: 5px 0;
+    padding: 2px 0;
 }
 
 .axis strong,
@@ -399,11 +430,16 @@ header {
 
 .axis-plot {
     min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .axis-chart {
     width: 100%;
-    height: 54px;
+    height: 100%;
+    max-height: 110px;
+    min-height: 48px;
     display: block;
 }
 
@@ -428,6 +464,11 @@ header {
 
 .axis-chart {
     min-width: 0;
+}
+
+.axis-chart .axis-text {
+    font-size: 10px;
+    font-weight: 800;
 }
 
 .axis-plot .chart-labels {
@@ -494,9 +535,9 @@ header {
 
 .map {
 
-    height: 250px;
-
-    min-height: 0;
+    flex: 1;
+    min-height: 120px;
+    height: 100%;
 
     border: 2px solid #000000;
 
@@ -543,7 +584,7 @@ header {
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    padding: 12px 0;
+    padding: 6px 0;
     border-bottom: 2px solid #000;
     font-size: 19px;
     font-weight: 800;
@@ -555,7 +596,7 @@ header {
    ========================================================= */
 
 .milestones {
-    height: 250px;
+    flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -602,15 +643,15 @@ header {
     display: grid;
 
     grid-template-columns:
-        58px
-        12px
+        auto
+        10px
         1fr;
 
-    gap: 7px;
+    gap: 12px;
 
     align-items: center;
 
-    padding: 8px 0;
+    padding: 6px 0;
 
     border-bottom: 1px solid #000000;
 
@@ -624,6 +665,7 @@ header {
     color: #222222;
 
     font-variant-numeric: tabular-nums;
+    margin-right: 4px;
 }
 
 .log-dot {
@@ -695,17 +737,20 @@ footer {
     }
 
     .app {
-        min-height: 100vh;
         height: auto;
+        min-height: 100vh;
+        overflow: auto;
     }
 
     .dashboard {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto auto auto;
+        height: auto;
     }
 
     .card {
         grid-column: span 1;
-        min-height: 300px;
+        min-height: 320px;
     }
 
     .map-card {
@@ -864,31 +909,33 @@ footer {
             <div class="trend">
 
                 <svg
-                    viewBox="0 0 500 100"
+                    viewBox="0 0 500 200"
                     preserveAspectRatio="none"
                 >
 
-                    <line class="plot-grid" x1="0" y1="50" x2="500" y2="50"></line>
+                    <!-- Ejes y grilla -->
+                    <line class="plot-grid" x1="0" y1="100" x2="500" y2="100"></line>
+                    <line class="plot-axis" x1="0" y1="196" x2="500" y2="196"></line>
+
+                    <!-- Curva de datos -->
                     <polyline id="pressureTrend" points=""
                         fill="none"
                         stroke="#000"
                         stroke-width="3"
                     />
-                    <line class="plot-axis" x1="0" y1="98" x2="500" y2="98"></line>
+
+                    <!-- Eje Y: etiquetas y unidad en la punta superior -->
+                    <text class="axis-text" id="pressureScaleTop" x="8" y="20" text-anchor="start">1100 hPa</text>
+                    <text class="axis-text" id="pressureScaleMid" x="8" y="105" text-anchor="start">950</text>
+                    <text class="axis-text" id="pressureScaleBottom" x="8" y="190" text-anchor="start">800</text>
+
+                    <!-- Eje X: marcas de tiempo relativo -->
+                    <text class="axis-text axis-text-muted" x="60" y="190" text-anchor="start">−60 s</text>
+                    <text class="axis-text axis-text-muted" x="250" y="190" text-anchor="middle">−30 s</text>
+                    <text class="axis-text axis-text-muted" x="492" y="190" text-anchor="end">0 s</text>
 
                 </svg>
 
-            </div>
-
-            <div class="chart-labels">
-                <span id="pressureScaleTop">1100 hPa</span>
-                <span id="pressureScaleMid">950 hPa</span>
-                <span id="pressureScaleBottom">800 hPa</span>
-                <div class="chart-time-row chart-time">
-                    <span>−60 s</span>
-                    <span>−30 s</span>
-                    <span>ahora</span>
-                </div>
             </div>
 
 
@@ -976,31 +1023,33 @@ footer {
             <div class="trend">
 
                 <svg
-                    viewBox="0 0 500 100"
+                    viewBox="0 0 500 200"
                     preserveAspectRatio="none"
                 >
 
-                    <line class="plot-grid" x1="0" y1="50" x2="500" y2="50"></line>
+                    <!-- Ejes y grilla -->
+                    <line class="plot-grid" x1="0" y1="100" x2="500" y2="100"></line>
+                    <line class="plot-axis" x1="0" y1="196" x2="500" y2="196"></line>
+
+                    <!-- Curva de datos -->
                     <polyline id="altitudeTrend" points=""
                         fill="none"
                         stroke="#000"
                         stroke-width="3"
                     />
-                    <line class="plot-axis" x1="0" y1="98" x2="500" y2="98"></line>
+
+                    <!-- Eje Y: etiquetas y unidad en la punta superior -->
+                    <text class="axis-text" id="altitudeScaleTop" x="8" y="20" text-anchor="start">1200 m</text>
+                    <text class="axis-text" id="altitudeScaleMid" x="8" y="105" text-anchor="start">600</text>
+                    <text class="axis-text" id="altitudeScaleBottom" x="8" y="190" text-anchor="start">0</text>
+
+                    <!-- Eje X: marcas de tiempo relativo -->
+                    <text class="axis-text axis-text-muted" x="50" y="190" text-anchor="start">−60 s</text>
+                    <text class="axis-text axis-text-muted" x="250" y="190" text-anchor="middle">−30 s</text>
+                    <text class="axis-text axis-text-muted" x="492" y="190" text-anchor="end">0 s</text>
 
                 </svg>
 
-            </div>
-
-            <div class="chart-labels">
-                <span id="altitudeScaleTop">1200 m</span>
-                <span id="altitudeScaleMid">600 m</span>
-                <span id="altitudeScaleBottom">0 m</span>
-                <div class="chart-time-row chart-time">
-                    <span>−60 s</span>
-                    <span>−30 s</span>
-                    <span>ahora</span>
-                </div>
             </div>
 
         </section>
@@ -1030,16 +1079,22 @@ footer {
                     <strong>X</strong>
                     <span><b id="ax">---</b> g</span>
                     <div class="axis-plot">
-                    <svg class="axis-chart" viewBox="0 0 200 54" preserveAspectRatio="none">
-                        <line class="plot-grid" x1="0" y1="14" x2="200" y2="14"></line>
-                        <line class="plot-axis" x1="0" y1="27" x2="200" y2="27"></line>
-                        <line class="plot-grid" x1="0" y1="40" x2="200" y2="40"></line>
+                    <svg class="axis-chart" viewBox="0 0 200 80" preserveAspectRatio="none">
+                        <!-- Grilla y ejes -->
+                        <line class="plot-grid" x1="0" y1="20" x2="200" y2="20"></line>
+                        <line class="plot-axis" x1="0" y1="40" x2="200" y2="40"></line>
+                        <line class="plot-grid" x1="0" y1="60" x2="200" y2="60"></line>
+                        <!-- Curva de datos -->
                         <polyline id="accelXChart" points=""></polyline>
+                        <!-- Eje Y: etiquetas con unidad arriba y valores relativos -->
+                        <text class="axis-text" id="accelXScaleTop" x="4" y="11" text-anchor="start">+0.5 g</text>
+                        <text class="axis-text" id="accelXScaleMid" x="4" y="43" text-anchor="start">0</text>
+                        <text class="axis-text" id="accelXScaleBottom" x="4" y="75" text-anchor="start">−0.5</text>
+                        <!-- Eje X: marcas de tiempo relativo -->
+                        <text class="axis-text axis-text-muted" x="38" y="75" text-anchor="start">−60 s</text>
+                        <text class="axis-text axis-text-muted" x="110" y="75" text-anchor="middle">−30 s</text>
+                        <text class="axis-text axis-text-muted" x="196" y="75" text-anchor="end">0 s</text>
                     </svg>
-                    <div class="chart-labels">
-                        <span id="accelXScaleTop">+0.5 g</span><span id="accelXScaleMid">0 g</span><span id="accelXScaleBottom">−0.5 g</span>
-                        <div class="chart-time-row chart-time"><span>−60 s</span><span>−30 s</span><span>ahora</span></div>
-                    </div>
                     </div>
                 </div>
 
@@ -1048,16 +1103,22 @@ footer {
                     <strong>Y</strong>
                     <span><b id="ay">---</b> g</span>
                     <div class="axis-plot">
-                    <svg class="axis-chart" viewBox="0 0 200 54" preserveAspectRatio="none">
-                        <line class="plot-grid" x1="0" y1="14" x2="200" y2="14"></line>
-                        <line class="plot-axis" x1="0" y1="27" x2="200" y2="27"></line>
-                        <line class="plot-grid" x1="0" y1="40" x2="200" y2="40"></line>
+                    <svg class="axis-chart" viewBox="0 0 200 80" preserveAspectRatio="none">
+                        <!-- Grilla y ejes -->
+                        <line class="plot-grid" x1="0" y1="20" x2="200" y2="20"></line>
+                        <line class="plot-axis" x1="0" y1="40" x2="200" y2="40"></line>
+                        <line class="plot-grid" x1="0" y1="60" x2="200" y2="60"></line>
+                        <!-- Curva de datos -->
                         <polyline id="accelYChart" points=""></polyline>
+                        <!-- Eje Y: etiquetas con unidad arriba y valores relativos -->
+                        <text class="axis-text" id="accelYScaleTop" x="4" y="11" text-anchor="start">+0.5 g</text>
+                        <text class="axis-text" id="accelYScaleMid" x="4" y="43" text-anchor="start">0</text>
+                        <text class="axis-text" id="accelYScaleBottom" x="4" y="75" text-anchor="start">−0.5</text>
+                        <!-- Eje X: marcas de tiempo relativo -->
+                        <text class="axis-text axis-text-muted" x="38" y="75" text-anchor="start">−60 s</text>
+                        <text class="axis-text axis-text-muted" x="110" y="75" text-anchor="middle">−30 s</text>
+                        <text class="axis-text axis-text-muted" x="196" y="75" text-anchor="end">0 s</text>
                     </svg>
-                    <div class="chart-labels">
-                        <span id="accelYScaleTop">+0.5 g</span><span id="accelYScaleMid">0 g</span><span id="accelYScaleBottom">−0.5 g</span>
-                        <div class="chart-time-row chart-time"><span>−60 s</span><span>−30 s</span><span>ahora</span></div>
-                    </div>
                     </div>
                 </div>
 
@@ -1066,16 +1127,22 @@ footer {
                     <strong>Z</strong>
                     <span><b id="az">---</b> g</span>
                     <div class="axis-plot">
-                    <svg class="axis-chart" viewBox="0 0 200 54" preserveAspectRatio="none">
-                        <line class="plot-grid" x1="0" y1="14" x2="200" y2="14"></line>
-                        <line class="plot-axis" x1="0" y1="37.5" x2="200" y2="37.5"></line>
-                        <line class="plot-grid" x1="0" y1="40" x2="200" y2="40"></line>
+                    <svg class="axis-chart" viewBox="0 0 200 80" preserveAspectRatio="none">
+                        <!-- Grilla y ejes -->
+                        <line class="plot-grid" x1="0" y1="20" x2="200" y2="20"></line>
+                        <line class="plot-axis" x1="0" y1="56" x2="200" y2="56"></line>
+                        <line class="plot-grid" x1="0" y1="60" x2="200" y2="60"></line>
+                        <!-- Curva de datos -->
                         <polyline id="accelZChart" points=""></polyline>
+                        <!-- Eje Y: etiquetas con unidad arriba y valores relativos -->
+                        <text class="axis-text" id="accelZScaleTop" x="4" y="11" text-anchor="start">+4.5 g</text>
+                        <text class="axis-text" id="accelZScaleMid" x="4" y="46" text-anchor="start">+1.5</text>
+                        <text class="axis-text" id="accelZScaleBottom" x="4" y="75" text-anchor="start">−1.5</text>
+                        <!-- Eje X: marcas de tiempo relativo -->
+                        <text class="axis-text axis-text-muted" x="38" y="75" text-anchor="start">−60 s</text>
+                        <text class="axis-text axis-text-muted" x="110" y="75" text-anchor="middle">−30 s</text>
+                        <text class="axis-text axis-text-muted" x="196" y="75" text-anchor="end">0 s</text>
                     </svg>
-                    <div class="chart-labels">
-                        <span id="accelZScaleTop">+4.5 g</span><span id="accelZScaleMid">+1.5 g</span><span id="accelZScaleBottom">−1.5 g</span>
-                        <div class="chart-time-row chart-time"><span>−60 s</span><span>−30 s</span><span>ahora</span></div>
-                    </div>
                     </div>
                 </div>
 
@@ -1247,17 +1314,12 @@ footer {
                         ACTUAL
                     </div>
 
-                    <strong id="currentMilestone">—</strong>
-
-                    <span
-                        style="
-                        float:right;
-                        color:#222;
-                        font-size:19px;
-                        "
-                    >
-                        <span id="milestoneTime">T+ --:--:--</span>
-                    </span>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
+                        <strong id="currentMilestone">—</strong>
+                        <span style="color:#222; font-size:19px; font-variant-numeric:tabular-nums; flex-shrink:0;">
+                            <span id="milestoneTime">T+ --:--:--</span>
+                        </span>
+                    </div>
 
                 </div>
 
@@ -1419,6 +1481,9 @@ function initMap() {
     }).addTo(state.map);
     state.route = L.polyline([], { color: "#111", weight: 4 }).addTo(state.map);
     setTimeout(() => state.map.invalidateSize(), 100);
+    window.addEventListener("resize", () => {
+        if (state.map) state.map.invalidateSize();
+    });
 }
 
 function pushHistory(key, value, timestamp) {
@@ -1453,13 +1518,14 @@ function drawChart(id, values, scale, unit, decimals) {
     line.setAttribute("points", points.join(" "));
 
     const labelPrefix = id.replace(/Trend$|Chart$/, "");
-    const formatScale = value => {
+    const formatScale = (value, withUnit = false) => {
         const sign = id.startsWith("accel") && value > 0 ? "+" : "";
-        return `${sign}${formatNumber(value, decimals)} ${unit}`;
+        const formatted = `${sign}${formatNumber(value, decimals)}`;
+        return withUnit ? `${formatted} ${unit}` : formatted;
     };
-    setText(`${labelPrefix}ScaleTop`, formatScale(max));
-    setText(`${labelPrefix}ScaleMid`, formatScale((min + max) / 2));
-    setText(`${labelPrefix}ScaleBottom`, formatScale(min));
+    setText(`${labelPrefix}ScaleTop`, formatScale(max, true));
+    setText(`${labelPrefix}ScaleMid`, formatScale((min + max) / 2, false));
+    setText(`${labelPrefix}ScaleBottom`, formatScale(min, false));
 }
 
 function addEvent(message) {
@@ -1670,6 +1736,11 @@ async function loadStatus() {
 
 document.addEventListener("DOMContentLoaded", () => {
     initMap();
+    drawChart("pressureTrend", [], [800, 1100], "hPa", 0);
+    drawChart("altitudeTrend", [], [0, 1200], "m", 0);
+    drawChart("accelXChart", [], [-0.5, 0.5], "g", 1);
+    drawChart("accelYChart", [], [-0.5, 0.5], "g", 1);
+    drawChart("accelZChart", [], [-1.5, 4.5], "g", 1);
     loadStatus();
     connect();
     updateClock();
