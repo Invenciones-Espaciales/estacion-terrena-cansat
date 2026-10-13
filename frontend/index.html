@@ -176,8 +176,17 @@ table.t th { text-align: left; font-size: 10px; letter-spacing: .06em; color: va
 table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space: nowrap; }
 
 .empty { color: var(--muted); font-style: italic; padding: 4px; }
-.ev-time { font-weight: 900; width: 74px; display: inline-block; }
-.ev-row { padding: 2px 0; border-bottom: 1px solid var(--soft); }
+.ev-time { font-weight: 900; width: 95px; flex-shrink: 0; display: inline-block; }
+.ev-row { padding: 3px 0; border-bottom: 1px solid var(--soft); display: flex; align-items: baseline; gap: 8px; }
+
+.al-row { padding: 3px 4px; border-bottom: 1px solid var(--soft); display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.al-badge { font-weight: 900; font-size: 10px; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.al-badge.crit { background: var(--bad); color: #fff; }
+.al-badge.warn { background: var(--warn); color: #000; }
+.al-badge.info { background: #1a4fd6; color: #fff; }
+.al-badge.ok { background: var(--ok); color: #fff; }
+.al-desc { font-weight: 700; flex: 1; margin: 0 8px; }
+.al-val { font-weight: 900; font-family: monospace; font-size: 13px; }
 </style>
 </head>
 
@@ -193,12 +202,11 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
         </div>
 
         <div class="hgroup">
+            <div class="hcell"><span class="k">HORA LOCAL</span><span class="v clock num" id="localTime">00:00:00</span></div>
             <div class="hcell"><span class="k">MET</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
             <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
             <div class="hcell"><span class="k">RSSI</span><span class="v num nd" id="rssi">N/D</span></div>
-            <div class="hcell"><span class="k">SNR</span><span class="v num nd" id="snr">N/D</span></div>
             <div class="hcell"><span class="k">PÉRDIDA PAQ.</span><span class="v num" id="lossPercent">0,0 %</span></div>
-            <div class="hcell"><span class="k">VOLTAJE</span><span class="v num nd" id="voltage">N/D</span></div>
             <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
         </div>
     </header>
@@ -223,12 +231,6 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
             </div>
 
             <div class="card basecard">
-                <div class="card-title">BARÓMETRO <span class="hint">hPa</span></div>
-                <div><span class="big num" id="pressure">---</span><span class="unit">hPa</span></div>
-                <div class="row"><span class="k">MÁX</span><span class="v num" id="pressureMax">---</span></div>
-            </div>
-
-            <div class="card basecard">
                 <div class="card-title">ACELERACIÓN <span class="hint">g</span></div>
                 <div class="axis-row"><span class="a">X</span><span class="n num" id="ax">---</span></div>
                 <div class="axis-row"><span class="a">Y</span><span class="n num" id="ay">---</span></div>
@@ -243,14 +245,6 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
             <div class="card chart-card">
                 <div class="card-title">ALTITUD vs TIEMPO <span class="hint">m · últimos 60 s</span></div>
                 <div class="chart-box"><canvas id="chAlt"></canvas></div>
-            </div>
-
-            <div class="card chart-card">
-                <div class="card-title">
-                    BARÓMETRO vs TIEMPO
-                    <span class="hint"><span class="num" id="pressureNow">---</span> · hPa</span>
-                </div>
-                <div class="chart-box"><canvas id="chPres"></canvas></div>
             </div>
 
             <div class="card chart-card">
@@ -281,17 +275,17 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
         </section>
     </main>
 
-    <!-- ==================== REGISTROS (25%) ==================== -->
+    <!-- ==================== REGISTROS Y ALERTAS (25%) ==================== -->
     <footer class="bottom">
 
         <div class="card">
-            <div class="card-title">REGISTRO DE EVENTOS <span class="hint">fases de vuelo</span></div>
-            <div class="scroll" id="eventLog"><div class="empty">Sin eventos</div></div>
+            <div class="card-title">REGISTRO DE EVENTOS <span class="hint" id="eventStats">hitos de vuelo</span></div>
+            <div class="scroll" id="eventLog"><div class="empty">Sin eventos registrados</div></div>
         </div>
 
         <div class="card">
-            <div class="card-title">REGISTRO DE TRAMAS <span class="hint" id="frameStats">---</span></div>
-            <div class="scroll" id="frameBox"></div>
+            <div class="card-title">ALERTAS Y SALUD DEL ENLACE <span class="hint" id="linkSummary">RX: 0 Hz</span></div>
+            <div class="scroll" id="alertBox"></div>
         </div>
 
     </footer>
@@ -339,20 +333,25 @@ const state = {
     connected: false,
     stats: { received: 0, lost: 0, invalid: 0, loss_percent: 0 },
 
-    hist: { alt: [], pres: [], ax: [], ay: [], az: [] },
+    // Ventana deslizante de 5 segundos para pérdida de paquetes
+    lastSeq: null,
+    seqWindow: [],      // { t, received, lost }
+    lossRecentPercent: 0,
+
+    hist: { alt: [], ax: [], ay: [], az: [] },
     markers: [],
 
     altitude: null, maxAltitude: null,
-    pressure: null,
-    maxPressure: null,
+
     ax: null, ay: null, az: null,
     statusText: null,
-    rssi: null, snr: null, voltage: null,
+    rssi: null,
     lat: null, lon: null,
 
     events: [],
     eventsVersion: 0,
     frames: [],
+    framesVersion: 0,
 
     socket: null,
     reconnectTimer: null,
@@ -408,7 +407,13 @@ function pushHist(key, t, v) {
     const list = state.hist[key];
     list.push({ t, v });
     const cutoff = t - CFG.windowMs;
-    while (list.length && list[0].t < cutoff) list.shift();
+    let removeCount = 0;
+    while (removeCount < list.length && list[removeCount].t < cutoff) {
+        removeCount++;
+    }
+    if (removeCount > 0) {
+        list.splice(0, removeCount);
+    }
 }
 
 /* ---------- modelo: ingesta de telemetría ---------- */
@@ -438,6 +443,23 @@ function ingest(message) {
     state.lastPacketAt = now;
     state.packetTimes.push(now);
 
+    // Detección de saltos de secuencia para ventana de 5s
+    const seq = Number(d.frame_number);
+    let lostInStep = 0;
+    if (Number.isFinite(seq)) {
+        if (state.lastSeq !== null) {
+            const expected = (state.lastSeq + 1) & 0xFFFF;
+            if (seq !== expected) {
+                const diff = (seq - expected) & 0xFFFF;
+                if (diff < 1000) {  // Salto hacia adelante creíble
+                    lostInStep = diff;
+                }
+            }
+        }
+        state.lastSeq = seq;
+    }
+    state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
+
     const hasTs = Number.isFinite(Number(d.timestamp));
     const ts = hasTs ? Number(d.timestamp) : missionTime();
     if (hasTs) { state.missionTimestamp = ts; state.missionTimestampAt = now; }
@@ -446,11 +468,8 @@ function ingest(message) {
 
     if (message.statistics) state.stats = { ...state.stats, ...message.statistics };
 
-    // RF / energía (solo si el backend los envía)
+    // RF (solo si el backend lo envía)
     if (Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
-    if (Number.isFinite(Number(d.snr))) state.snr = Number(d.snr);
-    const volt = d.voltage ?? d.battery_voltage ?? d.vbat;
-    if (Number.isFinite(Number(volt))) state.voltage = Number(volt);
 
     // altitud (tal como llega)
     const alt = Number(d.altitude);
@@ -458,14 +477,6 @@ function ingest(message) {
         state.altitude = alt;
         state.maxAltitude = state.maxAltitude === null ? alt : Math.max(state.maxAltitude, alt);
         pushHist("alt", ts, alt);
-    }
-
-    // presión (Pa -> hPa)
-    const pressure = Number(d.pressure);
-    if (Number.isFinite(pressure)) {
-        state.pressure = pressure / 100;
-        state.maxPressure = state.maxPressure === null ? state.pressure : Math.max(state.maxPressure, state.pressure);
-        pushHist("pres", ts, state.pressure);
     }
 
     // aceleración
@@ -492,12 +503,8 @@ function ingest(message) {
         state.statusText = text;
     }
 
-    // registro de tramas
-    state.frames.unshift({
-        seq: d.frame_number, t: ts, alt: state.altitude, pres: state.pressure,
-        phase: code !== null ? (STATUS_SHORT[code] ?? text) : (text ?? "")
-    });
-    if (state.frames.length > 60) state.frames.pop();
+    // Registro en eventos solo ante cambio de fase
+    // (procesado arriba)
 
     state.connected = true;
     $("linkDot").classList.add("online");
@@ -512,15 +519,32 @@ function chartEnd() {
     return state.lastChartTimestamp + Math.min(250, Date.now() - state.lastArrivalAt);
 }
 
-function niceRange(min, max, minSpan) {
-    if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, minSpan];
-    const span = Math.max(max - min, minSpan);
-    const mid = (max + min) / 2;
-    const pad = span * 0.1;
-    return [mid - span / 2 - pad, mid + span / 2 + pad];
+function niceRange(min, max, minSpan, fixedMin, fixedMax) {
+    let effMin = Number.isFinite(min) ? min : 0;
+    let effMax = Number.isFinite(max) ? max : 0;
+
+    // El 0 SIEMPRE debe estar contenido en el rango
+    effMin = Math.min(effMin, 0);
+    effMax = Math.max(effMax, 0);
+
+    // Si hay límites fijos mínimos/máximos garantizados
+    if (fixedMin !== undefined && fixedMin !== null) {
+        effMin = Math.min(effMin, fixedMin);
+    }
+    if (fixedMax !== undefined && fixedMax !== null) {
+        effMax = Math.max(effMax, fixedMax);
+    }
+
+    const span = Math.max(effMax - effMin, minSpan);
+    if (fixedMin !== undefined && fixedMin !== null && fixedMax !== undefined && fixedMax !== null) {
+        // Para aceleración con rango nominal fijo pero expandible si supera
+        return [effMin, Math.max(effMin + span, effMax)];
+    }
+    const pad = span * 0.08;
+    return [Math.min(effMin - pad, 0), effMax + pad];
 }
 
-function drawChart(canvasId, series, decimals, minSpan, signedLabels) {
+function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, fixedMax) {
     const { ctx, w, h } = fitCanvas($(canvasId));
     ctx.clearRect(0, 0, w, h);
 
@@ -532,13 +556,20 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels) {
     const start = end - CFG.windowMs;
 
     let min = Infinity, max = -Infinity;
-    for (const s of series) for (const p of s.data) {
-        if (p.v < min) min = p.v;
-        if (p.v > max) max = p.v;
+    for (const s of series) {
+        for (let i = 0; i < s.data.length; i++) {
+            const p = s.data[i];
+            if (p.t >= start - 1000) {
+                if (p.v < min) min = p.v;
+                if (p.v > max) max = p.v;
+            }
+        }
     }
-    const [lo, hi] = niceRange(min, max, minSpan);
-    const X = t => left + ((t - start) / CFG.windowMs) * pw;
-    const Y = v => top + ph - ((v - lo) / (hi - lo)) * ph;
+    const [lo, hi] = niceRange(min, max, minSpan, fixedMin, fixedMax);
+    const invTime = pw / CFG.windowMs;
+    const invRange = (hi > lo) ? ph / (hi - lo) : 0;
+    const X = t => left + (t - start) * invTime;
+    const Y = v => top + ph - (v - lo) * invRange;
 
     ctx.font = "bold 11px Arial";
     ctx.fillStyle = "#333";
@@ -548,8 +579,20 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels) {
     ctx.textAlign = "right"; ctx.textBaseline = "middle";
     for (let i = 0; i <= 4; i++) {
         const v = lo + ((hi - lo) * i) / 4, y = Y(v);
+        ctx.strokeStyle = "#ddd";
+        ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + pw, y); ctx.stroke();
         ctx.fillText((signedLabels && v > 0 ? "+" : "") + fmt(v, decimals), left - 5, y);
+    }
+
+    // Línea de referencia del 0 bien visible si está dentro del marco
+    if (lo <= 0 && hi >= 0) {
+        const y0 = Y(0);
+        ctx.strokeStyle = "#888";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath(); ctx.moveTo(left, y0); ctx.lineTo(left + pw, y0); ctx.stroke();
+        ctx.setLineDash([]);
     }
     ctx.textBaseline = "top";
     for (let s = 0; s <= 60; s += 15) {
@@ -674,11 +717,6 @@ function renderText() {            // ~10 Hz
         setText("altitude", fmt(state.altitude, 0));
         setText("altitudeMax", `${fmt(state.maxAltitude, 0)} m`);
     }
-    if (state.pressure !== null) {
-        setText("pressure", fmt(state.pressure, 2));
-        setText("pressureMax", `${fmt(state.maxPressure, 2)} hPa`);
-        setText("pressureNow", fmt(state.pressure, 1));
-    }
     if (state.ax !== null) {
         setText("ax", `${sgn(state.ax, 4)} g`);
         setText("ay", `${sgn(state.ay, 4)} g`);
@@ -694,12 +732,20 @@ function setOptional(id, value, fmtFn) {
 }
 
 function renderHeader() {          // ~2 Hz
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    setText("localTime", `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
     setText("clock", elapsed(missionTime()));
     if (state.statusText) setText("phase", state.statusText);
     setOptional("rssi", state.rssi, v => `${fmt(v, 0)} dBm`);
-    setOptional("snr", state.snr, v => `${fmt(v, 1)} dB`);
-    setOptional("voltage", state.voltage, v => `${fmt(v, 2)} V`);
-    setText("lossPercent", `${fmt(Number(state.stats.loss_percent ?? 0), 1)} %`);
+    setText("lossPercent", `${fmt(state.lossRecentPercent, 1)} %`);
+    if (state.lossRecentPercent > 15) {
+        $("lossPercent").style.color = "var(--bad)";
+    } else if (state.lossRecentPercent > 5) {
+        $("lossPercent").style.color = "var(--warn)";
+    } else {
+        $("lossPercent").style.color = "var(--ink)";
+    }
 
     const stale = state.connected && state.lastPacketAt !== null && Date.now() - state.lastPacketAt > 2000;
     $("linkDot").classList.toggle("warn", stale);
@@ -708,38 +754,89 @@ function renderHeader() {          // ~2 Hz
 
 let eventsRendered = -1;
 function renderLogs() {            // ~4 Hz
+    // 1. Registro de eventos
     if (eventsRendered !== state.eventsVersion) {
         eventsRendered = state.eventsVersion;
         $("eventLog").innerHTML = state.events.length
             ? state.events.map(e => `<div class="ev-row"><span class="ev-time num">T+ ${elapsed(e.t)}</span>${escapeHtml(e.message)}</div>`).join("")
-            : '<div class="empty">Sin eventos</div>';
+            : '<div class="empty">Sin eventos registrados</div>';
     }
 
-    const s = state.stats;
-    const cutoff = Date.now() - 5000;
-    state.packetTimes = state.packetTimes.filter(t => t >= cutoff);
+    // 2. Mantenimiento de ventana de 5s para paquetes
+    const now = Date.now();
+    const cutoff = now - 5000;
+    let cutSeq = 0;
+    while (cutSeq < state.seqWindow.length && state.seqWindow[cutSeq].t < cutoff) cutSeq++;
+    if (cutSeq > 0) state.seqWindow.splice(0, cutSeq);
+
+    let rec5s = 0, lost5s = 0;
+    for (let i = 0; i < state.seqWindow.length; i++) {
+        rec5s += state.seqWindow[i].rec;
+        lost5s += state.seqWindow[i].lost;
+    }
+    const tot5s = rec5s + lost5s;
+    state.lossRecentPercent = tot5s > 0 ? (lost5s / tot5s) * 100 : 0;
+
+    // Tasa RX
+    let cutIdx = 0;
+    while (cutIdx < state.packetTimes.length && state.packetTimes[cutIdx] < cutoff) cutIdx++;
+    if (cutIdx > 0) state.packetTimes.splice(0, cutIdx);
     const span = state.packetTimes.length > 1 ? (state.packetTimes.at(-1) - state.packetTimes[0]) / 1000 : 0;
     const rate = span > 0 ? (state.packetTimes.length - 1) / span : 0;
-    const age = state.lastPacketAt === null ? "--" : `${((Date.now() - state.lastPacketAt) / 1000).toFixed(1)} s`;
-    setText("frameStats",
-        `RX ${Number(s.received ?? 0).toLocaleString("es-AR")} · PERD ${Number(s.lost ?? 0).toLocaleString("es-AR")} · CRC ${Number(s.invalid ?? 0)} · ${rate.toFixed(1)} Hz · últ ${age}`);
+    const age = state.lastPacketAt === null ? "--" : `${((now - state.lastPacketAt) / 1000).toFixed(1)} s`;
 
-    $("frameBox").innerHTML = state.frames.length
-        ? `<table class="t"><thead><tr><th>SEQ</th><th>T+</th><th>ALT m</th><th>P hPa</th><th>FASE</th></tr></thead><tbody>` +
-          state.frames.slice(0, 30).map(f =>
-              `<tr><td class="num">${f.seq ?? "-"}</td><td class="num">${elapsed(f.t)}</td><td class="num">${fmt(f.alt, 0)}</td><td class="num">${fmt(f.pres, 1)}</td><td>${escapeHtml(f.phase)}</td></tr>`
-          ).join("") + "</tbody></table>"
-        : '<div class="empty">Sin tramas</div>';
+    setText("linkSummary", `RX: ${rate.toFixed(1)} Hz · Últ: ${age}`);
+    setText("eventStats", `Total Eventos: ${state.events.length}`);
+
+    // 3. Panel de Alertas activas y estado de enlace
+    const alerts = [];
+    const isDisconnected = !state.connected || (state.lastPacketAt !== null && now - state.lastPacketAt > 3000);
+    const isDegraded = state.connected && state.lastPacketAt !== null && now - state.lastPacketAt > 1500;
+
+    if (isDisconnected) {
+        alerts.push({ badge: "crit", text: "ENLACE PERDIDO", val: `Sin señal (${age})` });
+    } else if (isDegraded) {
+        alerts.push({ badge: "warn", text: "ENLACE DEGRADADO", val: `Silencio ${age}` });
+    }
+
+    if (state.lossRecentPercent > 15) {
+        alerts.push({ badge: "crit", text: "ALTA PÉRDIDA DE PAQUETES (5s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
+    } else if (state.lossRecentPercent > 5) {
+        alerts.push({ badge: "warn", text: "PÉRDIDA MODERADA (5s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
+    }
+
+    const maxAcc = Math.max(Math.abs(state.ax ?? 0), Math.abs(state.ay ?? 0), Math.abs(state.az ?? 0));
+    if (maxAcc >= 9.5) {
+        alerts.push({ badge: "warn", text: "ACELERACIÓN CERCANA AL LÍMITE", val: `${fmt(maxAcc, 1)} g` });
+    }
+
+    if (Number(state.stats.invalid ?? 0) > 0) {
+        alerts.push({ badge: "info", text: "ERRORES DE CRC DETECTADOS", val: `${state.stats.invalid} tramas` });
+    }
+
+    if (alerts.length === 0) {
+        alerts.push({ badge: "ok", text: "TODOS LOS SISTEMAS NOMINALES", val: "OK" });
+    }
+
+    $("alertBox").innerHTML = alerts.map(a =>
+        `<div class="al-row">
+            <span class="al-badge ${a.badge}">${a.badge === "crit" ? "CRÍTICO" : a.badge === "warn" ? "ALERTA" : a.badge === "ok" ? "ESTABLE" : "INFO"}</span>
+            <span class="al-desc">${a.text}</span>
+            <span class="al-val">${a.val}</span>
+        </div>`
+    ).join("");
 }
 
 function renderCharts() {          // 10 Hz
-    drawChart("chAlt", [{ data: state.hist.alt, color: "#000" }], 0, 20, false);
-    drawChart("chPres", [{ data: state.hist.pres, color: "#000" }], 1, 2, false);
+    // Altitud: siempre incluye el 0, span mínimo 20m
+    drawChart("chAlt", [{ data: state.hist.alt, color: "#000" }], 0, 20, false, 0, null);
+
+    // Aceleración: rango garantizado -2g a +10g (se expande dinámicamente si supera)
     drawChart("chAcc", [
         { data: state.hist.ax, color: "#000" },
         { data: state.hist.ay, color: "#087a3b" },
         { data: state.hist.az, color: "#1a4fd6" }
-    ], 2, 1, true);
+    ], 1, 12, true, -2, 10);
 }
 
 /* ---------- conexión ---------- */

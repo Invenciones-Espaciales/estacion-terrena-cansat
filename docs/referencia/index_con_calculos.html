@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Estación Terrena de Telemetría</title>
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+>
+
+<style>
+:root {
+    --bg: #ffffff;
+    --ink: #000000;
+    --gray: #333333;
+    --muted: #666666;
+    --soft: #eeeeee;
+    --ok: #087a3b;
+    --warn: #f2b400;
+    --bad: #b00020;
+    --p1: #b00020;
+    --p2: #d9480f;
+    --p3: #f2b400;
+    --p4: #1a4fd6;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.num { font-variant-numeric: tabular-nums; }
+
+/* ===== APP: 10% cabecera / 65% instrumentos / 25% alarmas ===== */
+
+.app {
+    height: 100vh;
+    padding: 6px 10px;
+    display: grid;
+    grid-template-rows: minmax(0, 10fr) minmax(0, 65fr) minmax(0, 25fr);
+    gap: 6px;
+}
+
+/* ===== CABECERA ===== */
+
+header {
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 8px;
+    border: 3px solid #000;
+    padding: 4px 8px;
+}
+
+.brand { display: flex; align-items: center; gap: 8px; flex: none; }
+.brand img { height: 100%; max-height: 44px; width: auto; object-fit: contain; }
+.brand h1 { margin: 0; font-size: 17px; font-weight: 900; line-height: 1.05; }
+
+.hgroup { display: flex; gap: 6px; align-items: stretch; min-width: 0; }
+
+.hcell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0 10px;
+    border-left: 2px solid #000;
+    min-width: 0;
+    white-space: nowrap;
+}
+.hcell .k { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .08em; }
+.hcell .v { font-size: 20px; font-weight: 900; line-height: 1.1; }
+.hcell .v.clock { font-size: 28px; }
+.hcell .v.nd { color: var(--muted); }
+.hcell .v.bad { color: var(--bad); }
+
+.phase { font-size: 14px; font-weight: 900; padding: 3px 10px; border: 2px solid #000; background: #000; color: #fff; }
+
+.dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--bad); border: 2px solid #000; vertical-align: middle; margin-right: 6px; }
+.dot.online { background: var(--ok); }
+.dot.warn { background: var(--warn); }
+
+/* ===== GRID 25 / 45 / 30 ===== */
+
+.dashboard {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 25fr 45fr 30fr;
+    gap: 6px;
+}
+
+.panel { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+
+.card {
+    border: 2px solid #000;
+    padding: 6px 8px;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.card.grow { flex: 1 1 0; }
+
+.card-title {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+}
+.card-title .hint { font-weight: 700; color: var(--muted); letter-spacing: 0; text-align: right; }
+
+.row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; padding: 1px 0; }
+.row .k { font-weight: 800; color: var(--gray); }
+.row .v { font-weight: 900; font-size: 14px; }
+
+canvas { display: block; }
+
+/* ===== PFD ===== */
+
+.pfd-top { flex: 1 1 0; min-height: 0; display: flex; gap: 6px; }
+.pfd-top .cv { border: 2px solid #000; position: relative; flex: none; }
+.pfd-top .cv canvas { width: 100%; height: 100%; }
+.cv.tape { width: 76px; }
+.cv.vario { width: 40px; }
+
+.pfd-side { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.big { font-size: 32px; font-weight: 900; line-height: 1; }
+.unit { font-size: 13px; font-weight: 700; color: var(--gray); margin-left: 3px; }
+.lbl { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .08em; }
+.axis-row { display: flex; justify-content: space-between; align-items: baseline; font-weight: 900; }
+.axis-row .a { font-size: 12px; color: var(--gray); }
+.axis-row .n { font-size: 15px; }
+
+.gcount { flex: none; margin-top: 6px; padding-top: 6px; border-top: 2px solid #000; }
+
+/* ===== CHARTS ===== */
+
+.chart-card { flex: 1 1 0; }
+.chart-box { position: relative; flex: 1; min-height: 0; }
+.chart-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.legend { display: flex; gap: 10px; font-size: 11px; font-weight: 800; }
+.legend i { display: inline-block; width: 12px; height: 4px; margin-right: 3px; vertical-align: middle; }
+
+/* ===== NAV ===== */
+
+#gpsMap { flex: 1; min-height: 80px; border: 2px solid #000; }
+.nav-bottom { flex: none; display: grid; grid-template-columns: 1fr; margin-top: 6px; }
+.nav-read { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px 12px; }
+.nav-read .c .k { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .06em; }
+.nav-read .c .v { font-size: 17px; font-weight: 900; }
+.nav-read .c .v.sm { font-size: 13px; }
+
+/* ===== INFERIOR ===== */
+
+.bottom {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.btn {
+    font: inherit; font-weight: 900; font-size: 11px;
+    border: 2px solid #000; background: #fff; padding: 1px 8px; cursor: pointer;
+}
+.btn:hover { background: #000; color: #fff; }
+
+.scroll { flex: 1; min-height: 0; overflow-y: auto; font-size: 12px; }
+
+table.t { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.t th { text-align: left; font-size: 10px; letter-spacing: .06em; color: var(--muted); position: sticky; top: 0; background: #fff; border-bottom: 2px solid #000; padding: 1px 4px; }
+table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space: nowrap; }
+table.t td.txt { white-space: normal; font-weight: 700; }
+
+.prio { display: inline-block; min-width: 56px; text-align: center; padding: 0 6px; font-weight: 900; font-size: 11px; border: 2px solid #000; }
+.prio.p1 { background: var(--p1); color: #fff; border-color: var(--p1); }
+.prio.p2 { background: var(--p2); color: #fff; border-color: var(--p2); }
+.prio.p3 { background: var(--p3); color: #000; }
+.prio.p4 { background: var(--p4); color: #fff; border-color: var(--p4); }
+
+tr.unacked.active { animation: blink 1s steps(1) infinite; }
+tr.returned td { color: var(--muted); font-style: italic; }
+@keyframes blink { 50% { background: #ffe9e9; } }
+
+.empty { color: var(--muted); font-style: italic; padding: 4px; }
+.ev-time { font-weight: 900; width: 74px; display: inline-block; }
+.ev-row { padding: 2px 0; border-bottom: 1px solid var(--soft); }
+.ev-row.ev-alarm { color: var(--bad); font-weight: 800; }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ==================== CABECERA GLOBAL DE MISIÓN (10%) ==================== -->
+    <header>
+        <div class="brand">
+            <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
+            <h1>ESTACIÓN<br>TERRENA</h1>
+        </div>
+
+        <div class="hgroup">
+            <div class="hcell"><span class="k" id="metLabel">MET</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
+            <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
+            <div class="hcell"><span class="k">RSSI</span><span class="v num nd" id="rssi">N/D</span></div>
+            <div class="hcell"><span class="k">SNR</span><span class="v num nd" id="snr">N/D</span></div>
+            <div class="hcell"><span class="k">PÉRDIDA PAQ.</span><span class="v num" id="lossPercent">0,0 %</span></div>
+            <div class="hcell"><span class="k">VOLTAJE</span><span class="v num nd" id="voltage">N/D</span></div>
+            <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+
+        <!-- ==================== PFD (25% × 65%) ==================== -->
+        <section class="panel">
+            <div class="card grow">
+                <div class="card-title">PFD · ALTITUD BARO/KALMAN <span class="hint" id="kfInfo">Kalman: baro + GNSS</span></div>
+
+                <div class="pfd-top">
+                    <div class="cv tape"><canvas id="tape"></canvas></div>
+                    <div class="cv vario"><canvas id="vario"></canvas></div>
+
+                    <div class="pfd-side">
+                        <div>
+                            <div class="lbl">ALTITUD</div>
+                            <div><span class="big num" id="altitude">---</span><span class="unit">m</span></div>
+                            <div class="row"><span class="k">MÁX</span><span class="v num" id="altitudeMax">---</span></div>
+                        </div>
+                        <div>
+                            <div class="lbl">VARIÓMETRO Vz</div>
+                            <div><span class="big num" style="font-size:24px" id="vz">---</span><span class="unit">m/s</span></div>
+                        </div>
+                        <div>
+                            <div class="axis-row"><span class="a">aX</span><span class="n num" id="ax">---</span></div>
+                            <div class="axis-row"><span class="a">aY</span><span class="n num" id="ay">---</span></div>
+                            <div class="axis-row"><span class="a">aZ</span><span class="n num" id="az">---</span></div>
+                            <div class="row"><span class="k">PRESIÓN</span><span class="v num" id="pressure">---</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gcount">
+                    <div class="lbl">CARGA G</div>
+                    <div><span class="big num" id="gval">---</span><span class="unit">g₀</span></div>
+                    <div class="row"><span class="k">MÁX</span><span class="v num" id="gmax">---</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SERIES TEMPORALES (45% × 65%) ==================== -->
+        <section class="panel">
+
+            <div class="card chart-card">
+                <div class="card-title">ALTITUD vs TIEMPO <span class="hint">Kalman · m · últimos 60 s</span></div>
+                <div class="chart-box"><canvas id="chAlt"></canvas></div>
+            </div>
+
+            <div class="card chart-card">
+                <div class="card-title">
+                    BARÓMETRO vs TIEMPO
+                    <span class="hint"><span class="num" id="pressureNow">---</span> · hPa</span>
+                </div>
+                <div class="chart-box"><canvas id="chPres"></canvas></div>
+            </div>
+
+            <div class="card chart-card">
+                <div class="card-title">
+                    ACELERACIÓN vs TIEMPO
+                    <span class="legend">
+                        <span><i style="background:#000"></i>X</span>
+                        <span><i style="background:#087a3b"></i>Y</span>
+                        <span><i style="background:#1a4fd6"></i>Z</span>
+                        <span class="hint">g</span>
+                    </span>
+                </div>
+                <div class="chart-box"><canvas id="chAcc"></canvas></div>
+            </div>
+
+        </section>
+
+        <!-- ==================== NAVEGACIÓN Y APUNTAMIENTO (30% × 65%) ==================== -->
+        <section class="panel">
+            <div class="card grow">
+                <div class="card-title">NAVEGACIÓN Y APUNTAMIENTO <span class="hint" id="stationInfo">estación: --</span></div>
+                <div id="gpsMap"></div>
+
+                <div class="nav-bottom">
+                    <div class="nav-read">
+                        <div class="c"><div class="k">ACIMUT</div><div class="v num" id="az_deg">---</div></div>
+                        <div class="c"><div class="k">ELEVACIÓN</div><div class="v num" id="el_deg">---</div></div>
+                        <div class="c"><div class="k">DISTANCIA</div><div class="v num" id="range">---</div></div>
+                        <div class="c"><div class="k">V HORIZ.</div><div class="v num" id="vh">---</div></div>
+                        <div class="c"><div class="k">LAT / LON</div><div class="v sm num" id="latlon">---</div></div>
+                        <div class="c"><div class="k">ELIPSE IMPACTO</div><div class="v sm num" id="impactInfo">en descenso</div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== ALARMAS Y REGISTRO (100% × 25%) ==================== -->
+    <footer class="bottom">
+
+        <div class="card">
+            <div class="card-title">REGISTRO DE EVENTOS <span class="hint">fases de vuelo</span></div>
+            <div class="scroll" id="eventLog"><div class="empty">Sin eventos</div></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">REGISTRO DE TRAMAS <span class="hint" id="frameStats">---</span></div>
+            <div class="scroll" id="frameBox"></div>
+        </div>
+
+    </footer>
+
+</div>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+/* =========================================================
+   CONFIGURACIÓN (umbrales y parámetros ajustables)
+   ========================================================= */
+
+const CFG = {
+    alarmsEnabled: false,   // cola de alarmas retirada del diseño por ahora
+    windowMs: 60000,        // ventana de los gráficos
+    tapeSpanM: 200,         // metros visibles en la cinta
+    varioRange: 100,        // ±m/s del variómetro
+    gMax: 8,                // fondo de escala del medidor g
+    kalmanAccelNoise: 20,   // (m/s²)² ruido de proceso
+    baroSigma2: 4,          // varianza altitud barométrica (m²)
+    gpsSigma2: 25,          // varianza altitud GNSS (m²)
+    beamHalfWidthDeg: 10,   // semiancho del haz de la antena
+    alarms: {
+        linkLostMs: 3000,
+        lossPercent: 10,
+        gLoad: 8,
+        descentVz: -25,     // m/s
+        descentAglM: 300,   // m
+        rssiMin: -100,      // dBm
+        voltageMin: 3.3     // V
+    }
+};
+
+const STATUS_SHORT = { 0: "Standby", 1: "Pre-launch", 2: "Ascenso", 3: "Apogeo", 4: "Descenso", 5: "Aterrizaje" };
+const STATUS_LABELS = {
+    0: "Standby", 1: "Pre-launch", 2: "Motor encendido / Ascenso",
+    3: "Apogeo", 4: "Descenso", 5: "Aterrizaje"
+};
+const PRIO_NAMES = { 1: "CRÍTICA", 2: "ALTA", 3: "MEDIA", 4: "BAJA" };
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+
+const q = new URLSearchParams(location.search);
+
+const state = {
+    startedAt: Date.now(),
+    missionTimestamp: null,
+    missionTimestampAt: null,
+    lastChartTimestamp: null,
+
+    lastPacketAt: null,
+    packetTimes: [],
+    connected: false,
+    stats: { received: 0, lost: 0, invalid: 0, loss_percent: 0 },
+    invalidSeen: null,
+    invalidIncAt: 0,
+
+    hist: { alt: [], pres: [], ax: [], ay: [], az: [] },
+    markers: [],
+
+    // última muestra
+    h: null, maxH: null, vz: 0, speed: 0, groundAlt: null,
+    ax: 0, ay: 0, az: 0, g: 0, gMax: 0, pressure: null,
+    status: null, statusText: null,
+    rssi: null, snr: null, voltage: null,
+    gpsValid: null,
+
+    // navegación
+    station: null,       // {lat, lon, alt}
+    pos: null,           // {x, y, u, lat, lon}
+    posHist: [],
+    vx: 0, vy: 0, vh: 0,
+    nav: null,           // {az, el, range}
+    impact: null,        // {lat, lon, a, b, heading, t}
+
+    baroRef: null,
+
+    // eventos / tramas
+    events: [],
+    eventsVersion: 0,
+    frames: [],
+
+    socket: null,
+    reconnectTimer: null,
+    reconnectDelay: 1000,
+
+    map: null, marker: null, startMarker: null, route: null, impactPoly: null, routePoints: []
+};
+
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+
+function setText(id, value) {
+    const el = $(id);
+    if (el && el.textContent !== value) el.textContent = value;
+}
+
+function fmt(value, decimals = 2) {
+    const n = Number(value);
+    return Number.isFinite(n)
+        ? new Intl.NumberFormat("es-AR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n)
+        : "---";
+}
+
+function sgn(value, decimals) { return `${value >= 0 ? "+" : ""}${fmt(value, decimals)}`; }
+
+function elapsed(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const p = v => String(v).padStart(2, "0");
+    return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+}
+
+function missionTime() {
+    if (state.missionTimestamp === null) return Date.now() - state.startedAt;
+    return state.missionTimestamp + Date.now() - state.missionTimestampAt;
+}
+
+function deg(r) { return r * 180 / Math.PI; }
+function rad(d) { return d * Math.PI / 180; }
+
+function escapeHtml(t) {
+    return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function fitCanvas(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const r = canvas.getBoundingClientRect();
+    const w = Math.max(1, Math.round(r.width * dpr));
+    const h = Math.max(1, Math.round(r.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w: r.width, h: r.height };
+}
+
+function pushHist(key, t, v) {
+    if (!Number.isFinite(v)) return;
+    const list = state.hist[key];
+    list.push({ t, v });
+    const cutoff = t - CFG.windowMs;
+    while (list.length && list[0].t < cutoff) list.shift();
+}
+
+/* =========================================================
+   FILTRO DE KALMAN  (estado [h, v]; mediciones baro + GNSS)
+   ========================================================= */
+
+const kf = { init: false, t: 0, h: 0, v: 0, p00: 25, p01: 0, p10: 0, p11: 25 };
+
+function kfReset() { kf.init = false; }
+
+function kfMeasure(z, R) {
+    const S = kf.p00 + R;
+    const k0 = kf.p00 / S;
+    const k1 = kf.p10 / S;
+    const y = z - kf.h;
+    kf.h += k0 * y;
+    kf.v += k1 * y;
+    const p00 = (1 - k0) * kf.p00;
+    const p01 = (1 - k0) * kf.p01;
+    const p10 = kf.p10 - k1 * kf.p00;
+    const p11 = kf.p11 - k1 * kf.p01;
+    kf.p00 = p00; kf.p01 = p01; kf.p10 = p10; kf.p11 = p11;
+}
+
+function kfStep(ts, gpsAlt, baroAlt) {
+    if (!kf.init) {
+        kf.init = true;
+        kf.t = ts;
+        kf.h = gpsAlt;
+        kf.v = 0;
+        kf.p00 = 25; kf.p01 = 0; kf.p10 = 0; kf.p11 = 25;
+        return;
+    }
+    let dt = (ts - kf.t) / 1000;
+    kf.t = ts;
+    if (dt <= 0) return;
+    dt = Math.min(dt, 1);
+
+    const qn = CFG.kalmanAccelNoise;
+    const dt2 = dt * dt, dt3 = dt2 * dt, dt4 = dt3 * dt;
+    kf.h += kf.v * dt;
+    const p00 = kf.p00 + dt * (kf.p10 + kf.p01) + dt2 * kf.p11 + qn * dt4 / 4;
+    const p01 = kf.p01 + dt * kf.p11 + qn * dt3 / 2;
+    const p10 = kf.p10 + dt * kf.p11 + qn * dt3 / 2;
+    const p11 = kf.p11 + qn * dt2;
+    kf.p00 = p00; kf.p01 = p01; kf.p10 = p10; kf.p11 = p11;
+
+    if (Number.isFinite(baroAlt)) kfMeasure(baroAlt, CFG.baroSigma2);
+    if (Number.isFinite(gpsAlt)) kfMeasure(gpsAlt, CFG.gpsSigma2);
+}
+
+/* =========================================================
+   MODELO: INGESTA DE TELEMETRÍA (a tasa completa)
+   ========================================================= */
+
+function resetModel() {
+    for (const k of Object.keys(state.hist)) state.hist[k] = [];
+    state.markers = [];
+    state.maxH = null;
+    state.groundAlt = null;
+    state.gMax = 0;
+    state.baroRef = null;
+    state.posHist = [];
+    state.impact = null;
+    kfReset();
+}
+
+function toLocal(lat, lon) {
+    const st = state.station;
+    return {
+        x: (lon - st.lon) * 111320 * Math.cos(rad(st.lat)),
+        y: (lat - st.lat) * 110540
+    };
+}
+
+function fromLocal(x, y) {
+    const st = state.station;
+    return {
+        lat: st.lat + y / 110540,
+        lon: st.lon + x / (111320 * Math.cos(rad(st.lat)))
+    };
+}
+
+function addEvent(message, kind = "phase", markerLabel = null) {
+    const t = missionTime();
+    state.events.unshift({ t, message, kind });
+    if (state.events.length > 200) state.events.pop();
+    state.eventsVersion++;
+    if (markerLabel) state.markers.push({ t: state.lastChartTimestamp ?? t, label: markerLabel });
+    if (state.markers.length > 30) state.markers.shift();
+}
+
+function ingest(message) {
+    const d = message.data || message.telemetry || {};
+    if (!d || typeof d !== "object") return;
+
+    const now = Date.now();
+    state.lastPacketAt = now;
+    state.packetTimes.push(now);
+
+    const hasTs = Number.isFinite(Number(d.timestamp));
+    const ts = hasTs ? Number(d.timestamp) : missionTime();
+    if (hasTs) { state.missionTimestamp = ts; state.missionTimestampAt = now; }
+    if (state.lastChartTimestamp !== null && ts < state.lastChartTimestamp) resetModel();
+    state.lastChartTimestamp = ts;
+
+    if (message.statistics) state.stats = { ...state.stats, ...message.statistics };
+
+
+    // --- campos opcionales de RF / energía (si el backend los envía) ---
+    state.rssi = Number.isFinite(Number(d.rssi)) ? Number(d.rssi) : state.rssi;
+    state.snr = Number.isFinite(Number(d.snr)) ? Number(d.snr) : state.snr;
+    const volt = d.voltage ?? d.battery_voltage ?? d.vbat;
+    state.voltage = Number.isFinite(Number(volt)) ? Number(volt) : state.voltage;
+
+    // --- altitud: baro + GNSS -> Kalman ---
+    const gpsAlt = Number(d.altitude);
+    const pressure = Number(d.pressure);
+    let baroAlt = NaN;
+    if (Number.isFinite(pressure) && pressure > 0) {
+        state.pressure = pressure;
+        pushHist("pres", ts, pressure / 100);
+        if (state.baroRef === null && Number.isFinite(gpsAlt)) {
+            state.baroRef = { p0: pressure, h0: gpsAlt };
+        }
+        if (state.baroRef) {
+            baroAlt = state.baroRef.h0 +
+                44330 * (1 - Math.pow(pressure / state.baroRef.p0, 0.190295));
+        }
+    }
+    if (Number.isFinite(gpsAlt)) {
+        kfStep(ts, gpsAlt, baroAlt);
+        state.h = kf.h;
+        state.vz = kf.v;
+        if (state.groundAlt === null) state.groundAlt = kf.h;
+        state.maxH = state.maxH === null ? kf.h : Math.max(state.maxH, kf.h);
+        pushHist("alt", ts, kf.h);
+    }
+
+    // --- aceleración / carga g / actitud ---
+    const ax = Number(d.accel_x), ay = Number(d.accel_y), az = Number(d.accel_z);
+    if ([ax, ay, az].every(Number.isFinite)) {
+        state.ax = ax; state.ay = ay; state.az = az;
+        state.g = Math.sqrt(ax * ax + ay * ay + az * az);
+        pushHist("ax", ts, ax);
+        pushHist("ay", ts, ay);
+        pushHist("az", ts, az);
+
+        state.gMax = Math.max(state.gMax, state.g);
+    }
+
+    // --- GNSS: posición local, velocidad horizontal, acimut/elevación ---
+    const lat = Number(d.latitude), lon = Number(d.longitude);
+    const validFix = Number.isFinite(lat) && Number.isFinite(lon) &&
+        Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0);
+    state.gpsValid = validFix;
+    if (validFix) {
+        if (!state.station) {
+            state.station = {
+                lat: Number.isFinite(Number(q.get("stlat"))) && q.has("stlat") ? Number(q.get("stlat")) : lat,
+                lon: Number.isFinite(Number(q.get("stlon"))) && q.has("stlon") ? Number(q.get("stlon")) : lon,
+                alt: Number.isFinite(Number(q.get("stalt"))) && q.has("stalt") ? Number(q.get("stalt")) : (state.h ?? gpsAlt),
+                fromUrl: q.has("stlat") && q.has("stlon")
+            };
+        }
+        const p = toLocal(lat, lon);
+        const u = (state.h ?? gpsAlt) - state.station.alt;
+        state.pos = { x: p.x, y: p.y, u, lat, lon };
+
+        state.posHist.push({ t: ts, x: p.x, y: p.y });
+        while (state.posHist.length && state.posHist[0].t < ts - 4000) state.posHist.shift();
+        let ref = null;
+        for (const e of state.posHist) { if (e.t <= ts - 1000) ref = e; else break; }
+        if (ref) {
+            const dt = (ts - ref.t) / 1000;
+            state.vx = (p.x - ref.x) / dt;
+            state.vy = (p.y - ref.y) / dt;
+            state.vh = Math.hypot(state.vx, state.vy);
+        }
+
+        const range = Math.hypot(p.x, p.y, u);
+        const ground = Math.hypot(p.x, p.y);
+        state.nav = range < 5 ? null : {
+            az: (deg(Math.atan2(p.x, p.y)) + 360) % 360,
+            el: deg(Math.atan2(u, ground)),
+            range
+        };
+    }
+
+    // --- elipse de impacto (estimación balística lineal en descenso) ---
+    const agl = (state.h ?? 0) - (state.groundAlt ?? 0);
+    if (state.pos && state.vz < -2 && agl > 5) {
+        const t = agl / -state.vz;
+        const ix = state.pos.x + state.vx * t;
+        const iy = state.pos.y + state.vy * t;
+        const drift = state.vh * t;
+        const a = Math.max(10, 0.15 * drift);
+        const b = Math.max(10, 0.5 * a);
+        const c = fromLocal(ix, iy);
+        state.impact = { lat: c.lat, lon: c.lon, ix, iy, a, b, heading: Math.atan2(state.vy, state.vx), t };
+    } else {
+        state.impact = null;
+    }
+
+    // --- fase de vuelo ---
+    const code = Number.isFinite(Number(d.status)) ? Number(d.status) : null;
+    const text = d.status_label ?? (code !== null ? STATUS_LABELS[code] : null);
+    if (text) {
+        if (state.statusText !== text) {
+            addEvent(text, "phase", code !== null ? STATUS_SHORT[code] ?? text : text);
+        }
+        state.statusText = text;
+        state.status = code;
+    }
+
+    // --- registro de tramas ---
+    state.frames.unshift({
+        seq: d.frame_number, t: ts, alt: state.h, g: state.g,
+        phase: code !== null ? (STATUS_SHORT[code] ?? text) : (text ?? "")
+    });
+    if (state.frames.length > 60) state.frames.pop();
+
+    setConnection(true);
+}
+
+/* =========================================================
+   ALARMAS (ISA-18.2 simplificado: activa/retornada, acuse)
+   ========================================================= */
+
+const alarmDefs = [
+    { id: "LINK", prio: 1, text: "Enlace perdido: sin paquetes",
+      test: () => !state.connected ||
+          (state.lastPacketAt !== null && Date.now() - state.lastPacketAt > CFG.alarms.linkLostMs) },
+    { id: "DESC", prio: 1, text: () => `Descenso rápido bajo ${CFG.alarms.descentAglM} m AGL (Vz ${fmt(state.vz, 1)} m/s)`,
+      test: () => {
+          const agl = (state.h ?? 0) - (state.groundAlt ?? 0);
+          return state.status !== null && state.status >= 4 &&
+              state.vz < CFG.alarms.descentVz && agl < CFG.alarms.descentAglM && agl > 20;
+      } },
+    { id: "GLOAD", prio: 2, text: () => `Carga alta: ${fmt(state.g, 1)} g`,
+      test: () => state.g > CFG.alarms.gLoad },
+    { id: "CRC", prio: 2, text: "Tramas con CRC inválido en los últimos 10 s",
+      test: () => Date.now() - state.invalidIncAt < 10000 },
+    { id: "VOLT", prio: 2, text: () => `Voltaje bajo: ${fmt(state.voltage, 2)} V`,
+      test: () => state.voltage !== null && state.voltage < CFG.alarms.voltageMin },
+    { id: "LOSS", prio: 3, text: () => `Pérdida de paquetes ${fmt(state.stats.loss_percent, 1)} %`,
+      test: () => Number(state.stats.loss_percent) > CFG.alarms.lossPercent },
+    { id: "GNSS", prio: 3, text: "Sin fix GNSS válido",
+      test: () => state.gpsValid === false },
+    { id: "RSSI", prio: 3, text: () => `RSSI bajo: ${fmt(state.rssi, 0)} dBm`,
+      test: () => state.rssi !== null && state.rssi < CFG.alarms.rssiMin }
+];
+
+const alarms = new Map();   // id -> {def, active, acked, raisedAt, text}
+let alarmSignature = "";
+
+function evaluateAlarms() {
+    const invalid = Number(state.stats.invalid ?? 0);
+    if (state.invalidSeen !== null && invalid > state.invalidSeen) { state.invalidIncAt = Date.now(); }
+    state.invalidSeen = invalid;
+
+    for (const def of alarmDefs) {
+        const cond = Boolean(def.test());
+        const text = typeof def.text === "function" ? def.text() : def.text;
+        let a = alarms.get(def.id);
+
+        if (cond) {
+            if (!a) {
+                a = { def, active: true, acked: false, raisedAt: missionTime(), text };
+                alarms.set(def.id, a);
+                addEvent(`ALARMA ${PRIO_NAMES[def.prio]}: ${text}`, "alarm", "⚠");
+            } else if (!a.active) {
+                a.active = true; a.acked = false; a.raisedAt = missionTime();
+                addEvent(`ALARMA ${PRIO_NAMES[def.prio]}: ${text}`, "alarm", "⚠");
+            }
+            a.text = text;
+        } else if (a && a.active) {
+            a.active = false;
+            addEvent(`Retorno a normal: ${text}`, "phase");
+            if (a.acked) alarms.delete(def.id);
+        }
+    }
+}
+
+function ackAlarm(id) {
+    const a = alarms.get(id);
+    if (!a) return;
+    a.acked = true;
+    addEvent(`Acuse: ${a.text}`, "phase");
+    if (!a.active) alarms.delete(id);
+    alarmSignature = "";
+}
+
+function renderAlarms() {
+    const list = [...alarms.entries()].sort((x, y) =>
+        x[1].def.prio - y[1].def.prio || x[1].raisedAt - y[1].raisedAt);
+
+    const sig = list.map(([id, a]) => `${id}|${a.active}|${a.acked}|${a.text}`).join(";");
+    if (sig === alarmSignature) return;
+    alarmSignature = sig;
+
+    const active = list.filter(([, a]) => a.active).length;
+    setText("alarmCount", `${active} activa${active === 1 ? "" : "s"}`);
+
+    if (!list.length) {
+        $("alarmBox").innerHTML = '<div class="empty">Sin alarmas</div>';
+        return;
+    }
+
+    $("alarmBox").innerHTML = `<table class="t"><thead><tr>
+        <th>PRIO</th><th>HORA</th><th>ALARMA</th><th>ESTADO</th><th></th></tr></thead><tbody>` +
+        list.map(([id, a]) => {
+            const stateText = a.active ? (a.acked ? "ACTIVA · ACUSADA" : "ACTIVA · SIN ACUSE") : "RETORNADA · SIN ACUSE";
+            const cls = `${a.active ? "active" : "returned"} ${a.acked ? "" : "unacked"}`;
+            return `<tr class="${cls}">
+                <td><span class="prio p${a.def.prio}">${PRIO_NAMES[a.def.prio]}</span></td>
+                <td class="num">T+ ${elapsed(a.raisedAt)}</td>
+                <td class="txt">${escapeHtml(a.text)}</td>
+                <td>${stateText}</td>
+                <td>${a.acked ? "" : `<button class="btn" data-ack="${id}">ACUSAR</button>`}</td>
+            </tr>`;
+        }).join("") + "</tbody></table>";
+}
+
+/* =========================================================
+   DIBUJO: GRÁFICOS DE SERIES TEMPORALES
+   ========================================================= */
+
+function niceRange(min, max, minSpan) {
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, minSpan];
+    const span = Math.max(max - min, minSpan);
+    const mid = (max + min) / 2;
+    const pad = span * 0.1;
+    return [mid - span / 2 - pad, mid + span / 2 + pad];
+}
+
+function drawChart(canvasId, series, decimals, minSpan, signedLabels) {
+    const { ctx, w, h } = fitCanvas($(canvasId));
+    ctx.clearRect(0, 0, w, h);
+
+    const left = 46, right = 8, top = 6, bottom = 16;
+    const pw = w - left - right, ph = h - top - bottom;
+    if (pw <= 0 || ph <= 0) return;
+
+    const end = state.lastChartTimestamp ?? 0;
+    const start = end - CFG.windowMs;
+
+    let min = Infinity, max = -Infinity;
+    for (const s of series) for (const p of s.data) {
+        if (p.v < min) min = p.v;
+        if (p.v > max) max = p.v;
+    }
+    const [lo, hi] = niceRange(min, max, minSpan);
+    const X = t => left + ((t - start) / CFG.windowMs) * pw;
+    const Y = v => top + ph - ((v - lo) / (hi - lo)) * ph;
+
+    ctx.font = "bold 11px Arial";
+    ctx.fillStyle = "#333";
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 1;
+
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for (let i = 0; i <= 4; i++) {
+        const v = lo + ((hi - lo) * i) / 4, y = Y(v);
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + pw, y); ctx.stroke();
+        ctx.fillText((signedLabels && v > 0 ? "+" : "") + fmt(v, decimals), left - 5, y);
+    }
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (let s = 0; s <= 60; s += 15) {
+        const x = left + (s / 60) * pw;
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
+        ctx.textAlign = s === 0 ? "left" : (s === 60 ? "right" : "center");
+        ctx.fillText(s === 60 ? "0 s" : `−${60 - s} s`, s === 0 ? left : (s === 60 ? left + pw : x), top + ph + 2);
+    }
+
+    // trazas
+    ctx.save();
+    ctx.beginPath(); ctx.rect(left, top, pw, ph); ctx.clip();
+    ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+    for (const s of series) {
+        if (s.data.length < 2) continue;
+        ctx.strokeStyle = s.color;
+        ctx.beginPath();
+        s.data.forEach((p, i) => {
+            const x = X(p.t), y = Y(p.v);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+    }
+
+    // marcadores verticales de eventos de misión
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.font = "bold 10px Arial";
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    for (const m of state.markers) {
+        if (m.t < start || m.t > end) continue;
+        const x = X(m.t);
+        ctx.strokeStyle = m.label === "⚠" ? "#b00020" : "#000";
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
+        const tw = ctx.measureText(m.label).width + 4;
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#fff"; ctx.fillRect(x + 1, top + 1, tw, 12);
+        ctx.fillStyle = m.label === "⚠" ? "#b00020" : "#000";
+        ctx.fillText(m.label, x + 3, top + 2);
+        ctx.setLineDash([5, 4]);
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+    ctx.strokeRect(left, top, pw, ph);
+}
+
+/* =========================================================
+   DIBUJO: PFD (cinta, variómetro, actitud, medidor g)
+   ========================================================= */
+
+function drawTape() {
+    const { ctx, w, h } = fitCanvas($("tape"));
+    ctx.clearRect(0, 0, w, h);
+    const alt = state.h ?? 0;
+    const ppm = h / CFG.tapeSpanM, cy = h / 2;
+
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#000"; ctx.fillStyle = "#000";
+    ctx.font = "bold 12px Arial"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+
+    const first = Math.floor((alt - CFG.tapeSpanM / 2) / 10) * 10;
+    const last = Math.ceil((alt + CFG.tapeSpanM / 2) / 10) * 10;
+    for (let m = first; m <= last; m += 10) {
+        const y = cy - (m - alt) * ppm;
+        const major = m % 50 === 0;
+        ctx.lineWidth = major ? 2 : 1;
+        ctx.beginPath(); ctx.moveTo(w, y); ctx.lineTo(w - (major ? 20 : 10), y); ctx.stroke();
+        if (major) ctx.fillText(String(m), 5, y);
+    }
+    // máxima altitud
+    if (state.maxH !== null) {
+        const y = cy - (state.maxH - alt) * ppm;
+        if (y > 0 && y < h) {
+            ctx.strokeStyle = "#b00020"; ctx.lineWidth = 2;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.moveTo(w, cy); ctx.lineTo(w - 14, cy - 8); ctx.lineTo(w - 14, cy + 8); ctx.closePath(); ctx.fill();
+    ctx.fillRect(0, cy - 2, w - 14, 4);
+}
+
+function drawVario() {
+    const { ctx, w, h } = fitCanvas($("vario"));
+    ctx.clearRect(0, 0, w, h);
+    const R = CFG.varioRange, cy = h / 2;
+    const Y = v => cy - (Math.max(-R, Math.min(R, v)) / R) * (h / 2 - 6);
+
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
+    ctx.font = "bold 10px Arial"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.strokeStyle = "#000"; ctx.fillStyle = "#000";
+    for (const v of [-100, -50, -25, 0, 25, 50, 100]) {
+        const y = Y(v);
+        ctx.lineWidth = v === 0 ? 3 : 1;
+        ctx.beginPath(); ctx.moveTo(w - 12, y); ctx.lineTo(w, y); ctx.stroke();
+        if (v % 50 === 0) ctx.fillText(String(Math.abs(v)), 3, y);
+    }
+    // barra
+    const y = Y(state.vz);
+    ctx.fillStyle = state.vz >= 0 ? "#087a3b" : "#b00020";
+    ctx.fillRect(w / 2 - 4, Math.min(y, cy), 8, Math.abs(y - cy));
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.moveTo(w / 2 - 12, y); ctx.lineTo(w / 2 + 12, y - 5); ctx.lineTo(w / 2 + 12, y + 5); ctx.closePath(); ctx.fill();
+}
+
+
+
+/* =========================================================
+   MAPA (trazas GNSS + elipse de impacto)
+   ========================================================= */
+
+function initMap() {
+    if (!window.L) { console.error("No se pudo cargar Leaflet; mapa no disponible"); return; }
+    state.map = L.map("gpsMap", { zoomControl: true }).setView([-34.6, -58.65], 5);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(state.map);
+    state.route = L.polyline([], { color: "#111", weight: 4 }).addTo(state.map);
+    setTimeout(() => state.map.invalidateSize(), 100);
+    window.addEventListener("resize", () => state.map && state.map.invalidateSize());
+}
+
+let lastRoutePush = 0;
+function updateMap() {
+    if (!state.map || !state.pos) return;
+    const point = [state.pos.lat, state.pos.lon];
+
+    const now = Date.now();
+    if (now - lastRoutePush > 500) {
+        lastRoutePush = now;
+        state.routePoints.push(point);
+        if (state.routePoints.length > 2000) state.routePoints.shift();
+        state.route.setLatLngs(state.routePoints);
+    }
+    if (!state.startMarker) {
+        state.startMarker = L.circleMarker(point, { radius: 6, color: "#087a3b", fillColor: "#087a3b", fillOpacity: 1 })
+            .addTo(state.map).bindTooltip("Estación / inicio");
+    }
+    if (!state.marker) {
+        state.marker = L.circleMarker(point, { radius: 7, color: "#000", fillColor: "#fff", fillOpacity: 1, weight: 3 }).addTo(state.map);
+        state.map.setView(point, 15);
+    } else {
+        state.marker.setLatLng(point);
+    }
+    if (state.routePoints.length > 1) state.map.panTo(point, { animate: false });
+
+    // elipse de impacto
+    if (state.impact) {
+        const im = state.impact, pts = [];
+        for (let i = 0; i < 40; i++) {
+            const t = (i / 40) * 2 * Math.PI;
+            const ex = im.a * Math.cos(t), ey = im.b * Math.sin(t);
+            const x = im.ix + ex * Math.cos(im.heading) - ey * Math.sin(im.heading);
+            const y = im.iy + ex * Math.sin(im.heading) + ey * Math.cos(im.heading);
+            const c = fromLocal(x, y);
+            pts.push([c.lat, c.lon]);
+        }
+        if (!state.impactPoly) {
+            state.impactPoly = L.polygon(pts, { color: "#b00020", weight: 3, fillColor: "#b00020", fillOpacity: 0.2 }).addTo(state.map);
+        } else {
+            state.impactPoly.setLatLngs(pts);
+        }
+    } else if (state.impactPoly) {
+        state.map.removeLayer(state.impactPoly);
+        state.impactPoly = null;
+    }
+}
+
+/* =========================================================
+   PRESENTACIÓN: textos por tasa
+   ========================================================= */
+
+function renderPfdText() {         // ~10 Hz
+    if (state.h !== null) {
+        setText("altitude", fmt(state.h, 0));
+        setText("altitudeMax", `${fmt(state.maxH, 0)} m`);
+        setText("vz", sgn(state.vz, 1));
+    }
+    setText("ax", `${sgn(state.ax, 3)} g`);
+    setText("ay", `${sgn(state.ay, 3)} g`);
+    setText("az", `${sgn(state.az, 3)} g`);
+    if (state.pressure !== null) {
+        setText("pressure", `${fmt(state.pressure / 100, 1)} hPa`);
+        setText("pressureNow", `${fmt(state.pressure / 100, 1)}`);
+    }
+    setText("gval", fmt(state.g, 2));
+    setText("gmax", `${fmt(state.gMax, 2)} g₀`);
+}
+
+function setOptional(id, value, fmtFn, bad) {
+    const el = $(id);
+    if (value === null) { setText(id, "N/D"); el.className = "v num nd"; return; }
+    setText(id, fmtFn(value));
+    el.className = "v num" + (bad ? " bad" : "");
+}
+
+function renderHeader() {          // ~2 Hz
+    setText("clock", elapsed(missionTime()));
+    if (state.statusText) setText("phase", state.statusText);
+    setOptional("rssi", state.rssi, v => `${fmt(v, 0)} dBm`, state.rssi !== null && state.rssi < CFG.alarms.rssiMin);
+    setOptional("snr", state.snr, v => `${fmt(v, 1)} dB`, false);
+    setOptional("voltage", state.voltage, v => `${fmt(v, 2)} V`, state.voltage !== null && state.voltage < CFG.alarms.voltageMin);
+
+    const loss = Number(state.stats.loss_percent ?? 0);
+    setText("lossPercent", `${fmt(loss, 1)} %`);
+    $("lossPercent").className = "v num" + (loss > CFG.alarms.lossPercent ? " bad" : "");
+
+    const stale = state.connected && state.lastPacketAt !== null && Date.now() - state.lastPacketAt > 2000;
+    $("linkDot").classList.toggle("warn", stale);
+    setText("linkStatus", !state.connected ? "DESCONECTADO" : (stale ? "DEGRADADO" : "CONECTADO"));
+}
+
+function renderNav() {             // ~4 Hz
+    if (state.nav) {
+        setText("az_deg", `${fmt(state.nav.az, 1)}°`);
+        setText("el_deg", `${fmt(state.nav.el, 1)}°`);
+        setText("range", state.nav.range >= 1000 ? `${fmt(state.nav.range / 1000, 2)} km` : `${fmt(state.nav.range, 0)} m`);
+    } else {
+        setText("az_deg", "---"); setText("el_deg", "---"); setText("range", "---");
+    }
+    setText("vh", state.pos ? `${fmt(state.vh, 1)} m/s` : "---");
+    setText("latlon", state.pos ? `${fmt(state.pos.lat, 5)} / ${fmt(state.pos.lon, 5)}` : "---");
+    setText("impactInfo", state.impact
+        ? `${fmt(state.impact.a, 0)}×${fmt(state.impact.b, 0)} m · ${fmt(state.impact.t, 0)} s`
+        : "en descenso");
+    if (state.station) {
+        setText("stationInfo", `estación: ${state.station.fromUrl ? "URL" : "1er fix GNSS"}`);
+    }
+    updateMap();
+}
+
+let eventsRendered = -1;
+function renderLogs() {            // ~4 Hz
+    if (eventsRendered !== state.eventsVersion) {
+        eventsRendered = state.eventsVersion;
+        $("eventLog").innerHTML = state.events.length
+            ? state.events.map(e => `<div class="ev-row ev-${e.kind}"><span class="ev-time num">T+ ${elapsed(e.t)}</span>${escapeHtml(e.message)}</div>`).join("")
+            : '<div class="empty">Sin eventos</div>';
+    }
+
+    const s = state.stats;
+    const cutoff = Date.now() - 5000;
+    state.packetTimes = state.packetTimes.filter(t => t >= cutoff);
+    const span = state.packetTimes.length > 1 ? (state.packetTimes.at(-1) - state.packetTimes[0]) / 1000 : 0;
+    const rate = span > 0 ? (state.packetTimes.length - 1) / span : 0;
+    const age = state.lastPacketAt === null ? "--" : `${((Date.now() - state.lastPacketAt) / 1000).toFixed(1)} s`;
+    setText("frameStats",
+        `RX ${Number(s.received ?? 0).toLocaleString("es-AR")} · PERD ${Number(s.lost ?? 0).toLocaleString("es-AR")} · CRC ${Number(s.invalid ?? 0)} · ${rate.toFixed(1)} Hz · últ ${age}`);
+
+    $("frameBox").innerHTML = state.frames.length
+        ? `<table class="t"><thead><tr><th>SEQ</th><th>T+</th><th>ALT m</th><th>g</th><th>FASE</th></tr></thead><tbody>` +
+          state.frames.slice(0, 30).map(f =>
+              `<tr><td class="num">${f.seq ?? "-"}</td><td class="num">${elapsed(f.t)}</td><td class="num">${fmt(f.alt, 0)}</td><td class="num">${fmt(f.g, 2)}</td><td>${escapeHtml(f.phase)}</td></tr>`
+          ).join("") + "</tbody></table>"
+        : '<div class="empty">Sin tramas</div>';
+}
+
+function renderCharts() {          // 10 Hz
+    drawChart("chAlt", [{ data: state.hist.alt, color: "#000" }], 0, 20, false);
+    drawChart("chPres", [{ data: state.hist.pres, color: "#000" }], 1, 2, false);
+    drawChart("chAcc", [
+        { data: state.hist.ax, color: "#000" },
+        { data: state.hist.ay, color: "#087a3b" },
+        { data: state.hist.az, color: "#1a4fd6" }
+    ], 2, 1, true);
+}
+
+/* =========================================================
+   CONEXIÓN
+   ========================================================= */
+
+function setConnection(connected) {
+    state.connected = connected;
+    $("linkDot").classList.toggle("online", connected);
+}
+
+function connect() {
+    if (state.socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(state.socket.readyState)) return;
+    const scheme = location.protocol === "https:" ? "wss:" : "ws:";
+    state.socket = new WebSocket(`${scheme}//${location.host}/ws/telemetry`);
+    state.socket.onopen = () => { state.reconnectDelay = 1000; setConnection(true); };
+    state.socket.onmessage = event => {
+        let message;
+        try { message = JSON.parse(event.data); }
+        catch (error) { console.error("Mensaje WebSocket inválido", error); return; }
+        if (message.type === "connection") setConnection(Boolean(message.connected));
+        else if (message.type === "telemetry") ingest(message);
+        else if (message.type === "statistics") state.stats = { ...state.stats, ...(message.statistics || {}) };
+    };
+    state.socket.onerror = error => console.error("WebSocket telemetry error", error);
+    state.socket.onclose = () => {
+        setConnection(false);
+        if (!state.reconnectTimer) {
+            state.reconnectTimer = setTimeout(() => { state.reconnectTimer = null; connect(); }, state.reconnectDelay);
+            state.reconnectDelay = Math.min(state.reconnectDelay * 2, 10000);
+        }
+    };
+}
+
+async function loadStatus() {
+    try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const status = await response.json();
+        setConnection(Boolean(status.connected));
+        if (status.statistics) state.stats = { ...state.stats, ...status.statistics };
+    } catch (error) {
+        console.warn("No se pudo leer estado de la estación", error);
+    }
+}
+
+/* =========================================================
+   BUCLE PRINCIPAL  (tick 50 ms = 20 Hz)
+   PFD 20 Hz · gráficos 10 Hz · navegación 4 Hz · cabecera 2 Hz
+   ========================================================= */
+
+let tick = 0;
+function loop() {
+    tick++;
+    drawTape(); drawVario();                                   // 20 Hz
+    if (tick % 2 === 0) { renderCharts(); renderPfdText(); }    // 10 Hz
+    if (tick % 5 === 0) {
+        if (CFG.alarmsEnabled) { evaluateAlarms(); renderAlarms(); }
+        renderNav(); renderLogs();
+    }  // 4 Hz
+    if (tick % 10 === 0) renderHeader();                        // 2 Hz
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    initMap();
+    loadStatus();
+    connect();
+    if (CFG.alarmsEnabled) {
+        $("alarmBox").addEventListener("click", e => {
+            const id = e.target.getAttribute && e.target.getAttribute("data-ack");
+            if (id) ackAlarm(id);
+        });
+        $("ackAll").addEventListener("click", () => {
+            for (const id of [...alarms.keys()]) ackAlarm(id);
+        });
+    }
+    setInterval(loop, 50);
+    setInterval(loadStatus, 5000);
+});
+</script>
+
+</body>
+</html>
