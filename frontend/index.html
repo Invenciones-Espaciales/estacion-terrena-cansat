@@ -315,13 +315,52 @@ const CFG = {
 };
 
 const STATUS_LABELS = {
-    0: "Standby", 1: "Pre-launch", 2: "Motor encendido / Ascenso",
-    3: "Apogeo", 4: "Descenso", 5: "Aterrizaje"
+    0: "STANDBY",
+    1: "POWERED",
+    2: "BURNOUT",
+    3: "BURNOUT",
+    4: "APOGEE",
+    7: "APOGEE",
+    8: "DROGUE_ORD",
+    15: "DROGUE_ORD",
+    16: "DROGUE_CONF",
+    31: "DROGUE_CONF",
+    32: "MAIN_ORD",
+    63: "MAIN_ORD",
+    64: "MAIN_CONF",
+    127: "MAIN_CONF",
+    128: "LANDED",
+    255: "LANDED"
 };
-const STATUS_SHORT = { 0: "Standby", 1: "Pre-launch", 2: "Ascenso", 3: "Apogeo", 4: "Descenso", 5: "Aterrizaje" };
+const STATUS_SHORT = {
+    0: "STANDBY",
+    1: "POWERED",
+    2: "BURNOUT",
+    3: "BURNOUT",
+    4: "APOGEE",
+    7: "APOGEE",
+    8: "DROGUE_ORD",
+    15: "DROGUE_ORD",
+    16: "DROGUE_CONF",
+    31: "DROGUE_CONF",
+    32: "MAIN_ORD",
+    63: "MAIN_ORD",
+    64: "MAIN_CONF",
+    127: "MAIN_CONF",
+    128: "LANDED",
+    255: "LANDED"
+};
 
 const state = {
     startedAt: Date.now(),
+    liftoffDetected: false,
+    liftoffAt: null,
+    liftoffTs: null,
+
+    // Continuidad temporal monótona para gráficos (no resetea datos)
+    timeOffset: 0,
+    lastRawTs: null,
+
     missionTimestamp: null,
     missionTimestampAt: null,
     lastChartTimestamp: null,
@@ -357,7 +396,7 @@ const state = {
     reconnectTimer: null,
     reconnectDelay: 1000,
 
-    map: null, marker: null, startMarker: null, route: null, routePoints: []
+    map: null, marker: null, startMarker: null, route: null, routePoints: [], lastMapPoint: null
 };
 
 /* ---------- utilidades ---------- */
@@ -383,8 +422,12 @@ function elapsed(ms) {
 }
 
 function missionTime() {
-    if (state.missionTimestamp === null) return Date.now() - state.startedAt;
-    return state.missionTimestamp + Date.now() - state.missionTimestampAt;
+    if (!state.liftoffDetected) return 0;
+    if (state.missionTimestamp !== null && state.liftoffTs !== null) {
+        const elapsed = (state.missionTimestamp - state.liftoffTs) + (Date.now() - state.missionTimestampAt);
+        return Math.max(0, elapsed);
+    }
+    return Math.max(0, Date.now() - (state.liftoffAt || Date.now()));
 }
 
 function escapeHtml(t) {
@@ -417,13 +460,6 @@ function pushHist(key, t, v) {
 }
 
 /* ---------- modelo: ingesta de telemetría ---------- */
-
-function resetModel() {
-    for (const k of Object.keys(state.hist)) state.hist[k] = [];
-    state.markers = [];
-    state.maxAltitude = null;
-    state.maxPressure = null;
-}
 
 function addEvent(message, markerLabel = null) {
     const t = missionTime();
@@ -461,9 +497,20 @@ function ingest(message) {
     state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
 
     const hasTs = Number.isFinite(Number(d.timestamp));
-    const ts = hasTs ? Number(d.timestamp) : missionTime();
-    if (hasTs) { state.missionTimestamp = ts; state.missionTimestampAt = now; }
-    if (state.lastChartTimestamp !== null && ts < state.lastChartTimestamp) resetModel();
+    let ts;
+    if (hasTs) {
+        const rawTs = Number(d.timestamp);
+        if (state.lastRawTs !== null && rawTs < state.lastRawTs) {
+            // Continuidad monótona sin resetear datos ante reinicio de MCU o bucle de simulador
+            state.timeOffset += (state.lastRawTs + 200);
+        }
+        state.lastRawTs = rawTs;
+        ts = rawTs + state.timeOffset;
+        state.missionTimestamp = rawTs;
+        state.missionTimestampAt = now;
+    } else {
+        ts = now - state.startedAt;
+    }
     state.lastChartTimestamp = ts;
 
     if (message.statistics) state.stats = { ...state.stats, ...message.statistics };
@@ -495,9 +542,20 @@ function ingest(message) {
         state.lat = lat; state.lon = lon;
     }
 
-    // fase de vuelo
+    // fase de vuelo y detección de despegue (T-0)
     const code = Number.isFinite(Number(d.status)) ? Number(d.status) : null;
     const text = d.status_label ?? (code !== null ? STATUS_LABELS[code] : null);
+
+    const isFlightPhase = (code !== null && code > 0 && text !== "STANDBY" && text !== "Standby" && text !== "Pre-launch" && text !== "PRE-LAUNCH") ||
+                          (text && !["STANDBY", "Standby", "Pre-launch", "PRE-LAUNCH"].includes(text));
+
+    if (!state.liftoffDetected && (isFlightPhase || (state.altitude !== null && state.altitude > 25))) {
+        state.liftoffDetected = true;
+        state.liftoffAt = now;
+        state.liftoffTs = hasTs ? Number(d.timestamp) : 0;
+        addEvent("DESPEGUE / LIFTOFF DETECTADO — T-0", "T-0");
+    }
+
     if (text) {
         if (state.statusText !== text) addEvent(text, code !== null ? (STATUS_SHORT[code] ?? text) : text);
         state.statusText = text;
@@ -640,13 +698,21 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
     ctx.strokeRect(left, top, pw, ph);
 }
 
-function drawTape() {
+let lastTapeTime = 0;
+function drawTape(now) {
     const { ctx, w, h } = fitCanvas($("tape"));
     ctx.clearRect(0, 0, w, h);
     if (state.altitude !== null) {
-        if (state.altDisplay === null || Math.abs(state.altitude - state.altDisplay) > 50) state.altDisplay = state.altitude;
-        else state.altDisplay += (state.altitude - state.altDisplay) * 0.35;
+        if (state.altDisplay === null || Math.abs(state.altitude - state.altDisplay) > 500) {
+            state.altDisplay = state.altitude;
+        } else {
+            const dt = (now && lastTapeTime) ? Math.min((now - lastTapeTime) / 1000, 0.1) : 0.016;
+            // Suavizado continuo independiente de FPS (curva suave tipo PFD aeroespacial)
+            const factor = 1 - Math.exp(-5.5 * dt);
+            state.altDisplay += (state.altitude - state.altDisplay) * factor;
+        }
     }
+    if (now) lastTapeTime = now;
     const alt = state.altDisplay ?? 0;
     const ppm = h / CFG.tapeSpanM, cy = h / 2;
 
@@ -684,18 +750,25 @@ function initMap() {
 
 let lastRoutePush = 0;
 function updateMap() {
-    if (state.lat === null) return;
+    if (state.lat === null || state.lon === null) return;
     setText("lat", fmt(state.lat, 6));
     setText("lon", fmt(state.lon, 6));
     if (!state.map) return;
 
     const point = [state.lat, state.lon];
     const now = Date.now();
-    if (now - lastRoutePush > 500) {
+
+    // Solo acumular puntos si el vehículo se movió al menos ~1.5m para optimizar rendimiento
+    const moved = !state.lastMapPoint ||
+        Math.abs(state.lat - state.lastMapPoint[0]) > 0.000015 ||
+        Math.abs(state.lon - state.lastMapPoint[1]) > 0.000015;
+
+    if (moved && now - lastRoutePush > 500) {
         lastRoutePush = now;
+        state.lastMapPoint = point;
         state.routePoints.push(point);
         if (state.routePoints.length > 2000) state.routePoints.shift();
-        state.route.setLatLngs(state.routePoints);
+        if (state.route) state.route.addLatLng(point);
     }
     if (!state.startMarker) {
         state.startMarker = L.circleMarker(point, { radius: 6, color: "#087a3b", fillColor: "#087a3b", fillOpacity: 1 })
@@ -707,7 +780,7 @@ function updateMap() {
     } else {
         state.marker.setLatLng(point);
     }
-    if (state.routePoints.length > 1) state.map.panTo(point, { animate: false });
+    if (moved && state.routePoints.length > 1) state.map.panTo(point, { animate: false });
 }
 
 /* ---------- presentación ---------- */
@@ -753,6 +826,7 @@ function renderHeader() {          // ~2 Hz
 }
 
 let eventsRendered = -1;
+let lastAlertsHtml = "";
 function renderLogs() {            // ~4 Hz
     // 1. Registro de eventos
     if (eventsRendered !== state.eventsVersion) {
@@ -818,13 +892,17 @@ function renderLogs() {            // ~4 Hz
         alerts.push({ badge: "ok", text: "TODOS LOS SISTEMAS NOMINALES", val: "OK" });
     }
 
-    $("alertBox").innerHTML = alerts.map(a =>
+    const alertsHtml = alerts.map(a =>
         `<div class="al-row">
             <span class="al-badge ${a.badge}">${a.badge === "crit" ? "CRÍTICO" : a.badge === "warn" ? "ALERTA" : a.badge === "ok" ? "ESTABLE" : "INFO"}</span>
             <span class="al-desc">${a.text}</span>
             <span class="al-val">${a.val}</span>
         </div>`
     ).join("");
+    if (alertsHtml !== lastAlertsHtml) {
+        lastAlertsHtml = alertsHtml;
+        $("alertBox").innerHTML = alertsHtml;
+    }
 }
 
 function renderCharts() {          // 10 Hz
@@ -886,7 +964,7 @@ async function loadStatus() {
 
 let lastText = 0, lastSlow = 0, lastHeader = 0;
 function loop(now) {
-    drawTape();
+    drawTape(now);
     renderCharts();
     if (now - lastText >= 33) { lastText = now; renderText(); }
     if (now - lastSlow >= 250) { lastSlow = now; updateMap(); renderLogs(); }

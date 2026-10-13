@@ -8,5 +8,5 @@ websocket:
   port: 8000
 
 storage:
-  database: "telemetry.db"
-  csv: "telemetry.csv"
+  database: "data/telemetry.db"
+  csv: "data/telemetry.csv"
