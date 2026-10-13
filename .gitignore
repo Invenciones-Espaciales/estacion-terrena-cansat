@@ -20,3 +20,4 @@ htmlcov/
 /telemetry.db
 /data/telemetry.csv
 /data/telemetry.db
+.agents/

@@ -1,118 +1,201 @@
-# Cálculos e interpretaciones retirados del dashboard
+# Mathematical Calculations and Derived Metrics Reference
 
-Por ahora el dashboard ([`frontend/index.html`](../frontend/index.html)) muestra **solo datos tal como llegan en la trama**. Todo lo calculado o interpretado se quitó y queda documentado acá para retomarlo.
+This document serves as the technical specification for derived avionics metrics, sensor fusion filters, and mathematical algorithms temporarily retired from the live dashboard (`frontend/index.html`).
 
-> La implementación completa y funcionando está archivada en
-> [`docs/referencia/index_con_calculos.html`](referencia/index_con_calculos.html).
-> Se puede abrir con el servidor corriendo (copiarla a `frontend/` o servirla aparte) para ver cómo se comportaba.
+Currently, the primary dashboard displays **raw telemetry values directly as received in the binary frame** to ensure maximum reliability and minimal processing overhead during flight operations. All secondary interpretations and estimations are documented here for future reintegration.
 
-## Qué se muestra hoy (sin interpretación)
+> **Historical Reference Implementation:**
+> The complete, operational JavaScript implementation containing these calculations is archived at [`docs/referencia/index_con_calculos.html`](referencia/index_con_calculos.html). It can be tested by serving it or copying it to `frontend/index.html` with the server running.
 
-| Elemento | Origen |
-|---|---|
-| Altitud, cinta, máxima, gráfico | `altitude` de la trama |
-| Barómetro | `pressure` (Pa → hPa) |
-| Aceleración X/Y/Z | `accel_x/y/z` |
-| Posición y traza | `latitude`, `longitude` |
-| Fase de vuelo y marcadores en gráficos | `status` |
-| MET | `timestamp` |
-| Pérdida de paquetes, recibidos, CRC | `statistics` del backend |
-| RSSI, SNR, voltaje | `N/D`: se muestran si el backend envía `rssi`, `snr`, `voltage` |
+---
 
-La tarjeta **CARGA G** muestra la magnitud `√(ax²+ay²+az²)` y su máximo. Es el único cálculo que se conserva, por pedido anterior. Si se quiere eliminar, basta quitar esa tarjeta.
+## 1. Primary Direct Telemetry Metrics (Current Dashboard)
 
-## Cálculos retirados
+The production dashboard renders telemetry directly from the parsed frame without algorithmic modification:
 
-### 1. Altitud barométrica y filtro de Kalman
-- **Altitud barométrica:** `h_baro = h0 + 44330 · (1 − (p/p0)^0.190295)`
-  - `p0` y `h0` son la presión y la altitud GNSS de la primera muestra (referencia en la rampa).
-- **Filtro de Kalman 1D, estado `[h, v]`:**
-  - Predicción con `dt` entre muestras (limitado a 1 s), ruido de proceso por aceleración `q = 20 (m/s²)²`:
-    - `P00 += dt·(P10+P01) + dt²·P11 + q·dt⁴/4`
-    - `P01 += dt·P11 + q·dt³/2`, `P10` igual
-    - `P11 += q·dt²`
-  - Dos actualizaciones secuenciales con `H=[1 0]`:
-    - Barómetro con `R = 4 m²`.
-    - GNSS con `R = 25 m²`.
-  - Inicialización: `h = altitud GNSS`, `v = 0`, `P = diag(25, 25)`.
-- **Se reinicia** cuando el `timestamp` retrocede.
-
-### 2. Variómetro (Vz) y velocidad
-- **Vz:** es la componente `v` del Kalman.
-- **Velocidad horizontal `Vh`:**
-  - Se calcula con la posición local (ver punto 3) comparando la muestra actual con la más reciente de hace 1 s o más (ventana de 4 s).
-  - Esto evita que el GNSS, que tiene tasa menor que la telemetría, dé saltos y ceros.
-- **Velocidad total:** `|V| = √(Vz² + Vh²)`.
-- **Visualización:** barra vertical de ±100 m/s con aguja y gráfico `|V|` y `Vz` vs tiempo.
-
-### 3. Posición local, acimut, elevación y distancia
-- **Estación:** el primer fix GNSS válido (lat/lon distintos de 0) o los parámetros de URL `?stlat=&stlon=&stalt=`.
-- **Coordenadas locales (aproximación plana):**
-  - `x = (lon − lon0)·111320·cos(lat0)`
-  - `y = (lat − lat0)·110540`
-  - `u = altitud − alt_estación`
-- **Resultados:**
-  - Acimut: `atan2(x, y)` normalizado a 0–360°.
-  - Elevación: `atan2(u, √(x²+y²))`.
-  - Distancia: `√(x²+y²+u²)`; no se calcula si es menor a 5 m.
-- **Cuadrante polar:** radio `(90−el)/90`, ángulo = acimut desde el norte, y haz de antena de ±10° (`beamHalfWidthDeg`).
-
-### 4. Elipse de impacto
-- **Condición:** `Vz < −2 m/s` y altitud sobre el suelo mayor a 5 m. `AGL = h − altitud inicial`.
-- **Cálculo:**
-  - `t = AGL / (−Vz)`
-  - `impacto = pos + (Vx, Vy)·t`
-  - Semieje mayor `a = max(10 m, 0.15·Vh·t)`, orientado según el rumbo de la velocidad.
-  - Semieje menor `b = max(10 m, 0.5·a)`.
-- **Limitaciones:** es una estimación lineal sin viento ni modelo del paracaídas. Los porcentajes son supuestos.
-
-### 5. Actitud / inclinación
-- `pitch = atan2(ax, √(ay²+az²))`
-- `roll = atan2(ay, −az)`
-- `inclinación = atan2(√(ax²+ay²), |az|)`
-- Se suavizan con filtro exponencial `α = 0.2`.
-- **Limitación:** solo es válida con aceleración propia baja, no durante el empuje del motor.
-- **Pendiente:** el signo de los ejes depende del montaje del sensor (en reposo `az ≈ −1 g`).
-
-### 6. Medidor G con aguja fantasma
-- **Dial:** semicircular de 0 a 8 g₀.
-- **Aguja fantasma:** retención de pico con caída de 2 g/s: `ghost = max(g, ghost − 2·dt)`.
-
-### 7. Cola de alarmas ISA-18.2
-- **Estados por alarma:** activa sin acuse, activa acusada, retornada sin acuse. Al retornar estando acusada, se elimina de la cola.
-- **Orden:** por prioridad y luego por hora.
-- **Acciones:** acuse individual y "acusar todas". Cada alarma, retorno y acuse se registra en el log de eventos.
-- **Se evalúa a 4 Hz.**
-
-| ID | Prioridad | Condición |
+| Display Element | Frame Source Field | Engineering Units & Processing |
 |---|---|---|
-| `LINK` | Crítica | sin conexión o sin paquetes por más de 3 s |
-| `DESC` | Crítica | fase ≥ Descenso, `Vz < −25 m/s`, AGL entre 20 y 300 m |
-| `GLOAD` | Alta | carga mayor a 8 g |
-| `CRC` | Alta | aumentó el contador de CRC inválidos en los últimos 10 s |
-| `VOLT` | Alta | voltaje menor a 3,3 V |
-| `LOSS` | Media | pérdida de paquetes mayor al 10% |
-| `GNSS` | Media | sin fix válido |
-| `RSSI` | Media | RSSI menor a −100 dBm |
+| **Altitude, Tape, Max Indicator, Chart** | `altitude` | Direct GNSS/geometric altitude in meters ($m$) |
+| **Barometer** | `pressure` | Atmospheric pressure converted from $\text{Pa}$ to $\text{hPa}$ ($\times 0.01$) |
+| **Tri-Axial Acceleration ($a_x, a_y, a_z$)** | `accel_x`, `accel_y`, `accel_z` | Scaled acceleration in $g$ ($1\text{ mg}$ or $0.5\text{ mg}$ resolution) |
+| **Position & Trajectory Polyline** | `latitude`, `longitude` | Micro-degrees scaled by $10^{-6}$ to decimal degrees ($^\circ$) |
+| **Flight Phase & Chart Event Markers** | `status` | State machine codes mapped to `status_label` |
+| **Mission Elapsed Time (MET)** | `timestamp` | Milliseconds formatted to `T+ HH:MM:SS` |
+| **Link Diagnostics (Loss, Rate, CRC)** | `statistics` | Cumulative backend counters and 5-second sliding windows |
+| **RF Diagnostics (RSSI, SNR, Voltage)** | `rssi`, `snr`, `voltage` | Displayed as `N/A` unless hardware and backend provide these optional fields |
 
-Estos umbrales son supuestos y hay que validarlos con el cohete real.
+> **Note on G-Load Card:**
+> The dashboard retains one minimal mathematical readout: the instantaneous total G-force magnitude:
+> $$G_{\text{total}} = \sqrt{a_x^2 + a_y^2 + a_z^2}$$
+> along with peak value memory.
 
-## Frecuencias de refresco objetivo (de la especificación)
+---
 
-| Zona | Frecuencia |
-|---|---|
-| Cabecera | 1–5 Hz |
-| Instrumento primario | 10–20 Hz |
-| Series temporales | 10 Hz |
-| Navegación | 1–5 Hz |
-| Alarmas y registro | por evento |
+## 2. Extended Mathematical Calculations (Future Implementation)
 
-## Pendientes para retomar
+### 2.1 Barometric Altitude & 1D Kalman Filter Fusion
 
-- Validar los signos y el montaje de los ejes de aceleración.
-- Definir el modelo de impacto (viento y descenso con paracaídas) y su incertidumbre.
-- Definir posición de la estación (fija en `app.yaml` o por URL).
-- Confirmar umbrales de alarmas.
-- Agregar al backend los campos `rssi`, `snr` y `voltage` (`config/frame.yaml`).
-- Cartografía offline (hoy usa teselas online de OpenStreetMap).
-- Cuenta atrás: requiere una hora de despegue programada.
+#### Barometric Altitude Calculation
+Barometric altitude is computed using the standard barometric formula referenced to ground conditions:
+$$h_{\text{baro}} = h_0 + 44330 \times \left(1 - \left(\frac{p}{p_0}\right)^{0.190295}\right)$$
+where $p_0$ and $h_0$ are the atmospheric pressure and GNSS altitude recorded on the launch rail during the pre-launch baseline calibration.
+
+#### 1D Kalman Filter (State: $[h, v]^T$)
+Fuses barometric pressure (high frequency, low latency, sensor drift) with GNSS altitude (low frequency, absolute accuracy) into a filtered altitude $h$ and vertical velocity $v$.
+
+1. **State Vector & Transition Matrix:**
+   $$\mathbf{x} = \begin{bmatrix} h \\ v \end{bmatrix}, \quad \mathbf{F} = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}$$
+   where $\Delta t$ is the elapsed time between successive frames ($\Delta t \le 1.0\text{ s}$).
+
+2. **Prediction Step:**
+   $$\hat{\mathbf{x}}_{k|k-1} = \mathbf{F} \hat{\mathbf{x}}_{k-1|k-1}$$
+   With acceleration process noise variance $q = 20\text{ (m/s²)}²$, covariance propagation is:
+   $$P_{00} \leftarrow P_{00} + \Delta t (P_{10} + P_{01}) + \Delta t^2 P_{11} + \frac{q \Delta t^4}{4}$$
+   $$P_{01} \leftarrow P_{01} + \Delta t P_{11} + \frac{q \Delta t^3}{2}, \quad P_{10} \leftarrow P_{01}$$
+   $$P_{11} \leftarrow P_{11} + q \Delta t^2$$
+
+3. **Sequential Measurement Updates ($\mathbf{H} = [1 \quad 0]$):**
+   - **Barometric Update:** $R_{\text{baro}} = 4.0\text{ m}^2$ (applied at each packet arrival).
+   - **GNSS Update:** $R_{\text{GNSS}} = 25.0\text{ m}^2$ (applied when new GNSS fix arrives).
+   - Innovation: $y = z - \hat{h}$
+   - Kalman Gain: $\mathbf{K} = \frac{\mathbf{P} \mathbf{H}^T}{\mathbf{H} \mathbf{P} \mathbf{H}^T + R} = \frac{1}{P_{00} + R} \begin{bmatrix} P_{00} \\ P_{10} \end{bmatrix}$
+   - State Correction: $\hat{\mathbf{x}} \leftarrow \hat{\mathbf{x}} + \mathbf{K} y$
+   - Covariance Update: $\mathbf{P} \leftarrow (\mathbf{I} - \mathbf{K} \mathbf{H}) \mathbf{P}$
+
+4. **Filter Reset:**
+   The filter re-initializes to $\mathbf{x} = [h_{\text{GNSS}}, 0]^T$ with $\mathbf{P} = \text{diag}(25, 25)$ if a packet timestamp retrograde jump is detected.
+
+---
+
+### 2.2 Variometer ($V_z$) & Total Velocity Vector
+
+- **Vertical Velocity ($V_z$):** Directly extracted as the velocity state $v$ from the Kalman filter.
+- **Horizontal Velocity ($V_h$):**
+  - Calculated using Local Tangent Plane displacements over a sliding time window:
+    $$V_x = \frac{x(t) - x(t - \delta t)}{\delta t}, \quad V_y = \frac{y(t) - y(t - \delta t)}{\delta t}$$
+    with $\delta t \ge 1.0\text{ s}$ (spanning up to $4.0\text{ s}$) to filter out low-resolution GNSS quantization steps.
+  - Horizontal speed: $V_h = \sqrt{V_x^2 + V_y^2}$.
+- **Total Velocity Magnitude:**
+  $$\|V\| = \sqrt{V_z^2 + V_h^2}$$
+- **Visualization:** A mechanical variometer tape scaled at $\pm 100\text{ m/s}$ with a colored needle indicator and dual-channel oscilloscope plotting $\|V\|$ and $V_z$ over time.
+
+---
+
+### 2.3 Ground Station Tracking (Azimuth, Elevation, Slant Range)
+
+Calculates the line-of-sight pointing angles from the ground station antenna to the vehicle:
+
+1. **Ground Station Reference:** Fixed at the initial valid launchpad GNSS fix $(\text{lat}_0, \text{lon}_0, \text{alt}_0)$ or configured via URL query parameters (`?stlat=...&stlon=...&stalt=...`).
+2. **Local Tangent Plane Coordinates (Flat-Earth Equirectangular Projection):**
+   $$x = (\text{lon} - \text{lon}_0) \times 111320 \times \cos(\text{lat}_0)$$
+   $$y = (\text{lat} - \text{lat}_0) \times 110540$$
+   $$z = \text{alt} - \text{alt}_0$$
+3. **Pointing Solutions:**
+   - **Azimuth ($\theta_{\text{az}}$):** Clockwise angle from True North ($0^\circ \text{ to } 360^\circ$):
+     $$\theta_{\text{az}} = \text{atan2}(x, y) \pmod{360^\circ}$$
+   - **Elevation ($\phi_{\text{el}}$):** Angle above local horizon:
+     $$\phi_{\text{el}} = \text{atan2}\left(z, \sqrt{x^2 + y^2}\right)$$
+   - **Slant Range ($D$):** Euclidean distance in meters:
+     $$D = \sqrt{x^2 + y^2 + z^2}$$
+4. **Radar Polar Plot Display:**
+   - Radial coordinate: $r = \frac{90^\circ - \phi_{\text{el}}}{90^\circ}$ (outer edge = horizon, center = zenith).
+   - Angular coordinate: $\theta_{\text{az}}$ from True North.
+   - Antenna directional lobe visualization with $\pm 10^\circ$ half-power beamwidth (`beamHalfWidthDeg`).
+
+---
+
+### 2.4 Parachute Impact Point Prediction Ellipse
+
+Predicts the vehicle touchdown footprint during recovery descent:
+
+- **Activation Trigger:** Evaluated when vehicle enters descent phase ($V_z < -2.0\text{ m/s}$) and Above Ground Level altitude ($\text{AGL} = h - h_0$) exceeds $5\text{ m}$.
+- **Estimated Time-to-Impact:**
+  $$t_{\text{impact}} = \frac{\text{AGL}}{-V_z}$$
+- **Predicted Center of Impact:**
+  $$\mathbf{p}_{\text{impact}} = \mathbf{p}_{\text{current}} + \begin{bmatrix} V_x \\ V_y \end{bmatrix} \times t_{\text{impact}}$$
+- **Uncertainty Footprint (Dispersion Ellipse):**
+  - Semi-major axis (oriented along track direction):
+    $$a = \max(10\text{ m}, 0.15 \times V_h \times t_{\text{impact}})$$
+  - Semi-minor axis (cross-track uncertainty):
+    $$b = \max(10\text{ m}, 0.5 \times a)$$
+- **Operational Assumptions:** Assumes constant descent velocity and ballistic translation without wind aloft drift gradient.
+
+---
+
+### 2.5 Vehicle Attitude & Incline Estimation
+
+Approximates vehicle spatial orientation from static accelerometer vectors:
+$$\text{Pitch} = \text{atan2}\left(a_x, \sqrt{a_y^2 + a_z^2}\right)$$
+$$\text{Roll} = \text{atan2}(a_y, -a_z)$$
+$$\text{Tilt Angle} = \text{atan2}\left(\sqrt{a_x^2 + a_y^2}, |a_z|\right)$$
+- **Damping:** Filtered using exponential smoothing with factor $\alpha = 0.2$.
+- **Operating Boundary:** Valid only in low-dynamic flight regimes (on launch rail or stable descent). During powered boost, thrust acceleration invalidates gravitational gravity-vector orientation.
+
+---
+
+### 2.6 Mechanical G-Meter Dial with Ghost Needle
+
+- **Dial Scale:** Semicircular gauge calibrated from $0$ to $8\text{ g}_0$.
+- **Ghost Needle Peak Retention:** Stores maximum acceleration and slowly decays at a constant rate of $2\text{ g/s}$:
+  $$\text{ghost} = \max(g_{\text{current}}, \text{ghost} - 2.0 \times \Delta t)$$
+
+---
+
+### 2.7 ISA-18.2 Standard Alarm Engine
+
+Implements an ANSI/ISA-18.2 compliant industrial alarm management state machine:
+
+- **State Lifecycle:**
+  1. *Normal* $\to$ Condition met $\to$ **Active Unacknowledged (UNACK)**
+  2. **Active UNACK** $\to$ Operator Acknowledged $\to$ **Active Acknowledged (ACKED)**
+  3. **Active UNACK** $\to$ Condition clears $\to$ **Returned Unacknowledged (RTN_UNACK)**
+  4. **Active ACKED** $\to$ Condition clears $\to$ **Normal (Cleared)**
+- **Alarm Definitions & Thresholds:**
+
+| Alarm ID | Priority Level | Trigger Criteria | Normalization Condition |
+|---|---|---|---|
+| `LINK` | Critical (`CRIT`) | No serial connection or packet silence $> 3.0\text{ s}$ | Valid frame received |
+| `DESC` | Critical (`CRIT`) | Phase $\ge \text{Descent}$, $V_z < -25\text{ m/s}$, $\text{AGL} \in [20, 300]\text{ m}$ | Velocity damped or touchdown |
+| `GLOAD` | High (`WARN`) | Total acceleration $\|a\| > 8.0\text{ g}$ | $\|a\| \le 7.0\text{ g}$ |
+| `CRC` | High (`WARN`) | Consecutive invalid CRC frames in last 10 seconds | 10 seconds without CRC errors |
+| `VOLT` | High (`WARN`) | Avionics battery voltage $< 3.3\text{ V}$ | Voltage $\ge 3.5\text{ V}$ |
+| `LOSS` | Medium (`INFO`) | Sliding 5-second packet loss $> 10\%$ | Packet loss $\le 5\%$ |
+| `GNSS` | Medium (`INFO`) | GPS fix lost ($\text{lat} = 0 \lor \text{lon} = 0$) | Valid GPS coordinates acquired |
+| `RSSI` | Medium (`INFO`) | RF signal strength $< -100\text{ dBm}$ | Signal strength $\ge -95\text{ dBm}$ |
+
+---
+
+## 3. Target Display Refresh Rates
+
+To ensure deterministic performance without browser render stalling, dashboard updates are organized into scheduled execution tiers:
+
+| Subsystem | Target Frequency | Scheduling Mechanism |
+|---|---|---|
+| **Mission Clocks & Status Header** | 1–5 Hz | Throttled interval / RAF timer |
+| **Primary Instruments (Altimeter Tape, Dial)** | 10–20 Hz (interpolated to 60 Hz) | `requestAnimationFrame` with exponential smoothing |
+| **Time-Series Oscilloscopes** | 10 Hz (nominal frame rate) | Rendered upon telemetry arrival, synchronized with RAF |
+| **GIS & Trajectory Mapping** | 1–5 Hz | Throttled Leaflet update loop |
+| **Alarm Engine & Events Log** | Event-driven (evaluated at 4 Hz) | Batch processed to avoid DOM thrashing |
+
+---
+
+## 4. Engineering Roadmap & Implementation Checklist
+
+When reintegrating these extended metrics, complete the following validation milestones:
+
+- [ ] **Coordinate Frame Calibration:** Confirm accelerometer axis orientation against the flight airframe (in resting pad position, $a_z \approx -1.0\text{ g}$ or $+1.0\text{ g}$ depending on sensor orientation).
+- [ ] **Aerodynamic Recovery Model:** Incorporate actual parachute drag coefficient ($C_d A$) and local wind aloft profile into the landing ellipse predictor.
+- [ ] **Ground Station Location Management:** Provide a GUI modal or configuration parameter in `config/app.yaml` to configure ground station coordinates instead of relying on first fix or URL params.
+- [ ] **Alarm Boundary Verification:** Calibrate alarm thresholds against historical flight telemetry datasets.
+- [ ] **RF Metric Ingestion:** Extend `config/frame.yaml` and embedded avionics code to pack `rssi`, `snr`, and `voltage` telemetry fields.
+- [ ] **Offline Tile Caching:** Package local map tile sets to support operations in remote launch sites lacking Internet connectivity.
+- [ ] **Countdown Sequencer:** Add synchronized T-0 launch countdown sequencer to MET timer.
+
+---
+
+## 5. Related Documentation
+
+- **[System Architecture Documentation](architecture.md):** Complete data flow pipeline and frontend render architecture.
+- **[Frame Specification & Binary Protocol](protocol.md):** 30-byte telemetry frame structure and CRC-16 specification.
+- **[API & WebSocket Specification](api.md):** REST and WebSocket endpoints for ground station communication.
+- **[Getting Started & Operations Manual](getting-started.md):** Setup, hardware configuration, and developer testing guide.

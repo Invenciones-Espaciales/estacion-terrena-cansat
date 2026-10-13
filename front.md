@@ -1,78 +1,68 @@
-# Dashboard de Telemetría — Especificación
+# Telemetry Dashboard Design & Ergonomic Specification
 
-## 1. Objetivo
+## 1. Objective
 
-El dashboard de la **Estación Terrena de Telemetría** debe presentar la información de telemetría de forma clara, compacta y orientada al monitoreo en tiempo real.
+The **Telemetry Ground Station** dashboard must display telemetry data clearly, compactly, and ergonomically for real-time monitoring during live rocket flight operations.
 
-La interfaz usa una grilla de 12 columnas: paneles de 4 columnas arriba y
-paneles inferiores con anchos ajustados a su contenido.
+The user interface utilizes a responsive 12-column grid layout: 4-column metric panels across the top row, and adaptive-width panels across the lower rows sized to match their content density.
 
-La intención es establecer una jerarquía visual:
+The core visual hierarchy is structured as follows:
 
-* **Métricas principales:** valores grandes y fáciles de identificar.
-* **Estado del enlace:** información crítica siempre visible.
-* **GPS y coordenadas:** agrupados en el mismo panel.
-* **Eventos:** solo transiciones de etapa atravesadas por el cohete.
+* **Primary Metrics:** Large, high-contrast numeric values for immediate cognitive acquisition.
+* **Link Health:** Critical communication and radio status persistently visible.
+* **GPS & Spatial Tracking:** Grouped within a unified interactive map panel.
+* **Flight Events:** High-priority stage transitions and milestone logging.
 
 ---
 
-# 2. Layout general
+# 2. General Layout Architecture
 
-La interfaz tendrá tres zonas principales:
+The user interface is divided into three primary functional zones:
 
 ### Header
+Spans the full display width across the top of the viewport.
 
-El encabezado ocupará todo el ancho.
+Displays:
+* System Title: `Estación Terrena` / `Ground Station`
+* Mission Elapsed Time (MET): `T+ 00:03:42`
+* Connection State Indicator: `● LINK CONNECTED`
 
-Debe mostrar:
-
-* Nombre del sistema: `Estación Terrena`
-* Tiempo transcurrido desde el inicio: `T+ 00:03:42`
-* Estado del enlace: `● LINK CONNECTED`
-
-Ejemplo:
-
+Wireframe:
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ HEADER — Estación Terrena                  T+ 00:03:42    ● LINK CONNECTED │
+│ HEADER — Ground Station                    T+ 00:03:42    ● LINK CONNECTED  │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Grid principal
+### Primary Grid
+A 12-column responsive layout:
+- **Top Row (4 / 4 / 4):** Barometer, Altimeter, and Tri-Axial Accelerometer.
+- **Bottom Row (6 / 3 / 3):** Interactive Map + Coordinates (6 columns), Link Health (3 columns), and Flight Milestones Log (3 columns).
 
-La grilla principal tiene 12 columnas. Barómetro, altitud y aceleración ocupan
-4 columnas cada uno. En la siguiente fila mapa+coordenadas ocupa 6 columnas,
-y salud de conexión e hitos ocupan 3 columnas cada uno.
-
-La distribución resultante es:
-
+Wireframe:
 ```text
 ┌──────────┬──────────┬──────────┐
-│ BARÓMETRO│ ALTITUD  │ ACELER.  │
+│BAROMETER │ ALTITUDE │  ACCEL.  │
 ├──────────┼──────────┼──────────┤
-│ MAPA + COORDENADAS │ SALUD │ HITOS │
-└────────────────────┴───────┴───────┘
+│ MAP + COORDINATES   │HEALTH│LOG│
+└─────────────────────┴──────┴───┘
 ```
 
-Esto permite que el mapa tenga mayor presencia visual sin sacrificar la densidad de información.
+This arrangement grants maximum visual prominence to the trajectory map without sacrificing telemetry density.
 
 ---
 
-# 3. Barómetro
+# 3. Barometer Instrument
 
-El componente de barómetro debe mostrar la presión atmosférica como métrica principal.
+Displays atmospheric pressure as a primary flight safety metric.
 
-No se utilizará una tabla como elemento principal.
+### Information Content
+* Current barometric pressure (hPa)
+* Rate of pressure change ($\Delta P$)
+* Minimum recorded pressure
+* Maximum recorded pressure
 
-### Información
-
-* Presión actual
-* Variación de presión
-* Presión mínima
-* Presión máxima
-
-### Diseño
-
+### Instrument Card Layout
 ```text
 BAROMETER
 
@@ -85,24 +75,20 @@ MIN     1006.12
 MAX     1012.83
 ```
 
-La presión actual debe tener mayor jerarquía visual que el resto de los datos.
-
-La presión incluye una mini línea de tendencia.
+Current atmospheric pressure retains top visual weight, supplemented by a real-time sparkline or trend indicator.
 
 ---
 
-# 4. Altitud
+# 4. Altimeter Instrument
 
-La altitud será una de las métricas principales del dashboard.
+Altitude is one of the most critical flight performance indicators.
 
-### Información
+### Information Content
+* Current geometric altitude ($m$)
+* Vertical velocity ($m/s$)
+* Maximum apogee altitude reached ($m$)
 
-* Altitud actual
-* Velocidad vertical
-* Altitud máxima alcanzada
-
-### Diseño
-
+### Instrument Card Layout
 ```text
 ALTITUDE
 
@@ -114,32 +100,21 @@ ALTITUDE
 MAX    181.2 m
 ```
 
-El valor actual debe ser uno de los elementos tipográficos más grandes de la interfaz.
-
-Referencia:
-
-```text
-124.8
-  m
-```
-
-El valor puede utilizar aproximadamente **42–48 px**, dependiendo de la resolución final del dashboard.
+The current altitude readout employs the largest typographic scale on the screen (42–48 px font size) alongside the mechanical moving altitude tape.
 
 ---
 
-# 5. Aceleración
+# 5. Tri-Axial Accelerometer Instrument
 
-El componente mostrará la aceleración en los tres ejes.
+Displays acceleration across vehicle body axes ($X, Y, Z$).
 
-### Información
+### Information Content
+* Transverse X-Axis ($g$)
+* Transverse Y-Axis ($g$)
+* Longitudinal Z-Axis ($g$)
+* Total G-Load Vector Magnitude: $\sqrt{a_x^2 + a_y^2 + a_z^2}$
 
-* Eje X
-* Eje Y
-* Eje Z
-* Magnitud total
-
-### Diseño
-
+### Instrument Card Layout
 ```text
 ACCELERATION
 
@@ -150,27 +125,23 @@ ACCELERATION
  MAGNITUDE  1.01 g
 ```
 
-La magnitud total tendrá una jerarquía ligeramente superior a los valores individuales.
-
-Cada eje incluye una gráfica de tendencia.
+Total magnitude retains visual prominence over individual axis channels. Each axis is plotted in real-time on continuous Canvas oscilloscopes.
 
 ---
 
-# 6. Salud de conexión
+# 6. Radio Link Health & Diagnostics
 
-El componente de salud del enlace debe proporcionar una visión inmediata del estado de comunicación con el sistema remoto.
+Provides instantaneous operational visibility into serial link stability and RF packet delivery.
 
-### Información
+### Information Content
+* Connection link status
+* Latest received sequence number
+* Total frames received
+* Total frames lost
+* Silence elapsed time since last packet
+* Instantaneous reception rate (Hz)
 
-* Estado de conexión
-* Número del último paquete enviado (secuencia)
-* Cantidad de paquetes recibidos
-* Cantidad de paquetes perdidos
-* Tiempo desde el último paquete
-* Tasa de recepción
-
-### Diseño
-
+### Instrument Card Layout
 ```text
 LINK HEALTH
 
@@ -184,35 +155,27 @@ LAST PACKET       0.1 s
 RX RATE          10.0 Hz
 ```
 
-### Estados
+### Visual State Indication
 
-El indicador de estado utilizará una codificación visual:
-
-| Estado       | Indicador |
-| ------------ | --------- |
-| Conectado    | Verde     |
-| Degradado    | Amarillo  |
-| Desconectado | Rojo      |
-
-El estado deberá ser identificable visualmente sin depender de otros valores.
+| Status | Dot Color | Condition |
+|---|:---:|---|
+| **Connected** | Green | Active packet ingestion within nominal timing |
+| **Degraded** | Amber | Silence $> 1.5\text{ s}$ or packet loss $> 5\%$ |
+| **Disconnected** | Red | Hardware UART closed or silence $> 3.0\text{ s}$ |
 
 ---
 
-# 7. GPS / Mapa
+# 7. Interactive GIS & Trajectory Map
 
-El mapa y las coordenadas comparten un panel de **6/12 columnas**.
+Occupies a prominent **6/12 column** panel.
 
-### Información
+### Information Content
+* Real-time vehicle coordinates
+* Historical trajectory polyline
+* Launchpad coordinate anchor (`startMarker`)
+* Georeferenced flight event markers
 
-Debe mostrar:
-
-* Posición actual
-* Trayectoria recorrida
-* Punto de inicio
-* Hitos georreferenciados, cuando estén disponibles
-
-### Diseño inicial
-
+### Map Card Layout
 ```text
 GPS / MAP
 
@@ -221,163 +184,85 @@ GPS / MAP
 │                 ●────●                      │
 │                                             │
 ├─────────────────────────────────────────────┤
-│ LATITUD                 LONGITUD             │
+│ LATITUDE                LONGITUDE           │
 └─────────────────────────────────────────────┘
 ```
 
-La posición GPS no debe implementarse como una imagen estática.
-
-### Implementación futura
-
-Se podrá integrar un mapa interactivo mediante:
-
-* **Leaflet**
-* **OpenStreetMap**
-
-Sobre el mapa se podrán dibujar:
-
-* Posición actual
-* Trayectoria
-* Punto de inicio
-* Hitos georreferenciados
-
-El mapa deberá ser interactivo cuando esta funcionalidad sea implementada.
+Implemented with **Leaflet 1.9.4** and OpenStreetMap cartography. Panned and refreshed at throttled intervals (4 Hz) to prevent DOM thrashing.
 
 ---
 
-# 8. Log de hitos
+# 8. Flight Milestones & State Transition Log
 
-El componente muestra solo los hitos que atraviesa el cohete durante el vuelo.
+Records and displays vehicle flight state changes.
 
-Se registran únicamente las transiciones de etapa que atraviesa el cohete,
-representadas como **etapa + tiempo de misión**. No se incluyen conexión,
-pérdida de paquetes ni mensajes técnicos.
+Transitions are captured as **Flight Stage + Mission Elapsed Time**. Technical network errors and CRC logs are routed to diagnostic alerts rather than cluttering this operational log.
 
-### Diseño
-
+### Event Log Layout
 ```text
 FLIGHT EVENTS
 
-09:42:13    HITO 1
-09:42:48    HITO 2
-09:43:12    HITO 3
-09:43:41    HITO 4
-09:44:02    HITO 5
+09:42:13    PRE-LAUNCH
+09:42:48    POWERED ASCENT
+09:43:12    APOGEE
+09:43:41    PARACHUTE DESCENT
+09:44:02    TOUCHDOWN
 ```
 
-En la parte superior se destacará el último evento:
-
+The header permanently highlights the active operational phase:
 ```text
 CURRENT
-HITO 4
+POWERED ASCENT
 ```
 
-### Decisión de diseño
+---
 
-El primer estado recibido solo inicializa la etapa actual; el log comienza al
-detectar una transición posterior.
+# 9. Geolocation Coordinate Readouts
+
+Coordinates are rendered in a dedicated numeric readout panel adjacent to the map:
+* **Latitude:** Signed decimal degrees ($^\circ$, 6 decimal places)
+* **Longitude:** Signed decimal degrees ($^\circ$, 6 decimal places)
 
 ---
 
-# 9. Coordenadas GPS
+# 10. Visual Hierarchy & Ergonomic Principles
 
-Las coordenadas aparecen fuera del mapa en un panel propio:
+The console prioritizes telemetry metrics according to operational criticality:
 
-* Latitud
-* Longitud
+1. **Link Health & Radio Connection**
+2. **Current Altitude & Apogee**
+3. **Vehicle Position & Track**
+4. **Tri-Axial Acceleration & Peak G-Load**
+5. **Barometric Pressure**
+6. **Flight Phase Transitions**
+7. **GNSS Coordinate Readouts**
 
-Los datos técnicos del frame no se muestran en el dashboard.
-
----
-
-# 10. Jerarquía visual
-
-La interfaz debe priorizar la información en este orden:
-
-1. **Estado del enlace**
-2. **Altitud**
-3. **Posición / mapa**
-4. **Aceleración**
-5. **Barómetro**
-6. **Eventos de vuelo**
-7. **Coordenadas GPS**
-
-Los valores principales deben utilizar tipografía grande y alto contraste.
-
-La información secundaria debe utilizar tamaños menores para evitar saturación visual.
+Primary values utilize bold, high-contrast typography, while secondary metrics use subdued scales to avoid visual fatigue under sunlight conditions.
 
 ---
 
-# 11. Principios de diseño
+# 11. Core Design Guidelines
 
-### Densidad
+### High Information Density
+Presents high-dimensional telemetry without degrading into an unreadable tabular spreadsheet.
 
-El dashboard debe mostrar mucha información sin convertirse en una tabla de datos.
+### Predictable Layout Stability
+Dynamic updates must never induce layout shifting, jitter, or scroll jumps.
 
-### Jerarquía
+### Sunlight Readability (Field Conditions)
+High-contrast color palette, minimum 14 pt font sizes for critical readouts, and prominent canvas stroke widths designed for outdoor operation under direct solar illumination.
 
-Cada componente debe tener claramente:
-
-* Título
-* Valor principal
-* Valores secundarios
-* Unidades
-
-### Tiempo real
-
-Los valores deberán actualizarse sin provocar cambios bruscos o innecesarios en el layout.
-
-### Estado
-
-Los estados críticos deben poder identificarse visualmente de forma inmediata.
-
-### Extensibilidad
-
-El diseño debe permitir agregar posteriormente:
-
-* Gráficos históricos
-* Tendencias
-* Mapa interactivo
-* Más métricas de telemetría
-* Diagnóstico avanzado
-* Exportación de datos
-
-sin tener que rediseñar completamente la estructura.
+### Extensible Modular Architecture
+Structured to accommodate future telemetry cards (variometer, antenna radar, battery voltage, temperature) without disrupting core dashboard stability.
 
 ---
 
-# 12. Resumen de la arquitectura visual
+# 12. Related Documentation
 
-La composición final queda definida como:
+- **[System Architecture & Component Documentation](docs/architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
+- **[Frame Specification & Binary Protocol Reference](docs/protocol.md):** 30-byte frame memory map, field data types, scales, and CRC-16 specification.
+- **[API & WebSocket Interface Specification](docs/api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
+- **[Getting Started & Operations Guide](docs/getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
+- **[Frame Schema Specification](config.md):** Declarative YAML frame definition reference.
+- **[Project Entry Point & Index](README.md):** Repository overview and documentation directory.
 
-```text
-┌──────────┬──────────┬──────────┐
-│ BARÓMETRO│ ALTITUD  │ ACELER.  │
-├──────────┼──────────┼──────────┤
-│ MAPA + COORDENADAS │ SALUD │ HITOS │
-└────────────────────┴───────┴───────┘
-```
-
-En pantallas amplias, mapa+coordenadas/salud/hitos tienen proporción 6/3/3.
-No hay panel de datos de frame.
-
----
-
-# 13. Requisitos G7, G8 y G12
-
-* **G7:** altitud y aceleración XYZ se grafican en tiempo real. Batería y tasas
-  de giro quedan fuera hasta que exista una fuente definida.
-* **G8:** tiempo de misión, GPS, paquetes recibidos/perdidos y estado del vuelo
-  se muestran. Temperatura queda fuera por ahora.
-* **G12:** tema claro de alto contraste para uso bajo luz solar; textos de al
-  menos 14 pt y trazos/ejes de gráficos en negrita.
-
-Las actualizaciones visuales se limitan a 10 Hz y suavizan los valores para
-reducir saltos sin modificar los datos recibidos. Se mantiene fija la trama
-binaria actual de 30 bytes. Temperatura, batería, giroscopio, RSSI y SNR no se
-muestran ni se envían por ahora.
-
-Los gráficos conservan escala fija para comparar lecturas entre actualizaciones:
-presión **800–1100 hPa**, altitud **0–1200 m**, aceleración X/Y **−0,5 a +0,5 g**
-y Z **−1,5 a +4,5 g**. Cada gráfico etiqueta esos límites y el tiempo de misión
-correspondiente al primer y último dato visible.

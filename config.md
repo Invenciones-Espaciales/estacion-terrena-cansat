@@ -1,633 +1,32 @@
-# Esquema genérico de definición de tramas
+# Generic Frame Definition Schema Specification
 
-## 1. Objetivo
+## 1. Objective
 
-El sistema de la estación terrena debe poder interpretar diferentes tipos de tramas sin modificar el código del programa.
+The Ground Station system must dynamically parse and validate arbitrary binary telemetry frame formats without requiring any code modifications to the core application.
 
-Para lograrlo, cada trama se describe mediante un archivo YAML externo.
+To accomplish this, each telemetry frame is declaratively defined using an external YAML configuration file (e.g., [`config/frame.yaml`](config/frame.yaml)).
 
-El programa de la PC:
+During runtime, the ground station engine:
 
-1. Carga la definición YAML.
-2. Recibe los bytes mediante el puerto serie.
-3. Identifica y valida la trama.
-4. Extrae los campos según la definición.
-5. Convierte los valores crudos a valores físicos.
-6. Entrega los datos interpretados al resto de la aplicación.
+1. Loads the YAML frame specification schema.
+2. Ingests raw binary byte streams over the serial interface.
+3. Identifies and validates candidate frame boundaries using configured lengths and CRC algorithms.
+4. Extracts discrete fields according to byte offsets, lengths, and binary types.
+5. Converts raw integer values to physical engineering metrics using linear scaling and offsets.
+6. Maps discrete status codes to operational labels and delivers interpreted dictionaries to storage and WebSocket pipelines.
 
-De esta forma, modificar el formato de una trama requiere modificar únicamente su archivo de definición.
+Modifying a vehicle's telemetry layout or adding new sensor fields requires only updating the YAML schema file—zero Python code changes are necessary.
 
 ---
 
-# 2. Estructura general
+# 2. Schema Structure
 
-Una definición de trama tiene la siguiente estructura:
+A declarative frame definition is structured into three primary sections:
 
 ```yaml
-name: "Nombre de la trama"
+name: "Frame Name"
 id: 1
-description: "Descripción"
-
-frame:
-  length: 30
-  byte_order: "big_endian"
-
-  crc:
-    ...
-
-fields:
-  - ...
-```
-
-Está dividida en tres componentes principales:
-
-* **Identificación de la trama**
-* **Configuración general de la trama**
-* **Definición de los campos**
-
----
-
-# 3. Identificación
-
-## `name`
-
-Nombre legible de la trama.
-
-```yaml
-name: "Trama A"
-```
-
-Es metadato: el parser actual no usa este valor para seleccionar una trama ni
-compararlo automáticamente con un campo.
-
----
-
-## `id`
-
-Identificador numérico de la trama.
-
-```yaml
-id: 1
-```
-
-Debe coincidir con el campo utilizado por el protocolo para identificar el tipo de trama.
-
-Por ejemplo:
-
-```text
-0x01 → Trama A
-0x02 → Trama B
-0x03 → Trama C
-```
-
----
-
-## `description`
-
-Descripción opcional de la trama.
-
-```yaml
-description: "Telemetría de alta frecuencia"
-```
-
-Sirve como documentación; el parser no lo agrega a los datos de telemetría.
-
----
-
-# 4. Configuración de la trama
-
-La sección `frame` contiene las propiedades generales del paquete.
-
-```yaml
-frame:
-  length: 30
-  byte_order: "big_endian"
-```
-
-## `length`
-
-Cantidad total de bytes de la trama.
-
-```yaml
-length: 30
-```
-
-En este ejemplo la trama completa ocupa 30 bytes.
-
-El parser debe utilizar este valor para determinar cuándo recibió una trama completa.
-
----
-
-## `byte_order`
-
-Define el orden de los bytes para los campos que ocupan más de un byte.
-
-Valores posibles:
-
-```yaml
-byte_order: "big_endian"
-```
-
-o:
-
-```yaml
-byte_order: "little_endian"
-```
-
-En `big_endian`, el byte más significativo aparece primero.
-
-Ejemplo:
-
-```text
-0x01 0x9F
-```
-
-representa:
-
-```text
-0x019F = 415
-```
-
----
-
-# 5. CRC
-
-La sección `crc` define cómo validar la integridad de la trama.
-
-Ejemplo:
-
-```yaml
-crc:
-  enabled: true
-  algorithm: "CRC-16/CCITT-FALSE"
-  polynomial: 0x1021
-  initial_value: 0xFFFF
-  final_xor: 0x0000
-  reflect_input: false
-  reflect_output: false
-
-  offset: 28
-  length: 2
-  byte_order: "big_endian"
-
-  calculate_from: 0
-  calculate_to: 27
-```
-
-## `enabled`
-
-Indica si la trama utiliza CRC.
-
-```yaml
-enabled: true
-```
-
----
-
-## `algorithm`
-
-Nombre del algoritmo utilizado.
-
-```yaml
-algorithm: "CRC-16/CCITT-FALSE"
-```
-
-El nombre permite identificar rápidamente el algoritmo, mientras que los parámetros siguientes permiten implementarlo de forma determinista.
-
----
-
-## `polynomial`
-
-Polinomio utilizado por el algoritmo.
-
-```yaml
-polynomial: 0x1021
-```
-
----
-
-## `initial_value`
-
-Valor inicial del cálculo.
-
-```yaml
-initial_value: 0xFFFF
-```
-
----
-
-## `final_xor`
-
-Valor aplicado mediante XOR al resultado final.
-
-```yaml
-final_xor: 0x0000
-```
-
----
-
-## `reflect_input`
-
-Indica si los bits de entrada deben reflejarse.
-
-```yaml
-reflect_input: false
-```
-
----
-
-## `reflect_output`
-
-Indica si los bits del resultado deben reflejarse.
-
-```yaml
-reflect_output: false
-```
-
----
-
-## `offset`
-
-Posición del primer byte correspondiente al CRC.
-
-```yaml
-offset: 28
-```
-
-En la trama de ejemplo:
-
-```text
-Byte 28 → CRC MSB
-Byte 29 → CRC LSB
-```
-
----
-
-## `length`
-
-Cantidad de bytes utilizados por el CRC.
-
-```yaml
-length: 2
-```
-
----
-
-## `byte_order`
-
-Orden de los bytes del CRC.
-
-```yaml
-byte_order: "big_endian"
-```
-
----
-
-## `calculate_from`
-
-Primer byte incluido en el cálculo.
-
-```yaml
-calculate_from: 0
-```
-
----
-
-## `calculate_to`
-
-Último byte incluido en el cálculo.
-
-```yaml
-calculate_to: 27
-```
-
-Por lo tanto, el CRC se calcula sobre:
-
-```text
-Byte 0 ──────────────── Byte 27
-        datos de trama
-```
-
-Los bytes 28 y 29 contienen el CRC recibido y no participan en su propio cálculo.
-
----
-
-# 6. Campos
-
-La sección `fields` contiene la definición de cada dato presente en la trama.
-
-Ejemplo:
-
-```yaml
-fields:
-
-  - name: "rocket_id"
-    offset: 0
-    length: 1
-    type: "uint8"
-```
-
-Cada campo posee una posición, tamaño y tipo.
-
----
-
-# 7. `name`
-
-Nombre interno del campo.
-
-```yaml
-name: "rocket_id"
-```
-
-Este nombre será utilizado por el software.
-
-Por ejemplo, después del procesamiento podríamos obtener:
-
-```python
-data["rocket_id"]
-```
-
----
-
-# 8. `description`
-
-Descripción del campo.
-
-```yaml
-description: "Identificador del cohete"
-```
-
-Es opcional y sirve para documentación, interfaces gráficas y mantenimiento.
-
----
-
-# 9. `offset`
-
-Posición del primer byte del campo dentro de la trama.
-
-```yaml
-offset: 8
-```
-
-La numeración comienza en cero.
-
-Ejemplo:
-
-```text
-Byte 0
-Byte 1
-Byte 2
-...
-Byte 8  ← inicio del campo
-Byte 9
-```
-
----
-
-# 10. `length`
-
-Cantidad de bytes ocupados por el campo.
-
-```yaml
-length: 2
-```
-
-Por ejemplo:
-
-```yaml
-offset: 8
-length: 2
-```
-
-significa:
-
-```text
-Byte 8
-Byte 9
-```
-
----
-
-# 11. `type`
-
-Define cómo interpretar los bytes.
-
-Tipos implementados:
-
-```text
-uint8
-int8
-
-uint16
-int16
-
-uint24
-int24
-
-uint32
-int32
-
-uint64
-int64
-
-float32
-float64
-
-bytes
-```
-
-Los tipos enteros pueden utilizar `byte_order` de la trama. Los campos
-`bytes` requieren declarar `length` y se entregan como una cadena hexadecimal.
-El largo declarado debe coincidir con el tamaño fijo del tipo en los demás
-casos.
-
----
-
-# 12. Escalado
-
-Los datos transmitidos pueden ser valores enteros que posteriormente deben convertirse a valores físicos.
-
-Para esto se utiliza:
-
-```yaml
-scale: 0.1
-```
-
-La conversión se realiza conceptualmente como:
-
-```text
-valor_físico = valor_crudo × scale
-```
-
-Ejemplo:
-
-```yaml
-type: "int16"
-scale: 0.1
-unit: "°C"
-```
-
-Si se recibe:
-
-```text
-185
-```
-
-el resultado será:
-
-```text
-18.5 °C
-```
-
----
-
-# 13. Offset físico
-
-Además de escala, puede existir un desplazamiento:
-
-```yaml
-scale: 0.1
-offset_value: -40
-```
-
-La conversión será:
-
-```text
-valor_físico =
-    valor_crudo × scale
-    + offset_value
-```
-
-Por ejemplo:
-
-```text
-valor_crudo = 500
-scale = 0.1
-offset = -40
-
-500 × 0.1 - 40 = 10 °C
-```
-
-Esto permite representar sensores que utilizan fórmulas de conversión simples.
-
----
-
-# 14. Unidad
-
-El campo `unit` define la unidad del valor ya convertido.
-
-Ejemplos:
-
-```yaml
-unit: "g"
-```
-
-```yaml
-unit: "Pa"
-```
-
-```yaml
-unit: "m"
-```
-
-```yaml
-unit: "deg"
-```
-
-La unidad no modifica el valor. Es información utilizada por la aplicación, principalmente para mostrar los datos.
-
----
-
-# 15. Valores enumerados
-
-Algunos campos representan estados en lugar de valores físicos.
-
-Para estos casos se puede utilizar `values`.
-
-Ejemplo:
-
-```yaml
-- name: "status"
-  offset: 27
-  length: 1
-  type: "uint8"
-
-  values:
-    0x00: "Standby"
-    0x01: "Pre-launch"
-    0x02: "Motor encendido / Ascenso"
-    0x03: "Apogeo"
-    0x04: "Descenso"
-    0x05: "Aterrizaje"
-```
-
-Si la PC recibe:
-
-```text
-0x02
-```
-
-el resultado conserva el valor numérico en `status` y agrega la etiqueta
-correspondiente en `status_label`:
-
-```text
-status = 2
-status_label = "Motor encendido / Ascenso"
-```
-
-Si no existe una etiqueta para un valor recibido, `status_label` será `null`.
-
----
-
-# 16. Valores esperados
-
-Algunos campos pueden utilizarse para identificar o validar una trama.
-
-Por ejemplo:
-
-```yaml
-- name: "frame_type"
-  offset: 1
-  length: 1
-  type: "uint8"
-  expected_value: 0x01
-```
-
-El parser debe comprobar que el valor recibido sea `0x01`.
-
-Esto permite descartar paquetes que no corresponden a la definición cargada.
-
----
-
-# 17. Comportamiento del parser
-
-Los `offset` de los campos y del CRC se cuentan desde el byte cero de la trama
-completa. El parser valida el tamaño total, el CRC y todos los campos con
-`expected_value` antes de entregar los datos.
-
-Los campos numéricos se convierten con `raw × scale + offset_value`. `values`
-agrega una clave `<nombre>_label` sin reemplazar el valor numérico. `unit` y
-`description` son metadatos: el parser no los agrega al objeto de telemetría.
-
-El lector acepta `fields` en el nivel raíz, como en este documento, y también
-`frame.fields` para definiciones anteriores. La secuencia se toma de
-`frame.sequence_field`; si no está declarada, se detecta `frame_number` o
-`sequence`.
-
-Para CRC-16/CCITT-FALSE se admiten `polynomial`, `initial_value` y `final_xor`.
-La reflexión de entrada y salida debe estar desactivada. El rango
-`calculate_from`–`calculate_to` es inclusivo.
-
----
-
-# 18. Ejemplo completo
-
-Una definición completa podría ser:
-
-```yaml
-name: "Trama A"
-id: 1
-description: "Telemetría de alta frecuencia"
+description: "High-level description"
 
 frame:
   length: 30
@@ -652,25 +51,324 @@ fields:
     offset: 0
     length: 1
     type: "uint8"
+  # Additional field definitions...
+```
+
+The schema consists of:
+* **Identification Metadata:** Top-level protocol name, ID, and description.
+* **General Frame Configuration:** Total length, byte ordering, and CRC validation parameters.
+* **Field Definitions:** Array of bit-level/byte-level telemetry channels with data types, scaling, and enumerations.
+
+---
+
+# 3. Identification Metadata
+
+## `name`
+Human-readable label for the telemetry frame:
+
+```yaml
+name: "High-Frequency Telemetry Frame"
+```
+
+*Note: This is informational metadata; the parser does not use this field for routing.*
+
+---
+
+## `id`
+Numeric protocol identifier for the frame:
+
+```yaml
+id: 1
+```
+
+Matches the protocol field identifying the packet type (e.g., `0x01` $\to$ High-frequency flight frame).
+
+---
+
+## `description`
+Optional documentation string describing the intended purpose or mission phase:
+
+```yaml
+description: "High-frequency sounding rocket telemetry stream"
+```
+
+---
+
+# 4. General Frame Configuration (`frame`)
+
+The `frame` mapping defines packet-level transport properties.
+
+```yaml
+frame:
+  length: 30
+  byte_order: "big_endian"
+```
+
+## `length`
+Total byte length of the frame:
+
+```yaml
+length: 30
+```
+
+The sliding window parser uses this length to accumulate candidate slices from the serial byte stream before triggering integrity verification.
+
+---
+
+## `byte_order`
+Defines default multi-byte endianness for fields that do not explicitly specify their own byte order.
+
+Supported values:
+- `"big_endian"` (Most Significant Byte first, Network Byte Order).
+- `"little_endian"` (Least Significant Byte first).
+
+Example: Two bytes `0x01 0x9F` in big-endian order represent $1 \times 256 + 159 = 415$.
+
+---
+
+# 5. Cyclic Redundancy Check (`crc`)
+
+The `crc` mapping defines the packet integrity verification parameters.
+
+```yaml
+crc:
+  enabled: true
+  algorithm: "CRC-16/CCITT-FALSE"
+  polynomial: 0x1021
+  initial_value: 0xFFFF
+  final_xor: 0x0000
+  reflect_input: false
+  reflect_output: false
+
+  offset: 28
+  length: 2
+  byte_order: "big_endian"
+
+  calculate_from: 0
+  calculate_to: 27
+```
+
+## `enabled`
+Boolean flag indicating whether CRC verification is enforced (`true` or `false`).
+
+## `algorithm`
+Descriptive identifier for the algorithm (e.g. `"CRC-16/CCITT-FALSE"`).
+
+## `polynomial`
+CRC generator polynomial (e.g. `0x1021` for CCITT: $x^{16} + x^{12} + x^5 + 1$).
+
+## `initial_value`
+Pre-loaded register value prior to calculation (e.g. `0xFFFF`).
+
+## `final_xor`
+Value XORed with the register upon completion of calculation (e.g. `0x0000`).
+
+## `reflect_input`
+Boolean indicating if data bytes are processed LSB-first (`true`) or MSB-first (`false`).
+
+## `reflect_output`
+Boolean indicating if the final CRC value is bit-reversed before XOR (`true` or `false`).
+
+## `offset`
+Zero-indexed byte position where the CRC checksum is stored in the frame:
+- `offset: 28` $\to$ Byte 28 is CRC MSB, Byte 29 is CRC LSB.
+
+## `length`
+Size of the CRC field in bytes (typically `2` for CRC-16).
+
+## `byte_order`
+Endianness of the transmitted checksum bytes (`"big_endian"` or `"little_endian"`).
+
+## `calculate_from` and `calculate_to`
+Inclusive byte indices defining the calculation range. For example:
+- `calculate_from: 0`, `calculate_to: 27` computes the CRC over bytes 0 through 27 (28 total bytes). Bytes 28 and 29 contain the transmitted CRC and are excluded from the calculation.
+
+---
+
+# 6. Field Definitions (`fields`)
+
+The `fields` list defines each telemetry metric embedded within the payload.
+
+```yaml
+fields:
+  - name: "rocket_id"
+    offset: 0
+    length: 1
+    type: "uint8"
+```
+
+---
+
+# 7. Field Properties Reference
+
+### `name`
+Internal identifier used by the application and emitted in JSON responses:
+```yaml
+name: "rocket_id"
+```
+Parsed into Python dictionary key `data["rocket_id"]`.
+
+### `description`
+Optional engineering description used for documentation and tooltips:
+```yaml
+description: "Rocket airframe identifier"
+```
+
+### `offset`
+Zero-indexed byte offset of the field within the 30-byte frame:
+```yaml
+offset: 8
+```
+
+### `length`
+Number of bytes occupied by the field:
+```yaml
+length: 2
+```
+
+### `type`
+Binary data representation. Supported data types include:
+
+| Type | Signedness | Size (bytes) | Description |
+|---|:---:|:---:|---|
+| `uint8` / `int8` | Unsigned / Signed | 1 | 8-bit integer |
+| `uint16` / `int16` | Unsigned / Signed | 2 | 16-bit integer |
+| `uint24` / `int24` | Unsigned / Signed | 3 | 24-bit integer |
+| `uint32` / `int32` | Unsigned / Signed | 4 | 32-bit integer |
+| `uint64` / `int64` | Unsigned / Signed | 8 | 64-bit integer |
+| `float32` | Signed | 4 | IEEE 754 single-precision float |
+| `float64` | Signed | 8 | IEEE 754 double-precision float |
+| `bytes` | Raw | N | Hexadecimal string representation |
+
+---
+
+# 8. Physical Conversions & Scaling
+
+### `scale`
+Linear multiplier applied to convert raw integers into engineering units:
+$$\text{Physical Value} = \text{Raw Integer} \times \text{scale}$$
+
+Example for $0.1\text{ }^\circ\text{C}$ resolution:
+```yaml
+type: "int16"
+scale: 0.1
+unit: "°C"
+```
+A raw value of `185` decodes to $185 \times 0.1 = 18.5\text{ }^\circ\text{C}$.
+
+### `offset_value`
+Additive constant applied after scaling:
+$$\text{Physical Value} = (\text{Raw Integer} \times \text{scale}) + \text{offset\_value}$$
+
+Example:
+```yaml
+scale: 0.1
+offset_value: -40.0
+```
+A raw value of `500` decodes to $(500 \times 0.1) - 40.0 = 10.0\text{ }^\circ\text{C}$.
+
+### `unit`
+Informational engineering unit symbol (e.g. `"g"`, `"Pa"`, `"m"`, `"deg"`, `"V"`). Included in documentation and UI headers.
+
+---
+
+# 9. Enumerations & Expected Values
+
+### `values`
+Maps discrete integer codes to human-readable strings:
+
+```yaml
+- name: "status"
+  offset: 27
+  length: 1
+  type: "uint8"
+  values:
+    0x00: "Standby"
+    0x01: "Pre-launch"
+    0x02: "Motor encendido / Ascenso"
+    0x03: "Apogeo"
+    0x04: "Descenso"
+    0x05: "Aterrizaje"
+```
+
+When raw code `0x02` is received:
+- `data["status"] = 2`
+- `data["status_label"] = "Motor encendido / Ascenso"`
+
+### `expected_value`
+Enforces packet filtering by requiring a specific field to match a fixed constant:
+
+```yaml
+- name: "frame_type"
+  offset: 1
+  length: 1
+  type: "uint8"
+  expected_value: 0x01
+```
+
+If the received byte at offset 1 does not equal `0x01`, the frame is rejected as invalid.
+
+---
+
+# 10. Complete Production Example
+
+Below is the standard production configuration utilized in `config/frame.yaml`:
+
+```yaml
+name: "Trama"
+id: 1
+description: "Telemetría de alta frecuencia"
+
+frame:
+  length: 30
+  byte_order: "big_endian"
+
+  crc:
+    enabled: true
+    algorithm: "CRC-16/CCITT-FALSE"
+    polynomial: 0x1021
+    initial_value: 0xFFFF
+    final_xor: 0x0000
+    reflect_input: false
+    reflect_output: false
+
+    offset: 28
+    length: 2
+    byte_order: "big_endian"
+
+    calculate_from: 0
+    calculate_to: 27
+
+fields:
+
+  - name: "rocket_id"
+    description: "Identificador del cohete"
+    offset: 0
+    length: 1
+    type: "uint8"
 
   - name: "frame_type"
+    description: "Tipo de trama"
     offset: 1
     length: 1
     type: "uint8"
     expected_value: 0x01
 
   - name: "frame_number"
+    description: "Número secuencial de trama"
     offset: 2
     length: 2
     type: "uint16"
 
   - name: "timestamp"
+    description: "Tiempo desde el despegue"
     offset: 4
     length: 4
     type: "uint32"
     unit: "ms"
 
   - name: "accel_x"
+    description: "Aceleración en eje X"
     offset: 8
     length: 2
     type: "int16"
@@ -679,6 +377,7 @@ fields:
     unit: "g"
 
   - name: "accel_y"
+    description: "Aceleración en eje Y"
     offset: 10
     length: 2
     type: "int16"
@@ -687,6 +386,7 @@ fields:
     unit: "g"
 
   - name: "accel_z"
+    description: "Aceleración en eje Z"
     offset: 12
     length: 2
     type: "int16"
@@ -695,32 +395,43 @@ fields:
     unit: "g"
 
   - name: "pressure"
+    description: "Presión atmosférica"
     offset: 14
     length: 3
     type: "uint24"
+    scale: 1
+    offset_value: 0
     unit: "Pa"
 
   - name: "latitude"
+    description: "Latitud GPS"
     offset: 17
     length: 4
     type: "int32"
     scale: 0.000001
+    offset_value: 0
     unit: "deg"
 
   - name: "longitude"
+    description: "Longitud GPS"
     offset: 21
     length: 4
     type: "int32"
     scale: 0.000001
+    offset_value: 0
     unit: "deg"
 
   - name: "altitude"
+    description: "Altitud GPS"
     offset: 25
     length: 2
     type: "int16"
+    scale: 1
+    offset_value: 0
     unit: "m"
 
   - name: "status"
+    description: "Estado actual del cohete"
     offset: 27
     length: 1
     type: "uint8"
@@ -732,3 +443,15 @@ fields:
       0x04: "Descenso"
       0x05: "Aterrizaje"
 ```
+
+---
+
+# 11. Related Documentation
+
+- **[System Architecture & Component Documentation](docs/architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
+- **[Frame Specification & Binary Protocol Reference](docs/protocol.md):** 30-byte frame memory map, field data types, scales, and CRC-16 specification.
+- **[API & WebSocket Interface Specification](docs/api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
+- **[Getting Started & Operations Guide](docs/getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
+- **[Dashboard Visual Specification](front.md):** Dashboard layout, telemetry instruments, and ergonomic design guidelines.
+- **[Project Entry Point & Index](README.md):** Repository overview and documentation directory.
+
