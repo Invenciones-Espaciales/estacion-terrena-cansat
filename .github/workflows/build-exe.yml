@@ -1,0 +1,69 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows .exe
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Compile Windows Executable with PyInstaller
+        run: |
+          pyinstaller --clean ground_station.spec
+
+      - name: Package Distribution Directory
+        run: |
+          $dist = "dist/estacion-terrena-windows"
+          New-Item -ItemType Directory -Force -Path "$dist/config"
+          New-Item -ItemType Directory -Force -Path "$dist/data"
+          Copy-Item "dist/estacion-terrena.exe" -Destination "$dist/"
+          Copy-Item "config/app.yaml" -Destination "$dist/config/"
+          Copy-Item "config/frame.yaml" -Destination "$dist/config/"
+          
+          # Create batch launcher
+          @"
+          @echo off
+          title Estacion Terrena Telemetria
+          echo Starting Ground Station server...
+          echo Open http://localhost:8000 in your browser.
+          estacion-terrena.exe
+          pause
+          "@ | Out-File -FilePath "$dist/iniciar.bat" -Encoding ascii
+
+          # Create ZIP archive
+          Compress-Archive -Path "$dist" -DestinationPath "dist/estacion-terrena-windows.zip" -Force
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: estacion-terrena-windows
+          path: dist/estacion-terrena-windows.zip
+          retention-days: 14
+
+      - name: Release Asset (On Tagged Push)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/estacion-terrena-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

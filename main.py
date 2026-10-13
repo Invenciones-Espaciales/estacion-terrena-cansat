@@ -12,12 +12,34 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
-import serial_asyncio
-import yaml
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-import uvicorn
-from fastapi.responses import FileResponse
+try:
+    import serial_asyncio
+    import yaml
+    from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+    from fastapi.staticfiles import StaticFiles
+    import uvicorn
+    from fastapi.responses import FileResponse
+except ModuleNotFoundError as exc:
+    missing_mod = exc.name or "required dependencies"
+    sys.stderr.write(
+        "\n"
+        "====================================================================\n"
+        f"[ERROR] Missing required dependency: '{missing_mod}'\n"
+        "The Ground Station requires packages installed in the virtual environment.\n\n"
+        "To resolve this issue:\n"
+        "  1. Activate the project virtual environment:\n"
+        "       source .venv/bin/activate       # On Linux / macOS\n"
+        "       .venv\\Scripts\\activate          # On Windows\n\n"
+        "  2. If the virtual environment is not initialized yet:\n"
+        "       python3 -m venv .venv\n"
+        "       source .venv/bin/activate\n"
+        "       pip install -r requirements.txt\n\n"
+        "  3. Re-run:\n"
+        "       python main.py\n"
+        "====================================================================\n\n"
+    )
+    sys.exit(1)
+
 
 
 # ============================================================
@@ -33,14 +55,27 @@ if sys.platform == "win32":
 
 
 # ============================================================
-# PATHS
+# PATHS & RUNTIME ENVIRONMENT
 # ============================================================
 
-BASE_DIR = Path(__file__).resolve().parent
+IS_FROZEN = getattr(sys, "frozen", False)
 
-CONFIG_DIR = BASE_DIR / "config"
-DATA_DIR = BASE_DIR / "data"
-FRONTEND_DIR = BASE_DIR / "frontend"
+if IS_FROZEN:
+    # Executable bundle environment (PyInstaller)
+    APP_DIR = Path(sys.executable).resolve().parent
+    BUNDLE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
+else:
+    # Standard Python source execution
+    APP_DIR = Path(__file__).resolve().parent
+    BUNDLE_DIR = APP_DIR
+
+BASE_DIR = APP_DIR
+DATA_DIR = APP_DIR / "data"
+
+# Config files: prioritize external config next to .exe, fallback to bundled defaults
+CONFIG_DIR = APP_DIR / "config" if (APP_DIR / "config").exists() else (BUNDLE_DIR / "config")
+# Frontend assets: prioritize external override next to .exe, fallback to bundled assets
+FRONTEND_DIR = APP_DIR / "frontend" if (APP_DIR / "frontend").exists() else (BUNDLE_DIR / "frontend")
 
 APP_CONFIG_FILE = CONFIG_DIR / "app.yaml"
 FRAME_CONFIG_FILE = CONFIG_DIR / "frame.yaml"
@@ -1044,10 +1079,10 @@ class Database:
         self.path = Path(path)
 
         if not self.path.is_absolute():
-            self.path = (
-                BASE_DIR
-                / self.path
-            )
+            if len(self.path.parts) == 1:
+                self.path = DATA_DIR / self.path
+            else:
+                self.path = BASE_DIR / self.path
 
         self.path.parent.mkdir(
             parents=True,
@@ -1126,10 +1161,10 @@ class CSVLogger:
         self.path = Path(path)
 
         if not self.path.is_absolute():
-            self.path = (
-                BASE_DIR
-                / self.path
-            )
+            if len(self.path.parts) == 1:
+                self.path = DATA_DIR / self.path
+            else:
+                self.path = BASE_DIR / self.path
 
         self.path.parent.mkdir(
             parents=True,
