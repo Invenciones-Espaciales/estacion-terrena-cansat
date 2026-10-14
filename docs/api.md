@@ -39,8 +39,21 @@ If the frontend asset is missing from disk:
 
 ---
 
-### 2.2 System & Link Status
-Returns the operational health of the ground station, serial port link status, and cumulative packet transmission statistics.
+### 2.2 Pre-Flight Go / No-Go Checklist View
+Serves the high-contrast Go/No-Go qualification dashboard.
+
+- **Route:** `GET /gonogo`
+- **Method:** `GET`
+- **Authentication:** None
+- **Response Type:** `text/html; charset=utf-8`
+
+#### Success Response (`200 OK`)
+Returns the complete `frontend/gonogo.html` operational view (or falls back to `index.html` if missing).
+
+---
+
+### 2.3 System & Link Status
+Returns the operational health of the ground station, serial port link status, Go/No-Go flight safety thresholds, and cumulative packet transmission statistics.
 
 - **Route:** `GET /api/status`
 - **Method:** `GET`
@@ -57,6 +70,7 @@ Returns the operational health of the ground station, serial port link status, a
 | `serial_port` | `string` \| `null` | Configured serial device path (e.g. `"/dev/ttyACM0"`) |
 | `baudrate` | `integer` \| `null` | Configured UART baud rate (e.g. `115200`) |
 | `statistics` | `object` | Rolling packet health metrics (see [Statistics Schema](#34-packet-statistics-schema)) |
+| `gonogo` | `object` | Configured Go/No-Go stability requirements and sensor tolerances |
 
 #### Example Response (`200 OK`)
 ```json
@@ -71,6 +85,19 @@ Returns the operational health of the ground station, serial port link status, a
     "lost": 2,
     "invalid": 0,
     "loss_percent": 0.13774104683195593
+  },
+  "gonogo": {
+    "required_hold_s": 30.0,
+    "altitude_tol_m": 5.0,
+    "accel_xy_tol_g": 0.1,
+    "accel_z_nominal_g": 1.0,
+    "accel_z_tol_g": 0.15,
+    "gps_radius_m": 5.0,
+    "weather_limits": {
+      "max_wind_speed_ms": 10.0,
+      "max_cloud_cover_pct": 75.0,
+      "min_visibility_km": 5.0
+    }
   }
 }
 ```

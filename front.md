@@ -257,10 +257,26 @@ Structured to accommodate future telemetry cards (variometer, antenna radar, bat
 
 ---
 
-# 12. Related Documentation
+# 12. Pre-Flight Go / No-Go Checklist View (`/gonogo`)
+
+Dedicated operational view for pre-launch launchpad qualification and flight safety checklist verification.
+
+### Key Capabilities & Layout
+* **Global Verdict Banner:** Persistent, ultra-high-contrast `GO` (Green) vs `NO-GO` (Red) display with active blocker badges.
+* **Cumulative Stability Hold Timer:** High-precision timer accumulating stability duration when all subsystems remain within prescribed safety thresholds. Automatically resets to zero and logs failure diagnostics upon any out-of-bounds telemetry sample.
+* **Launchpad Sensor Validation:**
+  - **Altitude Baseline:** Enforces $|h| \le \text{tolerance}$ (nominal $0.0\text{ m} \pm 5.0\text{ m}$).
+  - **Accelerometer Calibration:** Enforces transverse axes $|a_x|, |a_y| \le 0.10\text{ g}$ and longitudinal resting gravity $|a_z - 1.0\text{ g}| \le 0.15\text{ g}$.
+  - **GPS Fix & Position Lock:** Enforces valid navigation lock (`FIX_3D`) and verifies geographical coordinate drift does not exceed launchpad radius ($\le 5.0\text{ m}$).
+* **Surface Meteorology:** Real-time input evaluation for surface wind speed ($\le 10\text{ m/s}$), cloud cover ($\le 75\%$), flight visibility ($\ge 5\text{ km}$), and official weather officer authorization checkbox.
+* **System Audit Table:** Monospace tabular matrix displaying real-time metrics, criteria, and status for each subsystem.
+
+---
+
+# 13. Related Documentation
 
 - **[System Architecture & Component Documentation](docs/architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
-- **[Frame Specification & Binary Protocol Reference](docs/protocol.md):** 30-byte frame memory map, field data types, scales, and CRC-16 specification.
+- **[Frame Specification & Binary Protocol Reference](docs/protocol.md):** 31-byte frame memory map, field data types, scales, and CRC-16 specification.
 - **[API & WebSocket Interface Specification](docs/api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
 - **[Getting Started & Operations Guide](docs/getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
 - **[Frame Schema Specification](config.md):** Declarative YAML frame definition reference.
