@@ -61,7 +61,7 @@ sequenceDiagram
     HW->>SER: Raw byte chunk (data_received)
     SER->>BUF: feed(data)
     loop Buffer Processing
-        BUF->>PRS: Validate length (30B) & CRC-16
+        BUF->>PRS: Validate length (65B) & CRC-16
         alt Frame Valid
             PRS-->>BUF: Parsed telemetry dict
             BUF->>PROC: Enqueue frame task
@@ -86,26 +86,25 @@ sequenceDiagram
 - Low-level data chunks trigger `SerialProtocol.data_received(data: bytes)` on the active `asyncio` event loop without blocking thread execution.
 
 #### 2.1.1 Physical RF Link & Radio Modems
-- For wireless flight operations, the serial interface bridges directly to a physical RF transceiver (e.g. 433/915 MHz SiK modems or 868/915 MHz LoRa SX1262 modules).
+- For wireless flight operations, the serial interface bridges directly to a physical RF transceiver (e.g. 433 MHz LoRa SX1278 module or SiK radio modems).
 - The radio modem operates in transparent serial streaming mode, passing binary frames across the air link into the host OS USB-UART driver without altering frame contents.
-- Over-the-air data rate sizing ($\ge 9,600\text{ bps}$) is required to ensure 30-byte frames emitted at 10 Hz ($300\text{ bytes/s} = 2,400\text{ bps}$) pass through the modem's internal FIFO buffers without inducing transmit queues or packet drops (detailed in [`docs/getting-started.md`](getting-started.md#64-physical-rf-hardware-deployment--over-the-air-verification-lora--sik-radios)).
+- Over-the-air link budget analysis (SF7, BW 250 kHz, CR 4/5) results in a 61.57 ms Time-on-Air (ToA) per 65-byte frame, providing a 52.5% safety margin and 38.43 ms channel silence window per 100 ms transmission period at 10 Hz (detailed in [`docs/protocol.md`](protocol.md#2-lora-rf-modulation--time-on-air-toa-budget)).
 
 
 ### 2.2 Framing and Sliding Synchronization
 - Raw chunks are appended to a sliding byte buffer in `FrameBuffer`.
-- If an explicit synchronization header (`sync`) is defined in the configuration, `FrameBuffer` scans for the sync byte sequence.
-- When operating in sync-less fixed-frame mode (standard 30-byte frame), `FrameBuffer` inspects candidate 30-byte slices.
-- If a candidate slice fails validation (invalid CRC or incorrect field structure), `FrameBuffer` discards one byte (`del buffer[0]`) and enters resynchronization mode, sliding through the stream until valid frame boundaries are recovered.
+- With the `0xAA` synchronization header configured, `FrameBuffer` rapidly indexes to the start of valid frames.
+- If a candidate slice fails validation (invalid CRC or incorrect field structure), `FrameBuffer` cleanly discards the sync byte and searches for the next sync boundary, sliding through the stream without dropping genuine packets.
 
 ### 2.3 Declarative Parsing Engine
 - `FrameParser` operates according to `config/frame.yaml`.
 - The parser verifies:
-  1. **Frame Length:** Validates exact 30-byte occupancy.
-  2. **CRC-16/CCITT-FALSE Integrity:** Calculates CRC-16 over bytes 0 through 27 (polynomial `0x1021`, initial value `0xFFFF`, final XOR `0x0000`, no bit reflection). Compares the result with bytes 28–29.
-  3. **Expected Values:** Verifies identity constants such as `frame_type == 0x01`.
-  4. **Type Unpacking:** Translates binary fields according to their configured endianness (`big_endian`), extracting integers (`uint8`, `uint16`, `uint24`, `uint32`, `int16`, `int32`), floats, or byte vectors.
+  1. **Frame Length:** Validates exact 65-byte occupancy.
+  2. **CRC-16/CCITT-FALSE Integrity:** Calculates CRC-16 over bytes 0 through 62 (polynomial `0x1021`, initial value `0xFFFF`, final XOR `0x0000`, no bit reflection). Compares the result with bytes 63–64.
+  3. **Expected Values:** Verifies synchronization constants (`sync == 0xAA`).
+  4. **Type Unpacking:** Translates binary fields according to their configured endianness (`little_endian`), extracting integers (`uint8`, `uint16`, `uint32`), floats (`float32`), or byte vectors.
   5. **Physical Scaling & Offsets:** Applies linear formulas ($Physical = Raw \times Scale + Offset$).
-  6. **Enumeration Translation:** Maps discrete status codes to operational human-readable labels (e.g., status code `2` maps to `Motor encendido / Ascenso`).
+  6. **Enumeration Translation:** Maps discrete status codes to operational flight phases (`STANDBY`, `POWERED`, `BURNOUT`, `APOGEE`, `DROGUE_CONF`, `MAIN_CONF`, `LANDED`).
 
 ### 2.4 Dual Persistence Layer
 Once parsed, `process_frame` records the packet simultaneously across two storage engines:
@@ -278,7 +277,7 @@ To prevent heap exhaustion during multi-hour rocket operations:
 
 ## 5. Related Documentation
 
-- **[Frame Specification & Binary Protocol Reference](protocol.md):** 30-byte frame memory map, field data types, scales, and CRC-16 specification.
+- **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte LoRa frame memory map, field data types, scales, RF ToA link budget, and CRC-16 specification.
 - **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
 - **[Getting Started & Operations Guide](getting-started.md):** Setup, Linux serial permissions, runtime operation, and verification.
 - **[Extended Calculations & Future Reference](calculos-futuros.md):** Mathematical models for Kalman filtering, variometer ($V_z$), and antenna tracking.
