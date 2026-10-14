@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Estación Terrena de Telemetría</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
+<link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -165,7 +167,7 @@ canvas { display: block; }
 .bottom {
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 5fr 5fr 2fr;
     gap: 6px;
 }
 
@@ -203,10 +205,10 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
 
         <div class="hgroup">
             <div class="hcell"><span class="k">HORA LOCAL</span><span class="v clock num" id="localTime">00:00:00</span></div>
-            <div class="hcell"><span class="k">MET</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
+            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
             <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
-            <div class="hcell"><span class="k">RSSI</span><span class="v num nd" id="rssi">N/D</span></div>
-            <div class="hcell"><span class="k">PÉRDIDA PAQ.</span><span class="v num" id="lossPercent">0,0 %</span></div>
+            <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
+            <div class="hcell"><span class="k">PÉRDIDA DE PAQUETES</span><span class="v num" id="lossPercent">0,0 %</span></div>
             <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
         </div>
     </header>
@@ -217,7 +219,7 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
         <section class="panel">
 
             <div class="card grow">
-                <div class="card-title">ALTITUD <span class="hint">m</span></div>
+                <div class="card-title">ALTITUD</div>
                 <div class="alt-body">
                     <div class="tape"><canvas id="tape"></canvas></div>
                     <div class="alt-side">
@@ -225,17 +227,20 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
                             <div class="lbl">ACTUAL</div>
                             <div><span class="big num" id="altitude">---</span><span class="unit">m</span></div>
                         </div>
-                        <div class="row"><span class="k">MÁX</span><span class="v num" id="altitudeMax">---</span></div>
+                        <div class="row"><span class="k">MÁXIMA</span><span class="v num" id="altitudeMax">---</span></div>
+                        <div class="row"><span class="k">VARIACIÓN VERTICAL</span><span class="v num" id="altitudeVz">---</span></div>
                     </div>
                 </div>
             </div>
 
             <div class="card basecard">
-                <div class="card-title">ACELERACIÓN <span class="hint">g</span></div>
-                <div class="axis-row"><span class="a">X</span><span class="n num" id="ax">---</span></div>
-                <div class="axis-row"><span class="a">Y</span><span class="n num" id="ay">---</span></div>
-                <div class="axis-row"><span class="a">Z</span><span class="n num" id="az">---</span></div>
+                <div class="card-title">ACELERACIÓN</div>
+                <div class="axis-row"><span class="a">EJE X</span><span class="n num" id="ax">---</span></div>
+                <div class="axis-row"><span class="a">EJE Y</span><span class="n num" id="ay">---</span></div>
+                <div class="axis-row"><span class="a">EJE Z</span><span class="n num" id="az">---</span></div>
             </div>
+
+
 
         </section>
 
@@ -243,7 +248,7 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
         <section class="panel">
 
             <div class="card chart-card">
-                <div class="card-title">ALTITUD vs TIEMPO <span class="hint">m · últimos 60 s</span></div>
+                <div class="card-title">ALTITUD vs TIEMPO <span class="hint">últimos 60 s</span></div>
                 <div class="chart-box"><canvas id="chAlt"></canvas></div>
             </div>
 
@@ -254,7 +259,6 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
                         <span><i style="background:#000"></i>X</span>
                         <span><i style="background:#087a3b"></i>Y</span>
                         <span><i style="background:#1a4fd6"></i>Z</span>
-                        <span class="hint">g</span>
                     </span>
                 </div>
                 <div class="chart-box"><canvas id="chAcc"></canvas></div>
@@ -265,11 +269,11 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
         <!-- ==================== MAPA (30% × 65%) ==================== -->
         <section class="panel">
             <div class="card grow">
-                <div class="card-title">POSICIÓN GNSS <span class="hint">traza</span></div>
+                <div class="card-title">POSICIÓN GPS <span class="hint">trayectoria</span></div>
                 <div id="gpsMap"></div>
                 <div class="coords">
-                    <div><div class="k">LATITUD</div><div class="v num" id="lat">---</div></div>
-                    <div><div class="k">LONGITUD</div><div class="v num" id="lon">---</div></div>
+                    <div><div class="k">LATITUD (°)</div><div class="v num" id="lat">---</div></div>
+                    <div><div class="k">LONGITUD (°)</div><div class="v num" id="lon">---</div></div>
                 </div>
             </div>
         </section>
@@ -279,13 +283,32 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
     <footer class="bottom">
 
         <div class="card">
-            <div class="card-title">REGISTRO DE EVENTOS <span class="hint" id="eventStats">hitos de vuelo</span></div>
-            <div class="scroll" id="eventLog"><div class="empty">Sin eventos registrados</div></div>
+            <div class="card-title">HITOS DE VUELO <span class="hint" id="eventStats">0 eventos</span></div>
+            <div class="scroll" id="eventLog"><div class="empty">Sin hitos registrados</div></div>
         </div>
 
         <div class="card">
-            <div class="card-title">ALERTAS Y SALUD DEL ENLACE <span class="hint" id="linkSummary">RX: 0 Hz</span></div>
+            <div class="card-title">ALERTAS</div>
             <div class="scroll" id="alertBox"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;">
+                        <path d="M12 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                        <path d="M12 15V3"/>
+                        <path d="M4.93 7.93a10 10 0 0 1 14.14 0"/>
+                        <path d="M7.76 10.76a6 6 0 0 1 8.48 0"/>
+                    </svg>
+                    ENLACE Y DIAGNÓSTICO
+                </span>
+            </div>
+            <div class="row"><span class="k">TOTAL RX (POST-P0)</span><span class="v num" id="diagRxAfterP0">0</span></div>
+            <div class="row"><span class="k">PAQUETE ACTUAL (SEQ)</span><span class="v num" id="diagSeq">---</span></div>
+            <div class="row"><span class="k">PÉRDIDA (5 s)</span><span class="v num" id="diagLoss5s">0,0 %</span></div>
+            <div class="row"><span class="k">TASA RX (CALCULADA)</span><span class="v num" id="diagRate">0,0 Hz</span></div>
+            <div class="row"><span class="k">ÚLTIMO PAQUETE</span><span class="v num" id="diagLastTime">--</span></div>
         </div>
 
     </footer>
@@ -351,6 +374,26 @@ const STATUS_SHORT = {
     255: "LANDED"
 };
 
+/* Nombres para mostrar (el código crudo de la trama se usa solo para la lógica) */
+const PHASE_NAME = {
+    STANDBY:     "En espera",
+    POWERED:     "Motor encendido",
+    BURNOUT:     "Fin de empuje",
+    APOGEE:      "Apogeo",
+    DROGUE_ORD:  "Orden de drogue",
+    DROGUE_CONF: "Drogue desplegado",
+    MAIN_ORD:    "Orden de principal",
+    MAIN_CONF:   "Principal desplegado",
+    LANDED:      "Aterrizaje"
+};
+const PHASE_MARK = {
+    STANDBY: "ESPERA", POWERED: "ENCENDIDO", BURNOUT: "FIN EMPUJE", APOGEE: "APOGEO",
+    DROGUE_ORD: "ORD. DROGUE", DROGUE_CONF: "DROGUE", MAIN_ORD: "ORD. PRINC.",
+    MAIN_CONF: "PRINCIPAL", LANDED: "ATERRIZAJE"
+};
+const phaseName = raw => PHASE_NAME[raw] ?? raw;
+const phaseMark = raw => PHASE_MARK[raw] ?? raw;
+
 const state = {
     startedAt: Date.now(),
     liftoffDetected: false,
@@ -374,13 +417,18 @@ const state = {
 
     // Ventana deslizante de 5 segundos para pérdida de paquetes
     lastSeq: null,
+    p0Seen: false,
+    rxAfterP0: 0,
+    rxRate: 0,
     seqWindow: [],      // { t, received, lost }
     lossRecentPercent: 0,
 
     hist: { alt: [], ax: [], ay: [], az: [] },
     markers: [],
 
-    altitude: null, maxAltitude: null,
+    altitude: null, maxAltitude: null, vz: null,
+    vzHistory: [],      // [{ t, alt }] para derivación limpia y sin ruido
+
 
     ax: null, ay: null, az: null,
     statusText: null,
@@ -479,10 +527,16 @@ function ingest(message) {
     state.lastPacketAt = now;
     state.packetTimes.push(now);
 
-    // Detección de saltos de secuencia para ventana de 5s
+    // Detección de saltos de secuencia para ventana de 5s y conteo post-paquete 0
     const seq = Number(d.frame_number);
     let lostInStep = 0;
     if (Number.isFinite(seq)) {
+        if (seq === 0) {
+            state.p0Seen = true;
+        } else if (state.p0Seen) {
+            state.rxAfterP0++;
+        }
+
         if (state.lastSeq !== null) {
             const expected = (state.lastSeq + 1) & 0xFFFF;
             if (seq !== expected) {
@@ -524,6 +578,21 @@ function ingest(message) {
         state.altitude = alt;
         state.maxAltitude = state.maxAltitude === null ? alt : Math.max(state.maxAltitude, alt);
         pushHist("alt", ts, alt);
+
+        // Variación vertical (derivada con ventana deslizante de ~500 ms a 1 s)
+        state.vzHistory.push({ t: now, alt });
+        const vzCutoff = now - 1000;
+        let cutVz = 0;
+        while (cutVz < state.vzHistory.length && state.vzHistory[cutVz].t < vzCutoff) cutVz++;
+        if (cutVz > 0) state.vzHistory.splice(0, cutVz);
+
+        if (state.vzHistory.length >= 2) {
+            const first = state.vzHistory[0];
+            const dt = (now - first.t) / 1000;
+            if (dt >= 0.2) {
+                state.vz = (alt - first.alt) / dt;
+            }
+        }
     }
 
     // aceleración
@@ -549,16 +618,29 @@ function ingest(message) {
     const isFlightPhase = (code !== null && code > 0 && text !== "STANDBY" && text !== "Standby" && text !== "Pre-launch" && text !== "PRE-LAUNCH") ||
                           (text && !["STANDBY", "Standby", "Pre-launch", "PRE-LAUNCH"].includes(text));
 
+    // Detección inicial de despegue (T-0)
     if (!state.liftoffDetected && (isFlightPhase || (state.altitude !== null && state.altitude > 25))) {
         state.liftoffDetected = true;
         state.liftoffAt = now;
         state.liftoffTs = hasTs ? Number(d.timestamp) : 0;
-        addEvent("DESPEGUE / LIFTOFF DETECTADO — T-0", "T-0");
+        addEvent("Despegue detectado (T-0)", "T-0");
     }
 
+    // Registro de eventos ante cambio de fase
     if (text) {
-        if (state.statusText !== text) addEvent(text, code !== null ? (STATUS_SHORT[code] ?? text) : text);
-        state.statusText = text;
+        if (state.statusText === null) {
+            // Primer paquete recibido al abrir la sesión: registrar solo la fase inicial
+            state.statusText = text;
+        } else if (state.statusText !== text) {
+            // Detección de nuevo vuelo tras ciclo de simulador o nuevo ensayo
+            if (state.statusText === "LANDED" && (text === "STANDBY" || text === "POWERED")) {
+                state.liftoffDetected = (text === "POWERED");
+                state.liftoffAt = now;
+                state.liftoffTs = hasTs ? Number(d.timestamp) : 0;
+            }
+            state.statusText = text;
+            addEvent(`Fase: ${phaseName(text)}`, phaseMark(text));
+        }
     }
 
     // Registro en eventos solo ante cambio de fase
@@ -789,6 +871,7 @@ function renderText() {            // ~10 Hz
     if (state.altitude !== null) {
         setText("altitude", fmt(state.altitude, 0));
         setText("altitudeMax", `${fmt(state.maxAltitude, 0)} m`);
+        setText("altitudeVz", state.vz !== null ? `${sgn(state.vz, 1)} m/s` : "---");
     }
     if (state.ax !== null) {
         setText("ax", `${sgn(state.ax, 4)} g`);
@@ -809,7 +892,7 @@ function renderHeader() {          // ~2 Hz
     const pad = n => String(n).padStart(2, "0");
     setText("localTime", `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
     setText("clock", elapsed(missionTime()));
-    if (state.statusText) setText("phase", state.statusText);
+    if (state.statusText) setText("phase", phaseName(state.statusText));
     setOptional("rssi", state.rssi, v => `${fmt(v, 0)} dBm`);
     setText("lossPercent", `${fmt(state.lossRecentPercent, 1)} %`);
     if (state.lossRecentPercent > 15) {
@@ -833,7 +916,7 @@ function renderLogs() {            // ~4 Hz
         eventsRendered = state.eventsVersion;
         $("eventLog").innerHTML = state.events.length
             ? state.events.map(e => `<div class="ev-row"><span class="ev-time num">T+ ${elapsed(e.t)}</span>${escapeHtml(e.message)}</div>`).join("")
-            : '<div class="empty">Sin eventos registrados</div>';
+            : '<div class="empty">Sin hitos registrados</div>';
     }
 
     // 2. Mantenimiento de ventana de 5s para paquetes
@@ -857,10 +940,25 @@ function renderLogs() {            // ~4 Hz
     if (cutIdx > 0) state.packetTimes.splice(0, cutIdx);
     const span = state.packetTimes.length > 1 ? (state.packetTimes.at(-1) - state.packetTimes[0]) / 1000 : 0;
     const rate = span > 0 ? (state.packetTimes.length - 1) / span : 0;
+    state.rxRate = rate;
     const age = state.lastPacketAt === null ? "--" : `${((now - state.lastPacketAt) / 1000).toFixed(1)} s`;
 
-    setText("linkSummary", `RX: ${rate.toFixed(1)} Hz · Últ: ${age}`);
-    setText("eventStats", `Total Eventos: ${state.events.length}`);
+    setText("eventStats", `${state.events.length} eventos`);
+
+    // Actualización de tarjeta de Diagnóstico de Enlace
+    setText("diagRxAfterP0", state.rxAfterP0.toLocaleString("es-AR"));
+    setText("diagSeq", state.lastSeq !== null ? state.lastSeq.toLocaleString("es-AR") : "---");
+    setText("diagLoss5s", `${fmt(state.lossRecentPercent, 1)} %`);
+    setText("diagRate", `${rate.toFixed(1)} Hz`);
+    setText("diagLastTime", age);
+
+    // Color condicional en la pérdida de los últimos 5s
+    const lossEl = $("diagLoss5s");
+    if (lossEl) {
+        if (state.lossRecentPercent > 15) lossEl.style.color = "var(--bad)";
+        else if (state.lossRecentPercent > 5) lossEl.style.color = "var(--warn)";
+        else lossEl.style.color = "var(--ink)";
+    }
 
     // 3. Panel de Alertas activas y estado de enlace
     const alerts = [];
@@ -868,33 +966,33 @@ function renderLogs() {            // ~4 Hz
     const isDegraded = state.connected && state.lastPacketAt !== null && now - state.lastPacketAt > 1500;
 
     if (isDisconnected) {
-        alerts.push({ badge: "crit", text: "ENLACE PERDIDO", val: `Sin señal (${age})` });
+        alerts.push({ badge: "crit", text: "Enlace perdido", val: `Sin señal hace ${age}` });
     } else if (isDegraded) {
-        alerts.push({ badge: "warn", text: "ENLACE DEGRADADO", val: `Silencio ${age}` });
+        alerts.push({ badge: "warn", text: "Enlace degradado", val: `Sin datos hace ${age}` });
     }
 
     if (state.lossRecentPercent > 15) {
-        alerts.push({ badge: "crit", text: "ALTA PÉRDIDA DE PAQUETES (5s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
+        alerts.push({ badge: "crit", text: "Pérdida alta de paquetes (últimos 5 s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
     } else if (state.lossRecentPercent > 5) {
-        alerts.push({ badge: "warn", text: "PÉRDIDA MODERADA (5s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
+        alerts.push({ badge: "warn", text: "Pérdida moderada de paquetes (últimos 5 s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
     }
 
     const maxAcc = Math.max(Math.abs(state.ax ?? 0), Math.abs(state.ay ?? 0), Math.abs(state.az ?? 0));
     if (maxAcc >= 9.5) {
-        alerts.push({ badge: "warn", text: "ACELERACIÓN CERCANA AL LÍMITE", val: `${fmt(maxAcc, 1)} g` });
+        alerts.push({ badge: "warn", text: "Aceleración cercana al límite", val: `${fmt(maxAcc, 1)} g` });
     }
 
     if (Number(state.stats.invalid ?? 0) > 0) {
-        alerts.push({ badge: "info", text: "ERRORES DE CRC DETECTADOS", val: `${state.stats.invalid} tramas` });
+        alerts.push({ badge: "info", text: "Tramas con error de CRC", val: `${state.stats.invalid}` });
     }
 
     if (alerts.length === 0) {
-        alerts.push({ badge: "ok", text: "TODOS LOS SISTEMAS NOMINALES", val: "OK" });
+        alerts.push({ badge: "ok", text: "Todos los sistemas nominales", val: "OK" });
     }
 
     const alertsHtml = alerts.map(a =>
         `<div class="al-row">
-            <span class="al-badge ${a.badge}">${a.badge === "crit" ? "CRÍTICO" : a.badge === "warn" ? "ALERTA" : a.badge === "ok" ? "ESTABLE" : "INFO"}</span>
+            <span class="al-badge ${a.badge}">${a.badge === "crit" ? "CRÍTICO" : a.badge === "warn" ? "ALERTA" : a.badge === "ok" ? "OK" : "INFO"}</span>
             <span class="al-desc">${a.text}</span>
             <span class="al-val">${a.val}</span>
         </div>`
