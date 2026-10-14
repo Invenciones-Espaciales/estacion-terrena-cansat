@@ -176,10 +176,29 @@ class StorageConfig:
 
 
 @dataclass
+class GoNoGoWeatherConfig:
+    max_wind_speed_ms: float = 10.0
+    max_cloud_cover_pct: float = 75.0
+    min_visibility_km: float = 5.0
+
+
+@dataclass
+class GoNoGoConfig:
+    required_hold_s: float = 30.0
+    altitude_tol_m: float = 5.0
+    accel_xy_tol_g: float = 0.1
+    accel_z_nominal_g: float = 1.0
+    accel_z_tol_g: float = 0.15
+    gps_radius_m: float = 5.0
+    weather_limits: GoNoGoWeatherConfig = field(default_factory=GoNoGoWeatherConfig)
+
+
+@dataclass
 class AppConfig:
     serial: SerialConfig
     websocket: WebSocketConfig
     storage: StorageConfig
+    gonogo: GoNoGoConfig = field(default_factory=GoNoGoConfig)
 
 
 # ============================================================
@@ -316,10 +335,30 @@ def load_app_config() -> AppConfig:
         ),
     )
 
+    gonogo_data = data.get("gonogo", {})
+    weather_data = gonogo_data.get("weather_limits", {})
+
+    weather_config = GoNoGoWeatherConfig(
+        max_wind_speed_ms=float(weather_data.get("max_wind_speed_ms", 10.0)),
+        max_cloud_cover_pct=float(weather_data.get("max_cloud_cover_pct", 75.0)),
+        min_visibility_km=float(weather_data.get("min_visibility_km", 5.0)),
+    )
+
+    gonogo_config = GoNoGoConfig(
+        required_hold_s=float(gonogo_data.get("required_hold_s", 30.0)),
+        altitude_tol_m=float(gonogo_data.get("altitude_tol_m", 5.0)),
+        accel_xy_tol_g=float(gonogo_data.get("accel_xy_tol_g", 0.1)),
+        accel_z_nominal_g=float(gonogo_data.get("accel_z_nominal_g", 1.0)),
+        accel_z_tol_g=float(gonogo_data.get("accel_z_tol_g", 0.15)),
+        gps_radius_m=float(gonogo_data.get("gps_radius_m", 5.0)),
+        weather_limits=weather_config,
+    )
+
     return AppConfig(
         serial=serial_config,
         websocket=websocket_config,
         storage=storage_config,
+        gonogo=gonogo_config,
     )
 
 
@@ -797,7 +836,6 @@ class FrameParser:
         payload_offset = offset
 
         for field_config in self.config.fields:
-
             struct_format, _ = TYPE_FORMATS[field_config.type]
             size = field_size(field_config)
             field_offset = (
@@ -903,9 +941,11 @@ class FrameBuffer:
             self.parser.config.sync
         )
 
+        min_frame_size = frame_size
+
         while True:
 
-            if len(self.buffer) < frame_size:
+            if len(self.buffer) < min_frame_size:
                 break
 
             # ------------------------------------------------
@@ -943,26 +983,29 @@ class FrameBuffer:
                         :sync_index
                     ]
 
-                    if len(self.buffer) < frame_size:
+                    if len(self.buffer) < min_frame_size:
                         break
 
             # ------------------------------------------------
             # Extraer frame
             # ------------------------------------------------
 
-            raw_frame = bytes(
-                self.buffer[
-                    :frame_size
-                ]
-            )
+            candidate_parsed = None
+            candidate_size = 0
+            raw_frame = None
 
-            parsed = self.parser.parse(
-                raw_frame
-            )
+            if len(self.buffer) >= frame_size:
+                raw_cand = bytes(self.buffer[:frame_size])
+                cand_parsed = self.parser.parse(raw_cand)
+                if cand_parsed is not None:
+                    candidate_parsed = cand_parsed
+                    candidate_size = frame_size
+                    raw_frame = raw_cand
 
-            if parsed is not None:
-                del self.buffer[:frame_size]
-                frames.append(parsed)
+
+            if candidate_parsed is not None:
+                del self.buffer[:candidate_size]
+                frames.append(candidate_parsed)
                 self.last_raw_frames.append(raw_frame)
                 self.resyncing = False
             else:
@@ -976,7 +1019,7 @@ class FrameBuffer:
                     del self.buffer[0]
                     self.resyncing = True
                 else:
-                    del self.buffer[:frame_size]
+                    del self.buffer[:min_frame_size]
                     self.resyncing = False
 
         return frames
@@ -1692,6 +1735,25 @@ async def root():
     )
 
 
+@app.get("/gonogo")
+async def gonogo():
+
+    gonogo_file = FRONTEND_DIR / "gonogo.html"
+
+    if not gonogo_file.exists():
+        logger.error(
+            "Vista Go/No-Go no encontrada: %s, fallback a index.html",
+            gonogo_file,
+        )
+        return FileResponse(
+            FRONTEND_DIR / "index.html"
+        )
+
+    return FileResponse(
+        gonogo_file
+    )
+
+
 @app.get("/api/status")
 async def status():
 
@@ -1712,6 +1774,23 @@ async def status():
         "statistics": (
             statistics.snapshot()
             if statistics
+            else {}
+        ),
+        "gonogo": (
+            {
+                "required_hold_s": app_config.gonogo.required_hold_s,
+                "altitude_tol_m": app_config.gonogo.altitude_tol_m,
+                "accel_xy_tol_g": app_config.gonogo.accel_xy_tol_g,
+                "accel_z_nominal_g": app_config.gonogo.accel_z_nominal_g,
+                "accel_z_tol_g": app_config.gonogo.accel_z_tol_g,
+                "gps_radius_m": app_config.gonogo.gps_radius_m,
+                "weather_limits": {
+                    "max_wind_speed_ms": app_config.gonogo.weather_limits.max_wind_speed_ms,
+                    "max_cloud_cover_pct": app_config.gonogo.weather_limits.max_cloud_cover_pct,
+                    "min_visibility_km": app_config.gonogo.weather_limits.min_visibility_km,
+                },
+            }
+            if app_config is not None
             else {}
         ),
     }

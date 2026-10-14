@@ -3,7 +3,7 @@ id: 1
 description: "Telemetría de alta frecuencia"
 
 frame:
-  length: 30
+  length: 29
   byte_order: "big_endian"
 
   crc:
@@ -15,12 +15,12 @@ frame:
     reflect_input: false
     reflect_output: false
 
-    offset: 28
+    offset: 27
     length: 2
     byte_order: "big_endian"
 
     calculate_from: 0
-    calculate_to: 27
+    calculate_to: 26
 
 fields:
 
@@ -44,7 +44,7 @@ fields:
     type: "uint16"
 
   - name: "timestamp"
-    description: "Tiempo desde el despegue"
+    description: "Tiempo desde el inicio"
     offset: 4
     length: 4
     type: "uint32"
@@ -77,18 +77,9 @@ fields:
     offset_value: 0
     unit: "g"
 
-  - name: "pressure"
-    description: "Presión atmosférica"
-    offset: 14
-    length: 3
-    type: "uint24"
-    scale: 1
-    offset_value: 0
-    unit: "Pa"
-
   - name: "latitude"
     description: "Latitud GPS"
-    offset: 17
+    offset: 14
     length: 4
     type: "int32"
     scale: 0.000001
@@ -97,7 +88,7 @@ fields:
 
   - name: "longitude"
     description: "Longitud GPS"
-    offset: 21
+    offset: 18
     length: 4
     type: "int32"
     scale: 0.000001
@@ -106,7 +97,7 @@ fields:
 
   - name: "altitude"
     description: "Altitud GPS"
-    offset: 25
+    offset: 22
     length: 2
     type: "int16"
     scale: 1
@@ -115,7 +106,7 @@ fields:
 
   - name: "status"
     description: "Estado actual del cohete"
-    offset: 27
+    offset: 24
     length: 1
     type: "uint8"
 
@@ -136,3 +127,17 @@ fields:
       0x7F: "MAIN_CONF"
       0x80: "LANDED"
       0xFF: "LANDED"
+
+  - name: "rssi"
+    description: "Potencia de señal RF"
+    offset: 25
+    length: 1
+    type: "int8"
+    unit: "dBm"
+
+  - name: "satellites"
+    description: "Cantidad de satélites GNSS"
+    offset: 26
+    length: 1
+    type: "uint8"
+    unit: ""

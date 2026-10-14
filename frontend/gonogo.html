@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Go / No-Go Checklist — Estación Terrena</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
+<link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
+
+<style>
+:root {
+    --bg: #ffffff;
+    --ink: #000000;
+    --gray: #2d3748;
+    --muted: #555555;
+    --soft: #f4f5f7;
+    --soft-border: #cbd5e1;
+    --ok: #087a3b;
+    --ok-bg: #e6f6ec;
+    --warn: #b27b00;
+    --warn-bg: #fff8e6;
+    --bad: #b00020;
+    --bad-bg: #fde8eb;
+    --accent: #0056b3;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.num { font-variant-numeric: tabular-nums; font-family: "JetBrains Mono", Consolas, monospace; }
+
+/* ===== APP: FULL SCREEN VIEWPORT ===== */
+.app {
+    width: 100vw;
+    height: 100vh;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+/* ===== CABECERA PRE-LANZAMIENTO ===== */
+header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border: 3px solid #000;
+    padding: 8px 18px;
+    background: #fff;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.brand img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+}
+.brand h1 {
+    font-size: 18px;
+    font-weight: 950;
+    line-height: 1.1;
+    letter-spacing: .02em;
+}
+.view-tag {
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--muted);
+    letter-spacing: .12em;
+    margin-top: 2px;
+}
+
+.view-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 18px;
+    background: var(--soft);
+    padding: 4px;
+    border: 2px solid #000;
+}
+.nav-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: .08em;
+    text-decoration: none;
+    color: #000;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+.nav-tab:hover { background: #e0e0e0; }
+.nav-tab.active { background: #000; color: #fff; }
+
+.hgroup {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.hcell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0 16px;
+    border-left: 2px solid #000;
+    white-space: nowrap;
+}
+.hcell .k { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .1em; }
+.hcell .v { font-size: 22px; font-weight: 950; line-height: 1.1; }
+.hcell .v.clock { font-size: 28px; min-width: 5.5em; text-align: right; }
+.hcell .v.link-val { font-size: 20px; font-weight: 950; display: flex; align-items: center; }
+
+.phase { font-size: 15px; font-weight: 950; padding: 4px 12px; border: 2px solid #000; background: #000; color: #fff; letter-spacing: .05em; }
+.dot { display: inline-block; width: 15px; height: 15px; border-radius: 50%; background: var(--bad); border: 2px solid #000; vertical-align: middle; margin-right: 8px; }
+.dot.online { background: var(--ok); }
+.dot.warn { background: var(--warn); }
+
+/* ===== UNIFIED HERO BANNER (VERDICT + TIMER) ===== */
+.hero-banner {
+    flex: none;
+    border: 3px solid #000;
+    padding: 12px 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 24px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+.hero-banner.state-nogo {
+    background: var(--bad-bg);
+    border-color: var(--bad);
+}
+.hero-banner.state-go {
+    background: var(--ok-bg);
+    border-color: var(--ok);
+}
+
+.verdict-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 340px;
+}
+.verdict-tag {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    color: var(--muted);
+}
+.verdict-main {
+    font-size: 58px;
+    font-weight: 950;
+    letter-spacing: .04em;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.hero-banner.state-nogo .verdict-main { color: var(--bad); }
+.hero-banner.state-go .verdict-main { color: var(--ok); }
+
+.verdict-msg {
+    font-size: 15px;
+    font-weight: 900;
+    margin-top: 4px;
+}
+
+/* TIMER MIDDLE */
+.timer-center {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 10px;
+}
+.timer-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.timer-label {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    color: var(--muted);
+}
+.timer-nums {
+    font-size: 34px;
+    font-weight: 950;
+}
+.timer-nums .target {
+    font-size: 20px;
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.progress-track {
+    height: 20px;
+    background: #fff;
+    border: 3px solid #000;
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #0056b3;
+    transition: width 0.1s linear, background-color 0.2s ease;
+}
+.progress-bar.complete { background: var(--ok); }
+
+.timer-sub-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--gray);
+}
+.timer-sub-row span { font-weight: 950; color: #000; }
+
+.hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+}
+
+/* ===== UNIFIED CHECKLIST MATRIX (FLEX GROW TO 100% HEIGHT) ===== */
+.checklist-card {
+    flex: 1 1 0;
+    min-height: 0;
+    border: 3px solid #000;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.checklist-head {
+    flex: none;
+    background: #000;
+    color: #fff;
+    padding: 8px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.checklist-head-title {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .1em;
+}
+.checklist-head-hint {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ccc;
+}
+
+.table-wrap {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+}
+
+table.cl-table {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+}
+
+table.cl-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    color: var(--muted);
+    background: var(--soft);
+    border-bottom: 2px solid #000;
+    padding: 6px 18px;
+}
+
+table.cl-table td {
+    padding: 8px 18px;
+    border-bottom: 1px solid var(--soft-border);
+    vertical-align: middle;
+}
+table.cl-table tr:last-child td { border-bottom: none; }
+
+.cl-row-fail {
+    background: #fff5f6;
+}
+
+.subsys-title {
+    font-size: 18px;
+    font-weight: 950;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.subsys-desc {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.live-val {
+    font-size: 26px;
+    font-weight: 950;
+    line-height: 1.1;
+}
+.live-sub {
+    font-size: 13px;
+    color: var(--gray);
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.rule-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.rule-tag {
+    display: inline-block;
+    background: var(--soft);
+    border: 2px solid var(--soft-border);
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 800;
+    border-radius: 2px;
+}
+
+/* BADGES */
+.badge {
+    font-size: 18px;
+    font-weight: 950;
+    padding: 8px 18px;
+    border-radius: 3px;
+    letter-spacing: .05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.badge.ok { background: var(--ok); color: #fff; }
+.badge.bad { background: var(--bad); color: #fff; }
+.badge.warn { background: var(--warn); color: #fff; }
+
+/* INLINE CONTROLS (WEATHER & GPS) */
+.inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.in-group {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid #000;
+    background: #fff;
+    padding: 3px 8px;
+    gap: 6px;
+}
+.in-group input {
+    width: 65px;
+    border: none;
+    outline: none;
+    font-size: 18px;
+    font-weight: 950;
+    font-family: inherit;
+    text-align: right;
+}
+.in-label {
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--muted);
+}
+.in-unit {
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--muted);
+}
+
+.officer-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 2px solid #000;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 950;
+    cursor: pointer;
+}
+.officer-toggle input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--ok);
+}
+
+/* BUTTONS */
+.btn {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: .06em;
+    border: 2px solid #000;
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+.btn:hover { background: #000; color: #fff; }
+.btn.btn-sm { padding: 4px 10px; font-size: 12px; font-weight: 900; }
+.btn.btn-reset { background: var(--bad); color: #fff; border: 3px solid #000; }
+.btn.btn-reset:hover { background: #850017; }
+
+/* BOTTOM CONTROLS BAR */
+.actions-bar {
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 14px;
+    border: 2px solid #000;
+    background: var(--soft);
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ==================== CABECERA PRE-LANZAMIENTO ==================== -->
+    <header>
+        <div class="brand">
+            <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
+            <div>
+                <h1>ESTACIÓN TERRENA</h1>
+                <div class="view-tag">CONTROL DE RAMPA • GO / NO-GO</div>
+            </div>
+            <nav class="view-nav">
+                <a href="/" class="nav-tab">TELEMETRÍA</a>
+                <a href="/gonogo" class="nav-tab active">GO / NO-GO</a>
+            </nav>
+        </div>
+
+        <div class="hgroup">
+            <div class="hcell">
+                <span class="k">HORA LOCAL</span>
+                <span class="v clock num" id="localTime">00:00:00</span>
+            </div>
+            <div class="hcell">
+                <span class="k">FASE DEL COHETE</span>
+                <span class="phase" id="phase">STANDBY</span>
+            </div>
+            <div class="hcell">
+                <span class="k">ENLACE RF</span>
+                <span class="v link-val">
+                    <span class="dot" id="linkDot"></span>
+                    <span id="linkStatus">DESCONECTADO</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== UNIFIED HERO BANNER (VERDICT + TIMER) ==================== -->
+    <section class="hero-banner state-nogo" id="heroBanner">
+
+        <!-- 1. VERDICT -->
+        <div class="verdict-box">
+            <span class="verdict-tag">ESTADO OPERACIONAL</span>
+            <div class="verdict-main" id="verdictBadge">
+                <span id="verdictIcon">✖</span>
+                <span id="verdictText">NO-GO</span>
+            </div>
+            <div class="verdict-msg" id="verdictSubtitle">
+                ESPERANDO ESTABILIZACIÓN EN RAMPA
+            </div>
+        </div>
+
+        <!-- 2. STABILITY TIMER & PROGRESS -->
+        <div class="timer-center">
+            <div class="timer-header-row">
+                <span class="timer-label">VENTANA DE ESTABILIDAD CONTINUA</span>
+                <span class="timer-nums num">
+                    <span id="timerCurrent">00:00.0</span>
+                    <span class="target">/ <span id="timerTarget">00:30.0</span></span>
+                </span>
+            </div>
+
+            <div class="progress-track">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="timer-sub-row">
+                <div>ESTADO: <span id="timerStateLabel">EN ESPERA</span></div>
+                <div>REINICIOS: <span class="num" id="resetCount">0</span></div>
+                <div>ÚLTIMO FALLO: <span id="lastFailureReason">Ninguno</span></div>
+            </div>
+        </div>
+
+        <!-- 3. ACTIONS -->
+        <div class="hero-actions">
+            <button class="btn btn-reset" id="btnResetTimer">REINICIAR CONTADOR</button>
+        </div>
+
+    </section>
+
+    <!-- ==================== UNIFIED CHECKLIST MATRIX ==================== -->
+    <section class="checklist-card">
+        <div class="checklist-head">
+            <span class="checklist-head-title">LISTA DE COMPROBACIÓN DE SISTEMAS</span>
+            <span class="checklist-head-hint">TODOS LOS SUBSISTEMAS DEBEN ESTAR EN OK PARA COMPLETAR ESTABILIDAD</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="cl-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">SUBSISTEMA</th>
+                        <th style="width: 35%;">VALOR EN TIEMPO REAL</th>
+                        <th style="width: 25%;">CRITERIO / LÍMITE SEGURO</th>
+                        <th style="width: 15%; text-align: right;">EVALUACIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <!-- 1. ENLACE TELEMETRÍA -->
+                    <tr id="rowLink">
+                        <td>
+                            <div class="subsys-title">1. Enlace & Telemetría</div>
+                            <div class="subsys-desc">Flujo UART / RF y salud de paquetes</div>
+                        </td>
+                        <td>
+                            <div class="live-val num" id="valLinkRate">0.0 Hz</div>
+                            <div class="live-sub" id="valLinkSub">Pérdida 5s: <span class="num" id="valLinkLoss">0.0%</span> | Silencio: <span class="num" id="valLinkSilence">0.0s</span></div>
+                        </td>
+                        <td>
+                            <div class="rule-box">
+                                <span class="rule-tag">Tasa ≥ 5 Hz</span>
+                                <span class="rule-tag">Pérdida ≤ 5%</span>
+                                <span class="rule-tag">Silencio ≤ 3s</span>
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="badge bad" id="badgeLink">✖ DESCONECTADO</span>
+                        </td>
+                    </tr>
+
+                    <!-- 2. ALTITUD -->
+                    <tr id="rowAlt">
+                        <td>
+                            <div class="subsys-title">2. Altitud en Rampa</div>
+                            <div class="subsys-desc">Línea base altimétrica en reposo</div>
+                        </td>
+                        <td>
+                            <div class="live-val num" id="valAlt">---</div>
+                            <div class="live-sub" id="valAltSub">Desvío de cero: <span class="num" id="valAltDelta">---</span></div>
+                        </td>
+                        <td>
+                            <div class="rule-box">
+                                <span class="rule-tag" id="lblRuleAlt">Rango: 0.0 ± 5.0 m</span>
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="badge bad" id="badgeAlt">✖ FUERA</span>
+                        </td>
+                    </tr>
+
+                    <!-- 3. ACELERÓMETRO -->
+                    <tr id="rowAcc">
+                        <td>
+                            <div class="subsys-title">3. Aceleración Triaxial</div>
+                            <div class="subsys-desc">Inmovilidad y vector de gravedad en reposo</div>
+                        </td>
+                        <td>
+                            <div class="live-val num" id="valAccAxes">X: ---  Y: ---  Z: ---</div>
+                            <div class="live-sub" id="valAccMag">Magnitud total: <span class="num" id="valAccMagVal">--- g</span></div>
+                        </td>
+                        <td>
+                            <div class="rule-box">
+                                <span class="rule-tag" id="lblRuleAccXy">|X, Y| ≤ 0.10 g</span>
+                                <span class="rule-tag" id="lblRuleAccZ">|Z - 1.0g| ≤ 0.15 g</span>
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="badge bad" id="badgeAcc">✖ FUERA</span>
+                        </td>
+                    </tr>
+
+                    <!-- 4. GPS LOCK & DERIVA -->
+                    <tr id="rowGps">
+                        <td>
+                            <div class="subsys-title">4. GPS Lock & Posición</div>
+                            <div class="subsys-desc">Fijación satelital y deriva en rampa</div>
+                        </td>
+                        <td>
+                            <div style="display:flex; align-items:baseline; gap:12px;">
+                                <div class="live-val num" id="valGpsFix">NO_FIX</div>
+                                <div class="live-sub num" id="valGpsDrift" style="font-size:16px;">Deriva: --- m</div>
+                            </div>
+                            <div class="live-sub num" id="valGpsCoords">Coords: ---, ---</div>
+                        </td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="rule-tag" id="lblRuleGps">Deriva ≤ 5.0 m</span>
+                                <button class="btn btn-sm" id="btnSetGpsAnchor">Fijar Origen</button>
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="badge bad" id="badgeGps">✖ SIN LOCK</span>
+                        </td>
+                    </tr>
+
+                    <!-- 5. METEOROLOGÍA DE SUPERFICIE -->
+                    <tr id="rowWeather">
+                        <td>
+                            <div class="subsys-title">5. Meteorología de Rampa</div>
+                            <div class="subsys-desc">Condiciones atmosféricas y autorización</div>
+                        </td>
+                        <td>
+                            <div class="inline-form">
+                                <div class="in-group">
+                                    <span class="in-label">Viento:</span>
+                                    <input type="number" id="wWind" class="num" value="4.0" step="0.5" min="0">
+                                    <span class="in-unit">m/s</span>
+                                </div>
+                                <div class="in-group">
+                                    <span class="in-label">Nubes:</span>
+                                    <input type="number" id="wClouds" class="num" value="20" step="5" min="0" max="100">
+                                    <span class="in-unit">%</span>
+                                </div>
+                                <div class="in-group">
+                                    <span class="in-label">Vis:</span>
+                                    <input type="number" id="wVis" class="num" value="10.0" step="0.5" min="0">
+                                    <span class="in-unit">km</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <label class="officer-toggle" for="wOfficerCheck">
+                                <input type="checkbox" id="wOfficerCheck">
+                                <span>Oficial autoriza rampa</span>
+                            </label>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="badge bad" id="badgeWeather">✖ PENDIENTE</span>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ==================== ACTIONS BAR ==================== -->
+    <section class="actions-bar">
+        <div class="num" style="font-size:12px; font-weight:900; color:var(--muted)" id="anchorInfo">
+            Origen GPS de rampa: No fijado
+        </div>
+        <div style="font-size:12px; font-weight:900; color:var(--muted)">
+            SISTEMA DE VERIFICACIÓN PRE-LANZAMIENTO • ESTACIÓN TERRENA
+        </div>
+    </section>
+
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+// Configuración de umbrales gobernada por app.yaml vía /api/status
+let CFG = {
+    required_hold_s: 30.0,
+    altitude_tol_m: 5.0,
+    accel_xy_tol_g: 0.10,
+    accel_z_nominal_g: 1.0,
+    accel_z_tol_g: 0.15,
+    gps_radius_m: 5.0,
+    weather: {
+        max_wind_speed_ms: 10.0,
+        max_cloud_cover_pct: 75.0,
+        min_visibility_km: 5.0
+    }
+};
+
+// Estado del sistema
+const state = {
+    connected: false,
+    lastPacketAt: null,
+    packetTimes: [],
+    rxRate: 0,
+    loss5s: 0,
+    seqWindow: [],
+    lastSeq: null,
+
+    altitude: null,
+    ax: null, ay: null, az: null, accMag: null,
+    lat: null, lon: null,
+    gpsFix: 0,
+    status: "STANDBY",
+    timestampMs: 0,
+
+    gpsAnchor: null,
+    gpsDriftM: null,
+
+    stableMs: 0,
+    resetCount: 0,
+    lastFailureReason: "Ninguno",
+    allOk: false,
+    verdict: "NO-GO"
+};
+
+const GPS_FIX_NAMES = {
+    0: "NO_FIX",
+    1: "FIX_2D",
+    2: "FIX_3D",
+    3: "DGPS"
+};
+
+const STATUS_NAMES = {
+    0: "STANDBY", 1: "POWERED", 2: "BURNOUT", 3: "BURNOUT",
+    4: "APOGEE", 7: "APOGEE", 8: "DROGUE_ORD", 15: "DROGUE_ORD",
+    16: "DROGUE_CONF", 31: "DROGUE_CONF", 32: "MAIN_ORD", 63: "MAIN_ORD",
+    64: "MAIN_CONF", 127: "MAIN_CONF", 128: "LANDED", 255: "LANDED"
+};
+
+function getDistanceMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const rad = Math.PI / 180;
+    const phi1 = lat1 * rad;
+    const phi2 = lat2 * rad;
+    const dPhi = (lat2 - lat1) * rad;
+    const dLambda = (lon2 - lon1) * rad;
+    const meanPhi = (phi1 + phi2) / 2;
+
+    const x = dLambda * Math.cos(meanPhi);
+    const y = dPhi;
+    return Math.sqrt(x * x + y * y) * R;
+}
+
+// ============================================================
+// CONEXIÓN WEBSOCKET
+// ============================================================
+let socket = null;
+let reconnectTimer = null;
+
+function connectWs() {
+    if (socket) {
+        try { socket.close(); } catch (_) {}
+        socket = null;
+    }
+
+    const loc = window.location;
+    const wsProto = loc.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${wsProto}//${loc.host}/ws`;
+
+    socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+        state.connected = true;
+        updateLinkStatus();
+    };
+
+    socket.onmessage = (event) => {
+        try {
+            const msg = JSON.parse(event.data);
+            handleMessage(msg);
+        } catch (err) {
+            console.error("Error al procesar mensaje WS:", err);
+        }
+    };
+
+    socket.onclose = () => {
+        state.connected = false;
+        updateLinkStatus();
+        scheduleReconnect();
+    };
+
+    socket.onerror = () => {
+        state.connected = false;
+        updateLinkStatus();
+    };
+}
+
+function scheduleReconnect() {
+    if (reconnectTimer) return;
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connectWs();
+    }, 1500);
+}
+
+function handleMessage(msg) {
+    if (msg.type === "connection") {
+        state.connected = !!msg.connected;
+        updateLinkStatus();
+        return;
+    }
+
+    const d = msg.data || msg.telemetry || {};
+    if (!d || typeof d !== "object") return;
+
+    const now = Date.now();
+    state.lastPacketAt = now;
+    state.packetTimes.push(now);
+
+    const seq = Number(d.frame_number);
+    let lostInStep = 0;
+    if (Number.isFinite(seq)) {
+        if (state.lastSeq !== null) {
+            const expected = (state.lastSeq + 1) & 0xFFFF;
+            if (seq !== expected) {
+                const diff = (seq - expected) & 0xFFFF;
+                if (diff < 1000) lostInStep = diff;
+            }
+        }
+        state.lastSeq = seq;
+    }
+    state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
+
+    if (Number.isFinite(Number(d.timestamp))) {
+        state.timestampMs = Number(d.timestamp);
+    }
+
+    if (Number.isFinite(Number(d.altitude))) {
+        state.altitude = Number(d.altitude);
+    }
+
+    const ax = Number(d.accel_x), ay = Number(d.accel_y), az = Number(d.accel_z);
+    if ([ax, ay, az].every(Number.isFinite)) {
+        state.ax = ax;
+        state.ay = ay;
+        state.az = az;
+        state.accMag = Math.sqrt(ax * ax + ay * ay + az * az);
+    }
+
+    const lat = Number(d.latitude), lon = Number(d.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lon) && (lat !== 0 || lon !== 0)) {
+        state.lat = lat;
+        state.lon = lon;
+
+        if (!state.gpsAnchor) {
+            state.gpsAnchor = { lat, lon };
+            $("anchorInfo").textContent = `Origen GPS fijado: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+        }
+
+        state.gpsDriftM = getDistanceMeters(state.gpsAnchor.lat, state.gpsAnchor.lon, lat, lon);
+    }
+
+    if (d.gps_fix !== undefined && Number.isFinite(Number(d.gps_fix))) {
+        state.gpsFix = Number(d.gps_fix);
+    } else if (state.lat !== null && (state.lat !== 0 || state.lon !== 0)) {
+        state.gpsFix = 2; // 3D Fix heurístico si la trama es 30B legacy
+    }
+
+    if (d.status !== undefined) {
+        state.status = typeof d.status === "string" ? d.status : (STATUS_NAMES[d.status] || "STANDBY");
+    }
+}
+
+// ============================================================
+// EVALUACIÓN DE REGLAS DE VUELO
+// ============================================================
+
+function evaluateSubsystems() {
+    const now = Date.now();
+    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
+
+    // 1. Enlace
+    const linkOk = state.connected && silence <= 3.0 && state.loss5s <= 5.0 && state.rxRate > 0.0;
+    let linkReason = "";
+    if (!state.connected) linkReason = "Enlace desconectado";
+    else if (silence > 3.0) linkReason = `Silencio de RF (${silence.toFixed(1)}s)`;
+    else if (state.loss5s > 5.0) linkReason = `Pérdida excesiva (${state.loss5s.toFixed(1)}%)`;
+    else if (state.rxRate <= 0.0) linkReason = "Sin recepción";
+
+    // 2. Altitud en rampa
+    const altTol = CFG.altitude_tol_m;
+    const altValid = state.altitude !== null && Math.abs(state.altitude) <= altTol;
+    let altReason = "";
+    if (state.altitude === null) altReason = "Altitud sin datos";
+    else if (!altValid) altReason = `Altitud fuera de rango (${state.altitude > 0 ? "+" : ""}${state.altitude.toFixed(1)}m)`;
+
+    // 3. Acelerómetro
+    const axTol = CFG.accel_xy_tol_g;
+    const ayTol = CFG.accel_xy_tol_g;
+    const azNom = CFG.accel_z_nominal_g;
+    const azTol = CFG.accel_z_tol_g;
+    const accValid = state.ax !== null &&
+                     Math.abs(state.ax) <= axTol &&
+                     Math.abs(state.ay) <= ayTol &&
+                     Math.abs(state.az - azNom) <= azTol;
+    let accReason = "";
+    if (state.ax === null) accReason = "Acelerómetro sin datos";
+    else if (Math.abs(state.ax) > axTol) accReason = `Acel X fuera (${state.ax.toFixed(2)}g)`;
+    else if (Math.abs(state.ay) > ayTol) accReason = `Acel Y fuera (${state.ay.toFixed(2)}g)`;
+    else if (Math.abs(state.az - azNom) > azTol) accReason = `Acel Z fuera (${state.az.toFixed(2)}g)`;
+
+    // 4. GPS Lock & Posición
+    const gpsRadius = CFG.gps_radius_m;
+    const hasFix = state.gpsFix >= 1;
+    const driftOk = state.gpsDriftM !== null && state.gpsDriftM <= gpsRadius;
+    const gpsValid = hasFix && driftOk;
+    let gpsReason = "";
+    if (!hasFix) gpsReason = "GPS sin bloqueo (NO_FIX)";
+    else if (state.gpsDriftM === null) gpsReason = "Coordenadas no adquiridas";
+    else if (!driftOk) gpsReason = `Deriva excesiva (${state.gpsDriftM.toFixed(1)}m)`;
+
+    // 5. Meteorología
+    const windVal = parseFloat($("wWind").value) || 0;
+    const cloudsVal = parseFloat($("wClouds").value) || 0;
+    const visVal = parseFloat($("wVis").value) || 0;
+    const officerOk = $("wOfficerCheck").checked;
+
+    const windOk = windVal <= CFG.weather.max_wind_speed_ms;
+    const cloudsOk = cloudsVal <= CFG.weather.max_cloud_cover_pct;
+    const visOk = visVal >= CFG.weather.min_visibility_km;
+    const weatherValid = windOk && cloudsOk && visOk && officerOk;
+
+    let weatherReason = "";
+    if (!windOk) weatherReason = `Viento excesivo (${windVal} m/s)`;
+    else if (!cloudsOk) weatherReason = `Nubosidad excesiva (${cloudsVal}%)`;
+    else if (!visOk) weatherReason = `Visibilidad baja (${visVal} km)`;
+    else if (!officerOk) weatherReason = "Falta firma de Oficial";
+
+    return {
+        link: { ok: linkOk, reason: linkReason, name: "Enlace Telemetría" },
+        alt: { ok: altValid, reason: altReason, name: "Altitud" },
+        acc: { ok: accValid, reason: accReason, name: "Aceleración" },
+        gps: { ok: gpsValid, reason: gpsReason, name: "GPS Lock" },
+        weather: { ok: weatherValid, reason: weatherReason, name: "Meteorología" }
+    };
+}
+
+function updateStabilityClock(dtMs, checks) {
+    const allOk = Object.values(checks).every(c => c.ok);
+    const targetHoldMs = CFG.required_hold_s * 1000;
+
+    if (allOk) {
+        state.stableMs = Math.min(targetHoldMs, state.stableMs + dtMs);
+        state.verdict = state.stableMs >= targetHoldMs ? "GO" : "NO-GO";
+    } else {
+        if (state.stableMs > 0) {
+            state.resetCount++;
+            const failing = Object.values(checks).find(c => !c.ok);
+            if (failing) {
+                state.lastFailureReason = `${failing.name}: ${failing.reason}`;
+            }
+            state.stableMs = 0;
+        }
+        state.verdict = "NO-GO";
+    }
+
+    state.allOk = allOk;
+}
+
+// ============================================================
+// RENDERIZADO VISUAL
+// ============================================================
+
+function renderUI(checks) {
+    const now = Date.now();
+    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
+
+    // Header clocks
+    const date = new Date();
+    $("localTime").textContent = date.toTimeString().split(" ")[0];
+    $("phase").textContent = state.status;
+
+    // Hero Banner & Progress
+    const targetHoldMs = CFG.required_hold_s * 1000;
+    const curSec = (state.stableMs / 1000).toFixed(1);
+    const tarSec = CFG.required_hold_s.toFixed(1);
+
+    $("timerCurrent").textContent = formatTimerDigital(state.stableMs);
+    $("timerTarget").textContent = formatTimerDigital(targetHoldMs);
+    $("resetCount").textContent = state.resetCount;
+    $("lastFailureReason").textContent = state.lastFailureReason;
+
+    const progressPct = Math.min(100, (state.stableMs / targetHoldMs) * 100);
+    const pBar = $("progressBar");
+    pBar.style.width = `${progressPct}%`;
+
+    const hBanner = $("heroBanner");
+    const vIcon = $("verdictIcon");
+    const vText = $("verdictText");
+    const vSub = $("verdictSubtitle");
+
+    if (state.verdict === "GO") {
+        hBanner.className = "hero-banner state-go";
+        vIcon.textContent = "✔";
+        vText.textContent = "GO";
+        vSub.textContent = "TODOS LOS PARÁMETROS EN RANGO — VENTANA AUTORIZADA";
+        pBar.className = "progress-bar complete";
+        $("timerStateLabel").textContent = "ESTABILIDAD LOGRADA";
+    } else {
+        hBanner.className = "hero-banner state-nogo";
+        vIcon.textContent = "✖";
+        vText.textContent = "NO-GO";
+
+        const failing = Object.values(checks).filter(c => !c.ok);
+        if (failing.length === 0) {
+            vSub.textContent = `ACUMULANDO ESTABILIDAD: ${curSec}s / ${tarSec}s (${progressPct.toFixed(0)}%)`;
+            pBar.className = "progress-bar";
+            $("timerStateLabel").textContent = "ACUMULANDO";
+        } else {
+            vSub.textContent = `CONDICIONES NO CUMPLIDAS: ${failing.length} SUBSISTEMA(S) EN FALLO`;
+            pBar.className = "progress-bar";
+            $("timerStateLabel").textContent = "REINICIADO / FUERA";
+        }
+    }
+
+    // Row 1: Enlace
+    $("valLinkRate").textContent = `${state.rxRate.toFixed(1)} Hz`;
+    $("valLinkLoss").textContent = `${state.loss5s.toFixed(1)}%`;
+    $("valLinkSilence").textContent = silence > 90 ? "--" : `${silence.toFixed(1)}s`;
+    setRowState("rowLink", "badgeLink", checks.link.ok, checks.link.ok ? "OK" : (silence > 3.0 ? "SILENCIO" : "DEGRADADO"));
+
+    // Row 2: Altitud
+    if (state.altitude !== null) {
+        $("valAlt").textContent = `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(1)} m`;
+        $("valAltDelta").textContent = `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(2)} m`;
+    } else {
+        $("valAlt").textContent = "---";
+        $("valAltDelta").textContent = "---";
+    }
+    setRowState("rowAlt", "badgeAlt", checks.alt.ok, checks.alt.ok ? "OK" : "FUERA DE RANGO");
+
+    // Row 3: Acelerómetro
+    if (state.ax !== null) {
+        $("valAccAxes").textContent = `X: ${state.ax >= 0 ? "+" : ""}${state.ax.toFixed(2)}g   Y: ${state.ay >= 0 ? "+" : ""}${state.ay.toFixed(2)}g   Z: ${state.az >= 0 ? "+" : ""}${state.az.toFixed(2)}g`;
+        $("valAccMagVal").textContent = `${state.accMag.toFixed(2)} g`;
+    } else {
+        $("valAccAxes").textContent = "X: ---  Y: ---  Z: ---";
+        $("valAccMagVal").textContent = "--- g";
+    }
+    setRowState("rowAcc", "badgeAcc", checks.acc.ok, checks.acc.ok ? "OK" : "FUERA DE RANGO");
+
+    // Row 4: GPS
+    $("valGpsFix").textContent = GPS_FIX_NAMES[state.gpsFix] || `FIX_${state.gpsFix}`;
+    if (state.gpsDriftM !== null) {
+        $("valGpsDrift").textContent = `Deriva: ${state.gpsDriftM.toFixed(1)} m`;
+        $("valGpsCoords").textContent = `Coords: ${state.lat.toFixed(6)}, ${state.lon.toFixed(6)}`;
+    } else {
+        $("valGpsDrift").textContent = "Deriva: --- m";
+        $("valGpsCoords").textContent = "Coords: ---, ---";
+    }
+    setRowState("rowGps", "badgeGps", checks.gps.ok, checks.gps.ok ? "OK" : (state.gpsFix === 0 ? "SIN LOCK" : "DERIVA"));
+
+    // Row 5: Weather
+    setRowState("rowWeather", "badgeWeather", checks.weather.ok, checks.weather.ok ? "APROBADO" : "NO APROBADO");
+}
+
+function setRowState(rowId, badgeId, isOk, label) {
+    const row = $(rowId);
+    const badge = $(badgeId);
+    if (!row || !badge) return;
+
+    if (isOk) {
+        row.classList.remove("cl-row-fail");
+        badge.className = "badge ok";
+        badge.textContent = `✔ ${label}`;
+    } else {
+        row.classList.add("cl-row-fail");
+        badge.className = "badge bad";
+        badge.textContent = `✖ ${label}`;
+    }
+}
+
+function formatTimerDigital(ms) {
+    const totalSec = ms / 1000;
+    const m = Math.floor(totalSec / 60);
+    const s = Math.floor(totalSec % 60);
+    const frac = Math.floor((totalSec % 1) * 10);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${frac}`;
+}
+
+function updateLinkStatus() {
+    const dot = $("linkDot");
+    const label = $("linkStatus");
+    if (!dot || !label) return;
+
+    if (state.connected) {
+        dot.className = "dot online";
+        label.textContent = "CONECTADO";
+    } else {
+        dot.className = "dot";
+        label.textContent = "DESCONECTADO";
+    }
+}
+
+// Bucle de diagnóstico de red a 2 Hz
+setInterval(() => {
+    const now = Date.now();
+    const cutoffRate = now - 1000;
+    while (state.packetTimes.length && state.packetTimes[0] < cutoffRate) {
+        state.packetTimes.shift();
+    }
+    state.rxRate = state.packetTimes.length;
+
+    const cutoffSeq = now - 5000;
+    while (state.seqWindow.length && state.seqWindow[0].t < cutoffSeq) {
+        state.seqWindow.shift();
+    }
+    let recCount = 0, lostCount = 0;
+    for (const w of state.seqWindow) {
+        recCount += w.rec;
+        lostCount += w.lost;
+    }
+    const tot = recCount + lostCount;
+    state.loss5s = tot > 0 ? (lostCount / tot) * 100 : 0;
+}, 500);
+
+// Bucle de evaluación a 60 Hz
+let lastFrameTime = performance.now();
+
+function frameLoop(time) {
+    const dt = time - lastFrameTime;
+    lastFrameTime = time;
+
+    const checks = evaluateSubsystems();
+    updateStabilityClock(dt, checks);
+    renderUI(checks);
+
+    requestAnimationFrame(frameLoop);
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+
+$("btnResetTimer").addEventListener("click", () => {
+    state.stableMs = 0;
+    state.resetCount++;
+    state.lastFailureReason = "Reinicio manual";
+});
+
+$("btnSetGpsAnchor").addEventListener("click", () => {
+    if (state.lat !== null && state.lon !== null) {
+        state.gpsAnchor = { lat: state.lat, lon: state.lon };
+        state.gpsDriftM = 0;
+        $("anchorInfo").textContent = `Origen GPS fijado: ${state.lat.toFixed(6)}, ${state.lon.toFixed(6)}`;
+    } else {
+        alert("Sin coordenadas GPS válidas para fijar el origen.");
+    }
+});
+
+function applyConfigUI() {
+    $("lblRuleAlt").textContent = `Rango: 0.0 ± ${CFG.altitude_tol_m.toFixed(1)} m`;
+    $("lblRuleAccXy").textContent = `|X, Y| ≤ ${CFG.accel_xy_tol_g.toFixed(2)} g`;
+    $("lblRuleAccZ").textContent = `|Z - 1.0g| ≤ ${CFG.accel_z_tol_g.toFixed(2)} g`;
+    $("lblRuleGps").textContent = `Deriva ≤ ${CFG.gps_radius_m.toFixed(1)} m`;
+}
+
+async function fetchBackendConfig() {
+    try {
+        const res = await fetch("/api/status");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.gonogo) {
+            const g = data.gonogo;
+            if (g.required_hold_s) CFG.required_hold_s = g.required_hold_s;
+            if (g.altitude_tol_m) CFG.altitude_tol_m = g.altitude_tol_m;
+            if (g.accel_xy_tol_g) CFG.accel_xy_tol_g = g.accel_xy_tol_g;
+            if (g.accel_z_nominal_g) CFG.accel_z_nominal_g = g.accel_z_nominal_g;
+            if (g.accel_z_tol_g) CFG.accel_z_tol_g = g.accel_z_tol_g;
+            if (g.gps_radius_m) CFG.gps_radius_m = g.gps_radius_m;
+            if (g.weather_limits && g.weather_limits.max_wind_speed_ms) {
+                CFG.weather.max_wind_speed_ms = g.weather_limits.max_wind_speed_ms;
+            }
+            applyConfigUI();
+        }
+    } catch (err) {
+        console.warn("No se pudo obtener /api/status:", err);
+    }
+}
+
+// Inicialización
+applyConfigUI();
+fetchBackendConfig();
+connectWs();
+requestAnimationFrame(frameLoop);
+
+</script>
+
+</body>
+</html>

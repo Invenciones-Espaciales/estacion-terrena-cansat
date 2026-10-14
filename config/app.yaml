@@ -10,3 +10,15 @@ websocket:
 storage:
   database: "data/telemetry.db"
   csv: "data/telemetry.csv"
+
+gonogo:
+  required_hold_s: 30
+  altitude_tol_m: 5.0
+  accel_xy_tol_g: 0.1
+  accel_z_nominal_g: 1.0
+  accel_z_tol_g: 0.15
+  gps_radius_m: 5.0
+  weather_limits:
+    max_wind_speed_ms: 10.0
+    max_cloud_cover_pct: 75.0
+    min_visibility_km: 5.0

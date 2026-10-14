@@ -66,6 +66,35 @@ header {
 .brand img { height: 100%; max-height: 44px; width: auto; object-fit: contain; }
 .brand h1 { margin: 0; font-size: 17px; font-weight: 900; line-height: 1.05; }
 
+.view-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 14px;
+    background: var(--soft);
+    padding: 3px;
+    border: 2px solid #000;
+}
+.nav-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-decoration: none;
+    color: #000;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+.nav-tab:hover {
+    background: #e0e0e0;
+}
+.nav-tab.active {
+    background: #000;
+    color: #fff;
+}
+
 .hgroup { display: flex; gap: 6px; align-items: stretch; flex: none; }
 
 .hcell {
@@ -201,6 +230,10 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
         <div class="brand">
             <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
             <h1>ESTACIÓN<br>TERRENA</h1>
+            <nav class="view-nav">
+                <a href="/" class="nav-tab active">TELEMETRÍA</a>
+                <a href="/gonogo" class="nav-tab">GO / NO-GO</a>
+            </nav>
         </div>
 
         <div class="hgroup">
@@ -271,9 +304,10 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
             <div class="card grow">
                 <div class="card-title">POSICIÓN GPS <span class="hint">trayectoria</span></div>
                 <div id="gpsMap"></div>
-                <div class="coords">
+                <div class="coords" style="grid-template-columns: 1fr 1fr 0.8fr;">
                     <div><div class="k">LATITUD (°)</div><div class="v num" id="lat">---</div></div>
                     <div><div class="k">LONGITUD (°)</div><div class="v num" id="lon">---</div></div>
+                    <div><div class="k">SATÉLITES</div><div class="v num" id="satellites">--</div></div>
                 </div>
             </div>
         </section>
@@ -433,6 +467,7 @@ const state = {
     ax: null, ay: null, az: null,
     statusText: null,
     rssi: null,
+    satellites: null,
     lat: null, lon: null,
 
     events: [],
@@ -571,6 +606,12 @@ function ingest(message) {
 
     // RF (solo si el backend lo envía)
     if (Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
+
+    // Satélites GNSS
+    if (Number.isFinite(Number(d.satellites))) {
+        state.satellites = Number(d.satellites);
+        setText("satellites", String(state.satellites));
+    }
 
     // altitud (tal como llega)
     const alt = Number(d.altitude);
