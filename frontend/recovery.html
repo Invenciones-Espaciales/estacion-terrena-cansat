@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Recuperación y Seguimiento — Estación Terrena</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
+<link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+>
+
+<style>
+/* ============================================================
+   REQUISITOS DE COMPETICIÓN:
+   G12: Alta visibilidad bajo luz solar intensa (texto oscuro sobre fondo claro,
+        trazos/ejes en negrita, números de telemetría de gran tamaño).
+   G13: Todo simultáneo en pantalla principal, sin pestañas operativas internas.
+   G14: Contador de paquetes recibidos en tierra (RX tierra).
+   ============================================================ */
+
+:root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --ink: #0f172a;
+    --gray: #334155;
+    --muted: #64748b;
+    --soft: #f1f5f9;
+    --border: #0f172a;
+    --border-light: #cbd5e1;
+    --ok: #087a3b;
+    --ok-bg: #ecfdf5;
+    --warn: #b45309;
+    --warn-bg: #fffbeb;
+    --bad: #b91c1c;
+    --bad-bg: #fef2f2;
+    --accent: #1d4ed8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.num {
+    font-variant-numeric: tabular-nums;
+    font-family: "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-weight: 700;
+}
+
+/* ===== APP LAYOUT (100VH GRID EN ESCRITORIO) ===== */
+.app {
+    height: 100vh;
+    padding: 6px 8px;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* ===== CABECERA GLOBAL (COMPACTA Y DE ALTO CONTRASTE) ===== */
+header {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 2px solid var(--border);
+    padding: 4px 10px;
+    background: var(--card);
+    border-radius: 4px;
+    flex: none;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.brand img {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+.brand h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 0.02em;
+}
+
+.view-nav {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 10px;
+    background: var(--soft);
+    padding: 2px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+}
+.nav-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    color: var(--ink);
+    border-radius: 2px;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+.nav-tab:hover { background: #e2e8f0; }
+.nav-tab.active { background: #000000; color: #ffffff; }
+
+.hgroup {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex: none;
+}
+.hcell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0 8px;
+    border-left: 1.5px solid var(--border-light);
+    white-space: nowrap;
+}
+.hcell:first-child { border-left: none; }
+.hcell .k {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.hcell .v {
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.15;
+}
+.hcell .v.clock {
+    font-size: 15px;
+    min-width: 4.8em;
+    text-align: right;
+}
+
+.phase {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: #0f172a;
+    color: #ffffff;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--bad);
+    border: 1.5px solid #000000;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+.dot.online { background: var(--ok); }
+.dot.warn { background: var(--warn); }
+
+/* ===== HERO GUIDANCE BANNER ===== */
+.hero-guidance {
+    flex: none;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    background: var(--card);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr auto;
+    align-items: center;
+    gap: 14px;
+}
+
+.guidance-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.guidance-box .lbl {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.guidance-box .val-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+.guidance-box .big {
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--ink);
+}
+.guidance-box .unit {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--muted);
+}
+.guidance-box .sub {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray);
+}
+
+.compass-visual {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.compass-dial {
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: var(--soft);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.compass-arrow {
+    width: 3px;
+    height: 30px;
+    background: var(--bad);
+    border-radius: 2px;
+    transform-origin: center center;
+    transition: transform 0.25s ease;
+}
+.compass-center {
+    width: 6px;
+    height: 6px;
+    background: #000;
+    border-radius: 50%;
+    position: absolute;
+}
+
+/* BOTONES DE ACCION DIRECTA */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+}
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: #0f172a;
+    color: #ffffff;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s ease, transform 0.05s ease;
+}
+.btn-action:hover { background: #334155; }
+.btn-action:active { transform: scale(0.98); }
+.btn-action.sec {
+    background: #ffffff;
+    color: #0f172a;
+}
+.btn-action.sec:hover { background: #f1f5f9; }
+
+/* ===== MAIN CONTENT GRID (MAPA + PANELES LATERALES) ===== */
+.recovery-grid {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 6px;
+}
+
+.panel-map {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: var(--card);
+    min-height: 0;
+    overflow: hidden;
+}
+.panel-header {
+    flex: none;
+    padding: 6px 12px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--soft);
+}
+.panel-title {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink);
+}
+.map-controls {
+    display: flex;
+    gap: 4px;
+}
+.map-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: #ffffff;
+    color: #0f172a;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+.map-btn:hover { background: #e2e8f0; }
+
+#recoveryMap {
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 250px;
+}
+
+/* PANEL LATERAL DERECHO */
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.card {
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: var(--card);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.card-title {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1.5px solid var(--border-light);
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ink);
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 2px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.data-row:last-child { border-bottom: none; }
+.data-row .k {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.data-row .v {
+    font-size: 13px;
+    font-weight: 800;
+    text-align: right;
+    color: var(--ink);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: #0f172a;
+    color: #fff;
+    text-align: center;
+}
+.status-badge.ok { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.status-badge.warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+.status-badge.crit { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+
+/* LISTA DE HITOS */
+.timeline-scroll {
+    max-height: 140px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.tl-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 3px 6px;
+    border-left: 3px solid #0f172a;
+    background: var(--soft);
+    border-radius: 0 3px 3px 0;
+    font-size: 11px;
+}
+.tl-time {
+    font-weight: 900;
+    white-space: nowrap;
+    color: var(--accent);
+}
+.tl-label {
+    font-weight: 700;
+    color: var(--ink);
+}
+
+/* TOAST COPIADO */
+#toast {
+    position: fixed;
+    bottom: 18px;
+    right: 18px;
+    padding: 8px 16px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    border: 1.5px solid #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 9999;
+}
+#toast.show { opacity: 1; }
+
+/* ===== RESPONSIVE DESIGN (MÓVILES / PANTALLAS PEQUEÑAS) ===== */
+@media (max-width: 950px) {
+    .app {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .hero-guidance {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .action-buttons {
+        grid-column: 1 / -1;
+        flex-direction: row;
+    }
+    .action-buttons .btn-action {
+        flex: 1;
+        padding: 8px 10px;
+    }
+    .recovery-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .panel-map {
+        min-height: 360px;
+    }
+}
+
+@media (max-width: 600px) {
+    header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+    .brand {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .view-nav {
+        margin-left: 0;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .nav-tab {
+        flex: 1;
+        text-align: center;
+        padding: 5px 4px;
+    }
+    .hgroup {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+    .hcell {
+        align-items: flex-start;
+        border-left: none;
+        padding: 2px 4px;
+        background: var(--soft);
+        border-radius: 3px;
+    }
+    .hero-guidance {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- CABECERA GLOBAL -->
+    <header>
+        <div class="brand">
+            <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
+            <div>
+                <h1>ESTACIÓN TERRENA</h1>
+                <div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:0.04em;">RECUPERACIÓN Y LOCALIZACIÓN</div>
+            </div>
+            <nav class="view-nav">
+                <a href="/" class="nav-tab">TELEMETRÍA</a>
+                <a href="/gonogo" class="nav-tab">GO / NO-GO</a>
+                <a href="/recovery" class="nav-tab active">RECUPERACIÓN</a>
+            </nav>
+        </div>
+
+        <div class="hgroup">
+            <div class="hcell">
+                <span class="k">HORA LOCAL</span>
+                <span class="v clock num" id="localTime">00:00:00</span>
+            </div>
+            <div class="hcell">
+                <span class="k">TIEMPO MISIÓN</span>
+                <span class="v clock num">T+ <span id="clock">00:00:00</span></span>
+            </div>
+            <div class="hcell">
+                <span class="k">ESTADO VUELO</span>
+                <span class="phase" id="phase">---</span>
+            </div>
+            <div class="hcell">
+                <span class="k">PAQUETES RX (TIERRA)</span>
+                <span class="v num" id="rxCount">0</span>
+            </div>
+            <div class="hcell">
+                <span class="k">SEÑAL RF (RSSI)</span>
+                <span class="v num" id="rssi">N/D</span>
+            </div>
+            <div class="hcell">
+                <span class="k">ENLACE</span>
+                <span class="v" style="font-size:13px">
+                    <span class="dot" id="linkDot"></span>
+                    <span id="linkStatus">DESCONECTADO</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO GUIDANCE: DISTANCIA, RUMBO, AZIMUT Y BOTON GPS -->
+    <section class="hero-guidance">
+        <div class="guidance-box">
+            <div class="lbl">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                DISTANCIA AL COHETE
+            </div>
+            <div class="val-wrap">
+                <span class="big num" id="guidanceDist">---</span>
+                <span class="unit" id="guidanceDistUnit">m</span>
+            </div>
+            <div class="sub">Desde punto de despegue / base</div>
+        </div>
+
+        <div class="guidance-box">
+            <div class="lbl">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                </svg>
+                RUMBO / AZIMUT
+            </div>
+            <div class="compass-visual">
+                <div class="compass-dial">
+                    <div class="compass-arrow" id="compassNeedle"></div>
+                    <div class="compass-center"></div>
+                </div>
+                <div>
+                    <div class="big num" id="guidanceBearing">---°</div>
+                    <div class="sub" id="guidanceCardinal">---</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guidance-box">
+            <div class="lbl">ESTADO DE ATERRIZAJE</div>
+            <div>
+                <span class="status-badge" id="landingBadge">DESCONOCIDO</span>
+            </div>
+            <div class="sub" style="margin-top:3px;">
+                Vz al impacto: <strong class="num" id="touchdownVz">--- m/s</strong>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-action" id="btnGoogleMaps">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+                ABRIR EN GOOGLE MAPS
+            </button>
+            <button class="btn-action sec" id="btnCopyCoords">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                COPIAR COORDENADAS
+            </button>
+        </div>
+    </section>
+
+    <!-- CUADRÍCULA PRINCIPAL: MAPA + PANELES -->
+    <main class="recovery-grid">
+
+        <!-- MAPA TÁCTICO DE RECUPERACIÓN -->
+        <section class="panel-map">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+                        <line x1="8" y1="2" x2="8" y2="18"/>
+                        <line x1="16" y1="6" x2="16" y2="22"/>
+                    </svg>
+                    TRAYECTORIA Y ZONA DE IMPACTO
+                </div>
+                <div class="map-controls">
+                    <button class="map-btn" id="btnCenterRocket">Centrar Cohete</button>
+                    <button class="map-btn" id="btnCenterBase">Centrar Base</button>
+                    <button class="map-btn" id="btnFitAll">Ver Todo</button>
+                    <button class="map-btn" id="btnMyPos">Mi Ubicación</button>
+                </div>
+            </div>
+            <div id="recoveryMap"></div>
+        </section>
+
+        <!-- PANELES LATERALES DE INFORMACIÓN -->
+        <section class="side-panel">
+
+            <!-- COORDENADAS EXACTAS GNSS -->
+            <div class="card">
+                <div class="card-title">
+                    <span>COORDENADAS DEL VEHÍCULO</span>
+                    <span class="status-badge ok" id="fixBadge" style="font-size:10px;padding:2px 5px;">GNSS FIX</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">LATITUD</span>
+                    <span class="v num" id="recLat">---</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">LONGITUD</span>
+                    <span class="v num" id="recLon">---</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">ALTITUD GNSS</span>
+                    <span class="v num" id="recAlt">--- m</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">SATÉLITES</span>
+                    <span class="v num" id="recSats">--</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">ÚLTIMO REPORTE</span>
+                    <span class="v num" id="recLastTime">--</span>
+                </div>
+            </div>
+
+            <!-- REFERENCIA DE LA BASE / DESPEGUE -->
+            <div class="card">
+                <div class="card-title">
+                    <span>BASE / DESPEGUE</span>
+                    <span style="font-size:10px;font-weight:800;color:var(--muted)">ORIGEN</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">BASE LATITUD</span>
+                    <span class="v num" id="baseLat">---</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">BASE LONGITUD</span>
+                    <span class="v num" id="baseLon">---</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">ELEVACIÓN ANGULAR</span>
+                    <span class="v num" id="elevAngle">---°</span>
+                </div>
+            </div>
+
+            <!-- HITOS DE VUELO Y CRONOLOGÍA -->
+            <div class="card" style="flex:1 1 0; min-height:100px;">
+                <div class="card-title">
+                    <span>CRONOLOGÍA DE VUELO</span>
+                    <span id="eventsCount" style="font-size:10px;font-weight:800;color:var(--muted)">0 eventos</span>
+                </div>
+                <div class="timeline-scroll" id="timelineList">
+                    <div style="color:var(--muted);font-style:italic;padding:4px 0;font-size:11px;">Esperando hitos de vuelo...</div>
+                </div>
+            </div>
+
+            <!-- DIAGNÓSTICO DEL ENLACE Y PAQUETES (G14) -->
+            <div class="card">
+                <div class="card-title">
+                    <span>ESTADO DEL ENLACE</span>
+                    <span style="font-size:10px;font-weight:800;color:var(--muted)">RF GROUND</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">PAQUETES RX (TIERRA)</span>
+                    <span class="v num" id="diagRxCount">0</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">SECUENCIA AVIONICA</span>
+                    <span class="v num" id="diagSeq">---</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">PÉRDIDA DE PAQUETES</span>
+                    <span class="v num" id="diagLoss">0.0 %</span>
+                </div>
+                <div class="data-row">
+                    <span class="k">ALTITUD MÁXIMA (APOGEO)</span>
+                    <span class="v num" id="diagApogee">--- m</span>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div id="toast">Coordenadas copiadas al portapapeles</div>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const PHASE_NAMES = {
+    STANDBY: "En espera",
+    POWERED: "Motor encendido",
+    BURNOUT: "Fin de empuje",
+    APOGEE: "Apogeo",
+    DROGUE_ORD: "Orden de drogue",
+    DROGUE_CONF: "Drogue desplegado",
+    MAIN_ORD: "Orden de principal",
+    MAIN_CONF: "Principal desplegado",
+    LANDED: "Aterrizado"
+};
+
+const recoveryState = {
+    connected: false,
+    framesReceived: 0,
+    lastPacketAt: null,
+    liftoffDetected: false,
+    liftoffAt: null,
+    liftoffTs: null,
+    startedAt: Date.now(),
+    statusText: null,
+
+    baseLat: null,
+    baseLon: null,
+    baseAlt: null,
+
+    lat: null,
+    lon: null,
+    alt: null,
+    satellites: null,
+    rssi: null,
+    lastSeq: null,
+    lossPercent: 0,
+    maxAlt: 0,
+    vz: null,
+    lastAlt: null,
+    lastAltTime: null,
+
+    events: [],
+    routePoints: [],
+    map: null,
+    baseMarker: null,
+    rocketMarker: null,
+    apogeeMarker: null,
+    userMarker: null,
+    routeLine: null,
+    vectorLine: null,
+};
+
+function fmt(n, dec = 2) {
+    const num = Number(n);
+    return Number.isFinite(num)
+        ? new Intl.NumberFormat("es-AR", { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(num)
+        : "---";
+}
+
+function elapsed(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const p = v => String(v).padStart(2, "0");
+    return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+}
+
+function missionTime() {
+    if (!recoveryState.liftoffDetected) return 0;
+    return Math.max(0, Date.now() - (recoveryState.liftoffAt || Date.now()));
+}
+
+/* CÁLCULO DE DISTANCIA HAVERSINE Y RUMBO (AZIMUT) */
+function calculateDistanceM(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function calculateBearingDeg(lat1, lon1, lat2, lon2) {
+    const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
+    const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+              Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
+    const brng = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+    return brng;
+}
+
+function bearingToCardinal(deg) {
+    const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+    const idx = Math.round(deg / 22.5) % 16;
+    return dirs[idx];
+}
+
+/* MAPA LEAFLET */
+function initRecoveryMap() {
+    if (!window.L) return;
+    recoveryState.map = L.map("recoveryMap", { zoomControl: true }).setView([-34.6037, -58.3816], 14);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(recoveryState.map);
+
+    recoveryState.routeLine = L.polyline([], {
+        color: "#0f172a",
+        weight: 3.5,
+        opacity: 0.85
+    }).addTo(recoveryState.map);
+
+    recoveryState.vectorLine = L.polyline([], {
+        color: "#b91c1c",
+        weight: 2,
+        dashArray: "5, 5",
+        opacity: 0.9
+    }).addTo(recoveryState.map);
+
+    setTimeout(() => recoveryState.map.invalidateSize(), 100);
+    window.addEventListener("resize", () => recoveryState.map && recoveryState.map.invalidateSize());
+}
+
+function updateRecoveryMap() {
+    if (!recoveryState.map) return;
+    if (recoveryState.lat === null || recoveryState.lon === null) return;
+
+    const rPoint = [recoveryState.lat, recoveryState.lon];
+
+    // Marcador de base / despegue inicial
+    if (recoveryState.baseLat !== null && recoveryState.baseLon !== null) {
+        const bPoint = [recoveryState.baseLat, recoveryState.baseLon];
+        if (!recoveryState.baseMarker) {
+            recoveryState.baseMarker = L.circleMarker(bPoint, {
+                radius: 7,
+                color: "#0f172a",
+                fillColor: "#087a3b",
+                fillOpacity: 1,
+                weight: 2
+            }).addTo(recoveryState.map).bindTooltip("Base / Despegue", { permanent: true, direction: "top" });
+        } else {
+            recoveryState.baseMarker.setLatLng(bPoint);
+        }
+
+        // Línea vector entre Base y Cohete
+        recoveryState.vectorLine.setLatLngs([bPoint, rPoint]);
+    }
+
+    // Marcador del cohete
+    if (!recoveryState.rocketMarker) {
+        recoveryState.rocketMarker = L.circleMarker(rPoint, {
+            radius: 8,
+            color: "#0f172a",
+            fillColor: "#b91c1c",
+            fillOpacity: 1,
+            weight: 2
+        }).addTo(recoveryState.map).bindTooltip("Cohete", { permanent: true, direction: "bottom" });
+        recoveryState.map.setView(rPoint, 16);
+    } else {
+        recoveryState.rocketMarker.setLatLng(rPoint);
+    }
+
+    // Acumular trayectoria
+    const pts = recoveryState.routePoints;
+    const last = pts.length ? pts[pts.length - 1] : null;
+    if (!last || Math.abs(last[0] - rPoint[0]) > 0.000015 || Math.abs(last[1] - rPoint[1]) > 0.000015) {
+        pts.push(rPoint);
+        recoveryState.routeLine.addLatLng(rPoint);
+    }
+}
+
+/* INGESTA DE TRAMAS */
+function ingestFrame(frameItem) {
+    const d = frameItem.data || frameItem.telemetry || frameItem;
+    if (!d || typeof d !== "object") return;
+
+    const now = Date.now();
+    recoveryState.lastPacketAt = now;
+    if (frameItem.frames_received !== undefined) {
+        recoveryState.framesReceived = frameItem.frames_received;
+    } else {
+        recoveryState.framesReceived++;
+    }
+
+    if (d.frame_number !== undefined) recoveryState.lastSeq = Number(d.frame_number);
+    if (d.rssi !== undefined) recoveryState.rssi = Number(d.rssi);
+    if (d.satellites !== undefined) recoveryState.satellites = Number(d.satellites);
+
+    // Coordenadas
+    const lat = Number(d.latitude);
+    const lon = Number(d.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && (lat !== 0 || lon !== 0)) {
+        recoveryState.lat = lat;
+        recoveryState.lon = lon;
+
+        if (recoveryState.baseLat === null || recoveryState.baseLon === null) {
+            recoveryState.baseLat = lat;
+            recoveryState.baseLon = lon;
+            recoveryState.baseAlt = Number(d.altitude) || 0;
+        }
+    }
+
+    // Altitud
+    const alt = Number(d.altitude);
+    if (Number.isFinite(alt)) {
+        recoveryState.alt = alt;
+        if (alt > recoveryState.maxAlt) recoveryState.maxAlt = alt;
+
+        if (recoveryState.lastAlt !== null && recoveryState.lastAltTime !== null) {
+            const dt = (now - recoveryState.lastAltTime) / 1000;
+            if (dt >= 0.2) {
+                recoveryState.vz = (alt - recoveryState.lastAlt) / dt;
+            }
+        }
+        recoveryState.lastAlt = alt;
+        recoveryState.lastAltTime = now;
+    }
+
+    // Fase de vuelo
+    const text = d.status_label || (d.status !== undefined ? String(d.status) : null);
+    if (text && text !== recoveryState.statusText) {
+        recoveryState.statusText = text;
+        const pName = PHASE_NAMES[text] || text;
+        addEvent(`Fase: ${pName}`);
+
+        if (!recoveryState.liftoffDetected && (text === "POWERED" || (alt !== null && alt > 30))) {
+            recoveryState.liftoffDetected = true;
+            recoveryState.liftoffAt = now;
+            addEvent("Despegue confirmado (T-0)");
+        }
+        if (text === "LANDED") {
+            addEvent("¡Aterrizaje confirmado en tierra!");
+        }
+    }
+
+    updateRecoveryMap();
+}
+
+function addEvent(msg) {
+    const t = missionTime();
+    recoveryState.events.unshift({ t, msg });
+    if (recoveryState.events.length > 50) recoveryState.events.pop();
+    renderEvents();
+}
+
+function renderEvents() {
+    const list = $("timelineList");
+    if (!list) return;
+    $("eventsCount").textContent = `${recoveryState.events.length} hitos`;
+    if (!recoveryState.events.length) {
+        list.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:4px 0;font-size:11px;">Esperando hitos de vuelo...</div>';
+        return;
+    }
+    list.innerHTML = recoveryState.events.map(e => `
+        <div class="tl-item">
+            <span class="tl-time num">T+ ${elapsed(e.t)}</span>
+            <span class="tl-label">${e.msg}</span>
+        </div>
+    `).join("");
+}
+
+/* PRESENTACIÓN Y RENDER */
+function renderRecoveryUI() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    $("localTime").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    $("clock").textContent = elapsed(missionTime());
+
+    if (recoveryState.statusText) {
+        $("phase").textContent = PHASE_NAMES[recoveryState.statusText] || recoveryState.statusText;
+    }
+
+    // G14: Ground packet counter
+    $("rxCount").textContent = recoveryState.framesReceived.toLocaleString("es-AR");
+    $("diagRxCount").textContent = recoveryState.framesReceived.toLocaleString("es-AR");
+    $("diagSeq").textContent = recoveryState.lastSeq !== null ? recoveryState.lastSeq.toLocaleString("es-AR") : "---";
+    $("rssi").textContent = recoveryState.rssi !== null ? `${fmt(recoveryState.rssi, 0)} dBm` : "N/D";
+    $("diagApogee").textContent = `${fmt(recoveryState.maxAlt, 0)} m`;
+
+    const stale = recoveryState.lastPacketAt !== null && Date.now() - recoveryState.lastPacketAt > 3000;
+    $("linkDot").className = `dot ${recoveryState.connected ? (stale ? "warn" : "online") : ""}`;
+    $("linkStatus").textContent = !recoveryState.connected ? "DESCONECTADO" : (stale ? "SEÑAL DEGRADADA" : "CONECTADO");
+
+    // Coordenadas
+    if (recoveryState.lat !== null && recoveryState.lon !== null) {
+        $("recLat").textContent = `${recoveryState.lat.toFixed(6)}°`;
+        $("recLon").textContent = `${recoveryState.lon.toFixed(6)}°`;
+        $("recAlt").textContent = `${fmt(recoveryState.alt, 1)} m`;
+        $("recSats").textContent = recoveryState.satellites !== null ? String(recoveryState.satellites) : "--";
+        const ageS = recoveryState.lastPacketAt !== null ? ((Date.now() - recoveryState.lastPacketAt) / 1000).toFixed(1) : "--";
+        $("recLastTime").textContent = `Hace ${ageS} s`;
+
+        // Distancia y rumbo
+        if (recoveryState.baseLat !== null && recoveryState.baseLon !== null) {
+            $("baseLat").textContent = `${recoveryState.baseLat.toFixed(6)}°`;
+            $("baseLon").textContent = `${recoveryState.baseLon.toFixed(6)}°`;
+
+            const distM = calculateDistanceM(recoveryState.baseLat, recoveryState.baseLon, recoveryState.lat, recoveryState.lon);
+            if (distM >= 1000) {
+                $("guidanceDist").textContent = fmt(distM / 1000, 2);
+                $("guidanceDistUnit").textContent = "km";
+            } else {
+                $("guidanceDist").textContent = fmt(distM, 0);
+                $("guidanceDistUnit").textContent = "m";
+            }
+
+            const brng = calculateBearingDeg(recoveryState.baseLat, recoveryState.baseLon, recoveryState.lat, recoveryState.lon);
+            $("guidanceBearing").textContent = `${fmt(brng, 0)}°`;
+            $("guidanceCardinal").textContent = `Rumbo ${bearingToCardinal(brng)}`;
+            $("compassNeedle").style.transform = `rotate(${brng}deg)`;
+
+            const dAlt = (recoveryState.alt ?? 0) - (recoveryState.baseAlt ?? 0);
+            const elev = Math.atan2(dAlt, Math.max(1, distM)) * 180 / Math.PI;
+            $("elevAngle").textContent = `${fmt(elev, 1)}°`;
+        }
+    }
+
+    // Estado de aterrizaje
+    const isLanded = recoveryState.statusText === "LANDED";
+    const lBadge = $("landingBadge");
+    if (isLanded) {
+        lBadge.className = "status-badge ok";
+        lBadge.textContent = "ATERRIZAJE CONFIRMADO";
+    } else if (recoveryState.liftoffDetected) {
+        lBadge.className = "status-badge warn";
+        lBadge.textContent = "VEHÍCULO EN VUELO";
+    } else {
+        lBadge.className = "status-badge";
+        lBadge.textContent = "EN ESPERA DE DESPEGUE";
+    }
+    $("touchdownVz").textContent = recoveryState.vz !== null ? `${fmt(recoveryState.vz, 1)} m/s` : "---";
+}
+
+/* HISTORIAL INICIAL DESDE /api/history */
+async function loadHistory() {
+    try {
+        const res = await fetch("/api/history?seconds=300&limit=1200");
+        if (!res.ok) return;
+        const body = await res.json();
+        if (body.frames && Array.isArray(body.frames)) {
+            for (const f of body.frames) {
+                ingestFrame(f);
+            }
+            if (body.frames_received !== undefined) {
+                recoveryState.framesReceived = body.frames_received;
+            }
+            if (recoveryState.map && recoveryState.routePoints.length > 0 && recoveryState.routeLine) {
+                recoveryState.routeLine.setLatLngs(recoveryState.routePoints);
+                const pts = [];
+                if (recoveryState.baseLat !== null) pts.push([recoveryState.baseLat, recoveryState.baseLon]);
+                if (recoveryState.lat !== null) pts.push([recoveryState.lat, recoveryState.lon]);
+                if (pts.length > 1) {
+                    recoveryState.map.fitBounds(L.latLngBounds(pts).pad(0.25));
+                }
+            }
+        }
+    } catch (err) {
+        console.warn("No se pudo precargar historial:", err);
+    }
+}
+
+/* WEBSOCKET */
+function connectWebSocket() {
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${proto}//${location.host}/ws`);
+
+    ws.onopen = () => {
+        recoveryState.connected = true;
+    };
+    ws.onmessage = evt => {
+        try {
+            const msg = JSON.parse(evt.data);
+            if (msg.type === "telemetry") {
+                ingestFrame(msg);
+            } else if (msg.type === "connection") {
+                recoveryState.connected = !!msg.connected;
+            }
+        } catch (e) {}
+    };
+    ws.onclose = () => {
+        recoveryState.connected = false;
+        setTimeout(connectWebSocket, 1500);
+    };
+}
+
+/* BOTONES DE INTERACCIÓN */
+function showToast(text) {
+    const t = $("toast");
+    t.textContent = text;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+$("btnGoogleMaps").onclick = () => {
+    if (recoveryState.lat !== null && recoveryState.lon !== null) {
+        const url = `https://www.google.com/maps/search/?api=1&query=${recoveryState.lat},${recoveryState.lon}`;
+        window.open(url, "_blank");
+    } else {
+        showToast("Sin coordenadas GPS válidas aún");
+    }
+};
+
+$("btnCopyCoords").onclick = () => {
+    if (recoveryState.lat !== null && recoveryState.lon !== null) {
+        const text = `${recoveryState.lat.toFixed(6)}, ${recoveryState.lon.toFixed(6)}`;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast(`Copiado: ${text}`);
+        });
+    } else {
+        showToast("Sin coordenadas para copiar");
+    }
+};
+
+$("btnCenterRocket").onclick = () => {
+    if (recoveryState.map && recoveryState.lat !== null && recoveryState.lon !== null) {
+        recoveryState.map.setView([recoveryState.lat, recoveryState.lon], 17);
+    }
+};
+
+$("btnCenterBase").onclick = () => {
+    if (recoveryState.map && recoveryState.baseLat !== null && recoveryState.baseLon !== null) {
+        recoveryState.map.setView([recoveryState.baseLat, recoveryState.baseLon], 17);
+    }
+};
+
+$("btnFitAll").onclick = () => {
+    if (!recoveryState.map) return;
+    const pts = [];
+    if (recoveryState.baseLat !== null) pts.push([recoveryState.baseLat, recoveryState.baseLon]);
+    if (recoveryState.lat !== null) pts.push([recoveryState.lat, recoveryState.lon]);
+    if (pts.length) recoveryState.map.fitBounds(L.latLngBounds(pts).pad(0.2));
+};
+
+$("btnMyPos").onclick = () => {
+    if (!navigator.geolocation) {
+        showToast("Geolocalización no soportada");
+        return;
+    }
+    showToast("Obteniendo posición GPS del dispositivo...");
+    navigator.geolocation.getCurrentPosition(pos => {
+        const uLat = pos.coords.latitude;
+        const uLon = pos.coords.longitude;
+        if (!recoveryState.map) return;
+        if (!recoveryState.userMarker) {
+            recoveryState.userMarker = L.circleMarker([uLat, uLon], {
+                radius: 7,
+                color: "#0f172a",
+                fillColor: "#1d4ed8",
+                fillOpacity: 1,
+                weight: 2
+            }).addTo(recoveryState.map).bindTooltip("Mi Ubicación (Búsqueda)", { permanent: true });
+        } else {
+            recoveryState.userMarker.setLatLng([uLat, uLon]);
+        }
+        recoveryState.map.setView([uLat, uLon], 16);
+        showToast("Ubicación del equipo de recuperación fijada");
+    }, err => {
+        showToast("No se pudo obtener la posición del dispositivo");
+    });
+};
+
+/* INICIALIZACIÓN */
+window.addEventListener("DOMContentLoaded", async () => {
+    initRecoveryMap();
+    await loadHistory();
+    connectWebSocket();
+    setInterval(renderRecoveryUI, 200);
+});
+</script>
+
+</body>
+</html>

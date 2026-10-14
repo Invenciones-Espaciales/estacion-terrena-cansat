@@ -8,6 +8,7 @@ import sqlite3
 import struct
 import sys
 import time
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
@@ -1103,6 +1104,7 @@ class PacketStatistics:
 
         return {
             "received": self.received,
+            "frames_received": self.received,
             "lost": self.lost,
             "invalid": self.invalid,
             "loss_percent": loss_percent,
@@ -1148,6 +1150,13 @@ class Database:
             """
         )
 
+        self.connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_telemetry_timestamp
+            ON telemetry(timestamp)
+            """
+        )
+
         self.connection.commit()
 
     def insert(
@@ -1183,6 +1192,57 @@ class Database:
         )
 
         self.connection.commit()
+
+    def get_recent(
+        self,
+        seconds: float = 60.0,
+        limit: int = 1200,
+    ) -> list[dict[str, Any]]:
+        try:
+            cursor = self.connection.cursor()
+            min_ts = time.time() - max(1.0, seconds)
+            cursor.execute(
+                """
+                SELECT timestamp, sequence, payload
+                FROM telemetry
+                WHERE timestamp >= ?
+                ORDER BY timestamp ASC
+                LIMIT ?
+                """,
+                (min_ts, limit),
+            )
+            rows = cursor.fetchall()
+            if not rows:
+                cursor.execute(
+                    """
+                    SELECT timestamp, sequence, payload
+                    FROM telemetry
+                    ORDER BY id DESC
+                    LIMIT ?
+                    """,
+                    (min(limit, 300),),
+                )
+                rows = list(reversed(cursor.fetchall()))
+
+            results = []
+            for ts, seq, payload in rows:
+                try:
+                    payload_data = json.loads(payload)
+                    results.append(
+                        {
+                            "timestamp": ts,
+                            "sequence": seq,
+                            "data": payload_data,
+                            "raw_hex": None,
+                            "crc_value": None,
+                        }
+                    )
+                except Exception:
+                    continue
+            return results
+        except Exception:
+            logger.exception("Error consultando historial en SQLite")
+            return []
 
     def close(self):
 
@@ -1362,6 +1422,9 @@ class RuntimeState:
     frames_received: int = 0
     last_raw_frame: Optional[str] = None
     last_crc_value: Optional[str] = None
+    history: deque = field(
+        default_factory=lambda: deque(maxlen=3600)
+    )
 
 
 # ============================================================
@@ -1499,6 +1562,21 @@ async def process_frame(
 
     snapshot = statistics.snapshot()
     snapshot["frames_received"] = runtime.frames_received
+
+    runtime.history.append(
+        {
+            "timestamp": runtime.last_timestamp,
+            "sequence": frame.get(
+                frame_config.sequence_field
+                if frame_config
+                else "frame_number"
+            ),
+            "data": frame,
+            "raw_hex": runtime.last_raw_frame,
+            "crc_value": runtime.last_crc_value,
+            "frames_received": runtime.frames_received,
+        }
+    )
 
     await websocket_manager.broadcast(
         {
@@ -1754,6 +1832,81 @@ async def gonogo():
     )
 
 
+@app.get("/recovery")
+async def recovery():
+
+    recovery_file = FRONTEND_DIR / "recovery.html"
+
+    if not recovery_file.exists():
+        logger.error(
+            "Vista Recovery no encontrada: %s, fallback a index.html",
+            recovery_file,
+        )
+        return FileResponse(
+            FRONTEND_DIR / "index.html"
+        )
+
+    return FileResponse(
+        recovery_file
+    )
+
+
+@app.get("/api/history")
+async def history(
+    seconds: float = 60.0,
+    limit: int = 1200,
+):
+    """
+    Devuelve los datos de telemetría de los últimos N segundos
+    (por defecto 60 s) para hidratar gráficos y vistas sin perder historial.
+    """
+    now = time.time()
+    min_ts = now - max(1.0, seconds)
+
+    # 1. Intentar desde buffer en memoria (ultra rápido)
+    in_memory = [
+        frame
+        for frame in runtime.history
+        if frame.get("timestamp") and frame["timestamp"] >= min_ts
+    ]
+
+    if len(in_memory) >= 5:
+        if len(in_memory) > limit:
+            in_memory = in_memory[-limit:]
+        return {
+            "count": len(in_memory),
+            "seconds": seconds,
+            "frames_received": runtime.frames_received,
+            "connected": runtime.connected,
+            "last_timestamp": runtime.last_timestamp,
+            "frames": in_memory,
+        }
+
+    # 2. Si hay pocos frames en memoria (ej. tras reinicio), recurrir a SQLite
+    if database is not None:
+        db_frames = database.get_recent(
+            seconds=seconds,
+            limit=limit,
+        )
+        return {
+            "count": len(db_frames),
+            "seconds": seconds,
+            "frames_received": runtime.frames_received,
+            "connected": runtime.connected,
+            "last_timestamp": runtime.last_timestamp,
+            "frames": db_frames,
+        }
+
+    return {
+        "count": len(in_memory),
+        "seconds": seconds,
+        "frames_received": runtime.frames_received,
+        "connected": runtime.connected,
+        "last_timestamp": runtime.last_timestamp,
+        "frames": in_memory,
+    }
+
+
 @app.get("/api/status")
 async def status():
 
@@ -1954,6 +2107,19 @@ async def startup():
         "CSV: %s",
         csv_logger.path,
     )
+
+    # Precargar historial reciente en memoria para continuidad sin pérdidas
+    try:
+        recent_frames = database.get_recent(seconds=120.0, limit=1200)
+        for rf in recent_frames:
+            runtime.history.append(rf)
+        if recent_frames:
+            logger.info(
+                "Historial precargado desde SQLite: %d tramas",
+                len(recent_frames),
+            )
+    except Exception:
+        logger.exception("Error al precargar historial desde SQLite")
 
     # --------------------------------------------------------
     # UART
