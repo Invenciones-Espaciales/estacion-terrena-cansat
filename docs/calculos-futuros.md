@@ -15,7 +15,7 @@ The production dashboard renders telemetry directly from the parsed frame withou
 
 | Display Element | Frame Source Field | Engineering Units & Processing |
 |---|---|---|
-| **Altitude, Tape, Max Indicator, Chart** | `altitude` | Direct GNSS/geometric altitude in meters ($m$) |
+| **Altitude, Tape, Max Indicator, Chart** | `altitude` | Direct GPS/geometric altitude in meters ($m$) |
 | **Barometer** | `pressure` | Atmospheric pressure converted from $\text{Pa}$ to $\text{hPa}$ ($\times 0.01$) |
 | **Tri-Axial Acceleration ($a_x, a_y, a_z$)** | `accel_x`, `accel_y`, `accel_z` | Scaled acceleration in $g$ ($1\text{ mg}$ or $0.5\text{ mg}$ resolution) |
 | **Position & Trajectory Polyline** | `latitude`, `longitude` | Micro-degrees scaled by $10^{-6}$ to decimal degrees ($^\circ$) |
@@ -38,10 +38,10 @@ The production dashboard renders telemetry directly from the parsed frame withou
 #### Barometric Altitude Calculation
 Barometric altitude is computed using the standard barometric formula referenced to ground conditions:
 $$h_{\text{baro}} = h_0 + 44330 \times \left(1 - \left(\frac{p}{p_0}\right)^{0.190295}\right)$$
-where $p_0$ and $h_0$ are the atmospheric pressure and GNSS altitude recorded on the launch rail during the pre-launch baseline calibration.
+where $p_0$ and $h_0$ are the atmospheric pressure and GPS altitude recorded on the launch rail during the pre-launch baseline calibration.
 
 #### 1D Kalman Filter (State: $[h, v]^T$)
-Fuses barometric pressure (high frequency, low latency, sensor drift) with GNSS altitude (low frequency, absolute accuracy) into a filtered altitude $h$ and vertical velocity $v$.
+Fuses barometric pressure (high frequency, low latency, sensor drift) with GPS altitude (low frequency, absolute accuracy) into a filtered altitude $h$ and vertical velocity $v$.
 
 1. **State Vector & Transition Matrix:**
    $$\mathbf{x} = \begin{bmatrix} h \\ v \end{bmatrix}, \quad \mathbf{F} = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}$$
@@ -56,14 +56,14 @@ Fuses barometric pressure (high frequency, low latency, sensor drift) with GNSS 
 
 3. **Sequential Measurement Updates ($\mathbf{H} = [1 \quad 0]$):**
    - **Barometric Update:** $R_{\text{baro}} = 4.0\text{ m}^2$ (applied at each packet arrival).
-   - **GNSS Update:** $R_{\text{GNSS}} = 25.0\text{ m}^2$ (applied when new GNSS fix arrives).
+   - **GPS Update:** $R_{\text{GPS}} = 25.0\text{ m}^2$ (applied when new GPS fix arrives).
    - Innovation: $y = z - \hat{h}$
    - Kalman Gain: $\mathbf{K} = \frac{\mathbf{P} \mathbf{H}^T}{\mathbf{H} \mathbf{P} \mathbf{H}^T + R} = \frac{1}{P_{00} + R} \begin{bmatrix} P_{00} \\ P_{10} \end{bmatrix}$
    - State Correction: $\hat{\mathbf{x}} \leftarrow \hat{\mathbf{x}} + \mathbf{K} y$
    - Covariance Update: $\mathbf{P} \leftarrow (\mathbf{I} - \mathbf{K} \mathbf{H}) \mathbf{P}$
 
 4. **Filter Reset:**
-   The filter re-initializes to $\mathbf{x} = [h_{\text{GNSS}}, 0]^T$ with $\mathbf{P} = \text{diag}(25, 25)$ if a packet timestamp retrograde jump is detected.
+   The filter re-initializes to $\mathbf{x} = [h_{\text{GPS}}, 0]^T$ with $\mathbf{P} = \text{diag}(25, 25)$ if a packet timestamp retrograde jump is detected.
 
 ---
 
@@ -73,7 +73,7 @@ Fuses barometric pressure (high frequency, low latency, sensor drift) with GNSS 
 - **Horizontal Velocity ($V_h$):**
   - Calculated using Local Tangent Plane displacements over a sliding time window:
     $$V_x = \frac{x(t) - x(t - \delta t)}{\delta t}, \quad V_y = \frac{y(t) - y(t - \delta t)}{\delta t}$$
-    with $\delta t \ge 1.0\text{ s}$ (spanning up to $4.0\text{ s}$) to filter out low-resolution GNSS quantization steps.
+    with $\delta t \ge 1.0\text{ s}$ (spanning up to $4.0\text{ s}$) to filter out low-resolution GPS quantization steps.
   - Horizontal speed: $V_h = \sqrt{V_x^2 + V_y^2}$.
 - **Total Velocity Magnitude:**
   $$\|V\| = \sqrt{V_z^2 + V_h^2}$$
@@ -85,7 +85,7 @@ Fuses barometric pressure (high frequency, low latency, sensor drift) with GNSS 
 
 Calculates the line-of-sight pointing angles from the ground station antenna to the vehicle:
 
-1. **Ground Station Reference:** Fixed at the initial valid launchpad GNSS fix $(\text{lat}_0, \text{lon}_0, \text{alt}_0)$ or configured via URL query parameters (`?stlat=...&stlon=...&stalt=...`).
+1. **Ground Station Reference:** Fixed at the initial valid launchpad GPS fix $(\text{lat}_0, \text{lon}_0, \text{alt}_0)$ or configured via URL query parameters (`?stlat=...&stlon=...&stalt=...`).
 2. **Local Tangent Plane Coordinates (Flat-Earth Equirectangular Projection):**
    $$x = (\text{lon} - \text{lon}_0) \times 111320 \times \cos(\text{lat}_0)$$
    $$y = (\text{lat} - \text{lat}_0) \times 110540$$
@@ -160,7 +160,7 @@ Implements an ANSI/ISA-18.2 compliant industrial alarm management state machine:
 | `CRC` | High (`WARN`) | Consecutive invalid CRC frames in last 10 seconds | 10 seconds without CRC errors |
 | `VOLT` | High (`WARN`) | Avionics battery voltage $< 3.3\text{ V}$ | Voltage $\ge 3.5\text{ V}$ |
 | `LOSS` | Medium (`INFO`) | Sliding 5-second packet loss $> 10\%$ | Packet loss $\le 5\%$ |
-| `GNSS` | Medium (`INFO`) | GPS fix lost ($\text{lat} = 0 \lor \text{lon} = 0$) | Valid GPS coordinates acquired |
+| `GPS` | Medium (`INFO`) | GPS fix lost ($\text{lat} = 0 \lor \text{lon} = 0$) | Valid GPS coordinates acquired |
 | `RSSI` | Medium (`INFO`) | RF signal strength $< -100\text{ dBm}$ | Signal strength $\ge -95\text{ dBm}$ |
 
 ---

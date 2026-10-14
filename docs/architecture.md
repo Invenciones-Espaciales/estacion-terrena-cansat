@@ -34,7 +34,7 @@ graph TD
         STATE --> RAF[requestAnimationFrame Render Engine]
         RAF --> TAPE[Canvas Altimeter Tape]
         RAF --> CHARTS[Canvas Time-Series Charts]
-        RAF --> MAP[Leaflet GNSS Map & Polyline Track]
+        RAF --> MAP[Leaflet GPS Map & Polyline Track]
         RAF --> ALERTS[ISA-18.2 Alarm & Health Panel]
         RAF --> NUMS[High-Contrast Instrument Readouts]
     end

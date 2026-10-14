@@ -234,7 +234,7 @@ tr.returned td { color: var(--muted); font-style: italic; }
         <!-- ==================== PFD (25% × 65%) ==================== -->
         <section class="panel">
             <div class="card grow">
-                <div class="card-title">PFD · ALTITUD BARO/KALMAN <span class="hint" id="kfInfo">Kalman: baro + GNSS</span></div>
+                <div class="card-title">PFD · ALTITUD BARO/KALMAN <span class="hint" id="kfInfo">Kalman: baro + GPS</span></div>
 
                 <div class="pfd-top">
                     <div class="cv tape"><canvas id="tape"></canvas></div>
@@ -357,7 +357,7 @@ const CFG = {
     gMax: 8,                // fondo de escala del medidor g
     kalmanAccelNoise: 20,   // (m/s²)² ruido de proceso
     baroSigma2: 4,          // varianza altitud barométrica (m²)
-    gpsSigma2: 25,          // varianza altitud GNSS (m²)
+    gpsSigma2: 25,          // varianza altitud GPS (m²)
     beamHalfWidthDeg: 10,   // semiancho del haz de la antena
     alarms: {
         linkLostMs: 3000,
@@ -484,7 +484,7 @@ function pushHist(key, t, v) {
 }
 
 /* =========================================================
-   FILTRO DE KALMAN  (estado [h, v]; mediciones baro + GNSS)
+   FILTRO DE KALMAN  (estado [h, v]; mediciones baro + GPS)
    ========================================================= */
 
 const kf = { init: false, t: 0, h: 0, v: 0, p00: 25, p01: 0, p10: 0, p11: 25 };
@@ -596,7 +596,7 @@ function ingest(message) {
     const volt = d.voltage ?? d.battery_voltage ?? d.vbat;
     state.voltage = Number.isFinite(Number(volt)) ? Number(volt) : state.voltage;
 
-    // --- altitud: baro + GNSS -> Kalman ---
+    // --- altitud: baro + GPS -> Kalman ---
     const gpsAlt = Number(d.altitude);
     const pressure = Number(d.pressure);
     let baroAlt = NaN;
@@ -632,7 +632,7 @@ function ingest(message) {
         state.gMax = Math.max(state.gMax, state.g);
     }
 
-    // --- GNSS: posición local, velocidad horizontal, acimut/elevación ---
+    // --- GPS: posición local, velocidad horizontal, acimut/elevación ---
     const lat = Number(d.latitude), lon = Number(d.longitude);
     const validFix = Number.isFinite(lat) && Number.isFinite(lon) &&
         Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0);
@@ -728,7 +728,7 @@ const alarmDefs = [
       test: () => state.voltage !== null && state.voltage < CFG.alarms.voltageMin },
     { id: "LOSS", prio: 3, text: () => `Pérdida de paquetes ${fmt(state.stats.loss_percent, 1)} %`,
       test: () => Number(state.stats.loss_percent) > CFG.alarms.lossPercent },
-    { id: "GNSS", prio: 3, text: "Sin fix GNSS válido",
+    { id: "GPS", prio: 3, text: "Sin fix GPS válido",
       test: () => state.gpsValid === false },
     { id: "RSSI", prio: 3, text: () => `RSSI bajo: ${fmt(state.rssi, 0)} dBm`,
       test: () => state.rssi !== null && state.rssi < CFG.alarms.rssiMin }
@@ -960,7 +960,7 @@ function drawVario() {
 
 
 /* =========================================================
-   MAPA (trazas GNSS + elipse de impacto)
+   MAPA (trazas GPS + elipse de impacto)
    ========================================================= */
 
 function initMap() {
@@ -1079,7 +1079,7 @@ function renderNav() {             // ~4 Hz
         ? `${fmt(state.impact.a, 0)}×${fmt(state.impact.b, 0)} m · ${fmt(state.impact.t, 0)} s`
         : "en descenso");
     if (state.station) {
-        setText("stationInfo", `estación: ${state.station.fromUrl ? "URL" : "1er fix GNSS"}`);
+        setText("stationInfo", `estación: ${state.station.fromUrl ? "URL" : "1er fix GPS"}`);
     }
     updateMap();
 }

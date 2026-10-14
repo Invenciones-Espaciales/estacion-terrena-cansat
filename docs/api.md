@@ -127,8 +127,8 @@ Retrieves the most recent decoded telemetry frame, raw hex representation, CRC v
 | `accel_y` | `float` | `g` | Y-axis acceleration ($1\text{ mg}$ resolution) |
 | `accel_z` | `float` | `g` | Z-axis acceleration ($0.5\text{ mg}$ resolution) |
 | `pressure` | `integer` | `Pa` | Atmospheric pressure |
-| `latitude` | `float` | `deg` | GNSS latitude ($10^{-6}$ degree resolution) |
-| `longitude` | `float` | `deg` | GNSS longitude ($10^{-6}$ degree resolution) |
+| `latitude` | `float` | `deg` | GPS latitude ($10^{-6}$ degree resolution) |
+| `longitude` | `float` | `deg` | GPS longitude ($10^{-6}$ degree resolution) |
 | `altitude` | `integer` | `m` | Geometric altitude |
 | `status` | `integer` | — | Current flight state code (`0`–`5`) |
 | `status_label` | `string` \| `null` | — | Human-readable phase label (e.g. `"Motor encendido / Ascenso"`) |

@@ -53,9 +53,9 @@ The table below reflects the exact schema configuration defined in `config/frame
 | **10** | 2 | `accel_y` | `int16` | Big | `0.001` | `0` | `g` | `-32,768` to `+32,767` | `-32.768` to `+32.767 g` | Transverse body Y-axis acceleration ($1\text{ mg}$ resolution) |
 | **12** | 2 | `accel_z` | `int16` | Big | `0.0005` | `0` | `g` | `-32,768` to `+32,767` | `-16.384` to `+16.3835 g` | Longitudinal thrust Z-axis acceleration ($0.5\text{ mg}$ resolution) |
 | **14** | 3 | `pressure` | `uint24` | Big | `1.0` | `0` | `Pa` | `0` to `16,777,215` | `0` to $167,772\text{ hPa}$ | Barometric atmospheric pressure in Pascals |
-| **17** | 4 | `latitude` | `int32` | Big | `0.000001` | `0` | `deg` | `±90,000,000` | `-90.000000°` to `+90.000000°` | GNSS latitude ($10^{-6}$ degree / ~0.11 m resolution) |
-| **21** | 4 | `longitude` | `int32` | Big | `0.000001` | `0` | `deg` | `±180,000,000` | `-180.000000°` to `+180.000000°` | GNSS longitude ($10^{-6}$ degree resolution) |
-| **25** | 2 | `altitude` | `int16` | Big | `1.0` | `0` | `m` | `-32,768` to `+32,767` | `-32,768` to `+32,767 m` | GNSS/Barometric geometric altitude above reference |
+| **17** | 4 | `latitude` | `int32` | Big | `0.000001` | `0` | `deg` | `±90,000,000` | `-90.000000°` to `+90.000000°` | GPS latitude ($10^{-6}$ degree / ~0.11 m resolution) |
+| **21** | 4 | `longitude` | `int32` | Big | `0.000001` | `0` | `deg` | `±180,000,000` | `-180.000000°` to `+180.000000°` | GPS longitude ($10^{-6}$ degree resolution) |
+| **25** | 2 | `altitude` | `int16` | Big | `1.0` | `0` | `m` | `-32,768` to `+32,767` | `-32,768` to `+32,767 m` | GPS/Barometric geometric altitude above reference |
 | **27** | 1 | `status` | `uint8` | — | `1.0` | `0` | — | `0x00` to `0x05` | Discrete flight phases | Current vehicle state machine flight code |
 | **28** | 2 | `crc` | `uint16` | Big | — | — | — | `0x0000` to `0xFFFF` | Checksum value | CRC-16/CCITT-FALSE calculated across bytes 0 to 27 |
 

@@ -235,7 +235,7 @@ The console prioritizes telemetry metrics according to operational criticality:
 4. **Tri-Axial Acceleration & Peak G-Load**
 5. **Barometric Pressure**
 6. **Flight Phase Transitions**
-7. **GNSS Coordinate Readouts**
+7. **GPS Coordinate Readouts**
 
 Primary values utilize bold, high-contrast typography, while secondary metrics use subdued scales to avoid visual fatigue under sunlight conditions.
 
