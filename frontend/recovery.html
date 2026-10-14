@@ -997,12 +997,13 @@ function ingestFrame(frameItem) {
         if (recoveryState.baseLat === null || recoveryState.baseLon === null) {
             recoveryState.baseLat = lat;
             recoveryState.baseLon = lon;
-            recoveryState.baseAlt = Number(d.altitude) || 0;
+            recoveryState.baseAlt = Number(d.altura_actual !== undefined ? d.altura_actual : d.altitude) || 0;
         }
     }
 
     // Altitud
-    const alt = Number(d.altitude);
+    const rawAlt = d.altura_actual !== undefined ? d.altura_actual : d.altitude;
+    const alt = Number(rawAlt);
     if (Number.isFinite(alt)) {
         recoveryState.alt = alt;
         if (alt > recoveryState.maxAlt) recoveryState.maxAlt = alt;

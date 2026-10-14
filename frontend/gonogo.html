@@ -847,8 +847,9 @@ function handleMessage(msg) {
         state.timestampMs = Number(d.timestamp);
     }
 
-    if (Number.isFinite(Number(d.altitude))) {
-        state.altitude = Number(d.altitude);
+    const rawAlt = d.altura_actual !== undefined ? d.altura_actual : d.altitude;
+    if (Number.isFinite(Number(rawAlt))) {
+        state.altitude = Number(rawAlt);
     }
 
     const ax = Number(d.accel_x), ay = Number(d.accel_y), az = Number(d.accel_z);
@@ -874,8 +875,10 @@ function handleMessage(msg) {
 
     if (d.gps_fix !== undefined && Number.isFinite(Number(d.gps_fix))) {
         state.gpsFix = Number(d.gps_fix);
+    } else if (d.satellites !== undefined && Number.isFinite(Number(d.satellites))) {
+        state.gpsFix = Number(d.satellites) >= 4 ? 2 : (Number(d.satellites) > 0 ? 1 : 0);
     } else if (state.lat !== null && (state.lat !== 0 || state.lon !== 0)) {
-        state.gpsFix = 2; // 3D Fix heurístico si la trama es 30B legacy
+        state.gpsFix = 2; // 3D Fix heurístico si hay coordenadas válidas
     }
 
     if (d.status !== undefined) {

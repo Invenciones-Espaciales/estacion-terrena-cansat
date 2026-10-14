@@ -262,18 +262,28 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
                         </div>
                         <div class="row"><span class="k">MÁXIMA</span><span class="v num" id="altitudeMax">---</span></div>
                         <div class="row"><span class="k">VARIACIÓN VERTICAL</span><span class="v num" id="altitudeVz">---</span></div>
+                        <div class="row"><span class="k">PRESIÓN (BMP280)</span><span class="v num" id="pressure">---</span></div>
                     </div>
                 </div>
             </div>
 
             <div class="card basecard">
-                <div class="card-title">ACELERACIÓN</div>
-                <div class="axis-row"><span class="a">EJE X</span><span class="n num" id="ax">---</span></div>
-                <div class="axis-row"><span class="a">EJE Y</span><span class="n num" id="ay">---</span></div>
-                <div class="axis-row"><span class="a">EJE Z</span><span class="n num" id="az">---</span></div>
+                <div class="card-title">CINEMÁTICA IMU</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div>
+                        <div style="font-size:10px; font-weight:800; color:var(--muted); margin-bottom:2px;">ACEL (g)</div>
+                        <div class="axis-row"><span class="a">X</span><span class="n num" style="font-size:18px;" id="ax">---</span></div>
+                        <div class="axis-row"><span class="a">Y</span><span class="n num" style="font-size:18px;" id="ay">---</span></div>
+                        <div class="axis-row"><span class="a">Z</span><span class="n num" style="font-size:18px;" id="az">---</span></div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px; font-weight:800; color:var(--muted); margin-bottom:2px;">GIRO (°/s)</div>
+                        <div class="axis-row"><span class="a">X</span><span class="n num" style="font-size:18px;" id="gx">---</span></div>
+                        <div class="axis-row"><span class="a">Y</span><span class="n num" style="font-size:18px;" id="gy">---</span></div>
+                        <div class="axis-row"><span class="a">Z</span><span class="n num" style="font-size:18px;" id="gz">---</span></div>
+                    </div>
+                </div>
             </div>
-
-
 
         </section>
 
@@ -304,10 +314,28 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
             <div class="card grow">
                 <div class="card-title">POSICIÓN GPS <span class="hint">trayectoria</span></div>
                 <div id="gpsMap"></div>
-                <div class="coords" style="grid-template-columns: 1fr 1fr 0.8fr;">
+                <div class="coords" style="grid-template-columns: 1fr 1fr 0.8fr; margin-top: 6px;">
                     <div><div class="k">LATITUD (°)</div><div class="v num" id="lat">---</div></div>
                     <div><div class="k">LONGITUD (°)</div><div class="v num" id="lon">---</div></div>
                     <div><div class="k">SATÉLITES</div><div class="v num" id="satellites">--</div></div>
+                </div>
+                <div class="coords" style="grid-template-columns: 1fr 1fr 0.8fr; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--soft);">
+                    <div><div class="k">VEL. SUELO</div><div class="v num" style="font-size:14px;" id="groundSpeed">---</div></div>
+                    <div><div class="k">ALTITUD GPS</div><div class="v num" style="font-size:14px;" id="altGps">---</div></div>
+                    <div><div class="k">TEMP. IMU</div><div class="v num" style="font-size:14px;" id="tempImu">---</div></div>
+                </div>
+            </div>
+            <div class="card basecard" style="padding: 6px 8px;">
+                <div class="card-title" style="margin-bottom:3px;">LÍNEAS DE RECUPERACIÓN (PIROTECNIA)</div>
+                <div style="display:flex; justify-content:space-around; align-items:center; padding: 4px 0;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:11px; font-weight:800; color:var(--gray);">FRENADO:</span>
+                        <span id="badgeFrenado" class="al-badge ok" style="font-size:10px; padding:2px 8px;">DESACTIVADO</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:11px; font-weight:800; color:var(--gray);">PRINCIPAL:</span>
+                        <span id="badgePrincipal" class="al-badge ok" style="font-size:10px; padding:2px 8px;">DESACTIVADO</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -462,13 +490,21 @@ const state = {
 
     altitude: null, maxAltitude: null, vz: null,
     vzHistory: [],      // [{ t, alt }] para derivación limpia y sin ruido
-
+    pressure: null,
 
     ax: null, ay: null, az: null,
+    gx: null, gy: null, gz: null,
+    tempImu: null,
+
+    lat: null, lon: null,
+    altGps: null,
+    groundSpeed: null,
+    satellites: null,
+
+    pinFrenado: null,
+    pinPrincipal: null,
     statusText: null,
     rssi: null,
-    satellites: null,
-    lat: null, lon: null,
 
     events: [],
     eventsVersion: 0,
@@ -613,8 +649,9 @@ function ingest(message) {
         setText("satellites", String(state.satellites));
     }
 
-    // altitud (tal como llega)
-    const alt = Number(d.altitude);
+    // altitud (admite altura_actual de la nueva trama o altitude legado)
+    const rawAlt = d.altura_actual !== undefined ? d.altura_actual : d.altitude;
+    const alt = Number(rawAlt);
     if (Number.isFinite(alt)) {
         state.altitude = alt;
         state.maxAltitude = state.maxAltitude === null ? alt : Math.max(state.maxAltitude, alt);
@@ -636,7 +673,12 @@ function ingest(message) {
         }
     }
 
-    // aceleración
+    // presión barométrica BMP280 (hPa)
+    if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) {
+        state.pressure = Number(d.pressure);
+    }
+
+    // aceleración lineal IMU (g)
     const ax = Number(d.accel_x), ay = Number(d.accel_y), az = Number(d.accel_z);
     if ([ax, ay, az].every(Number.isFinite)) {
         state.ax = ax; state.ay = ay; state.az = az;
@@ -645,11 +687,47 @@ function ingest(message) {
         pushHist("az", ts, az);
     }
 
-    // posición
+    // velocidad angular giroscopio IMU (°/s)
+    const gx = Number(d.gyro_x), gy = Number(d.gyro_y), gz = Number(d.gyro_z);
+    if ([gx, gy, gz].every(Number.isFinite)) {
+        state.gx = gx; state.gy = gy; state.gz = gz;
+    }
+
+    // temperatura del sensor IMU (°C)
+    if (d.temp_imu !== undefined && Number.isFinite(Number(d.temp_imu))) {
+        state.tempImu = Number(d.temp_imu);
+    }
+
+    // posición y navegación GPS
     const lat = Number(d.latitude), lon = Number(d.longitude);
     if (Number.isFinite(lat) && Number.isFinite(lon) &&
         Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
         state.lat = lat; state.lon = lon;
+    }
+
+    if (d.altitud_gps !== undefined && Number.isFinite(Number(d.altitud_gps))) {
+        state.altGps = Number(d.altitud_gps);
+    }
+
+    if (d.ground_speed !== undefined && Number.isFinite(Number(d.ground_speed))) {
+        state.groundSpeed = Number(d.ground_speed);
+    }
+
+    // Pines de pirotecnia de recuperación
+    if (d.pin_frenado !== undefined && Number.isFinite(Number(d.pin_frenado))) {
+        const pf = Number(d.pin_frenado);
+        if (state.pinFrenado === 0 && pf === 1) {
+            addEvent("Pirotecnia: Pin de frenado activado (Drogue)", "PIN FRENADO");
+        }
+        state.pinFrenado = pf;
+    }
+
+    if (d.pin_principal !== undefined && Number.isFinite(Number(d.pin_principal))) {
+        const pp = Number(d.pin_principal);
+        if (state.pinPrincipal === 0 && pp === 1) {
+            addEvent("Pirotecnia: Pin principal activado", "PIN PRINC.");
+        }
+        state.pinPrincipal = pp;
     }
 
     // fase de vuelo y detección de despegue (T-0)
@@ -914,10 +992,43 @@ function renderText() {            // ~10 Hz
         setText("altitudeMax", `${fmt(state.maxAltitude, 0)} m`);
         setText("altitudeVz", state.vz !== null ? `${sgn(state.vz, 1)} m/s` : "---");
     }
+    if (state.pressure !== null) {
+        setText("pressure", `${fmt(state.pressure, 1)} hPa`);
+    }
     if (state.ax !== null) {
-        setText("ax", `${sgn(state.ax, 4)} g`);
-        setText("ay", `${sgn(state.ay, 4)} g`);
-        setText("az", `${sgn(state.az, 4)} g`);
+        setText("ax", `${sgn(state.ax, 2)}`);
+        setText("ay", `${sgn(state.ay, 2)}`);
+        setText("az", `${sgn(state.az, 2)}`);
+    }
+    if (state.gx !== null) {
+        setText("gx", `${sgn(state.gx, 1)}`);
+        setText("gy", `${sgn(state.gy, 1)}`);
+        setText("gz", `${sgn(state.gz, 1)}`);
+    }
+    if (state.groundSpeed !== null) {
+        setText("groundSpeed", `${fmt(state.groundSpeed, 1)} m/s`);
+    }
+    if (state.altGps !== null) {
+        setText("altGps", `${fmt(state.altGps, 0)} m`);
+    }
+    if (state.tempImu !== null) {
+        setText("tempImu", `${fmt(state.tempImu, 1)} °C`);
+    }
+
+    // Estado visual de pines de pirotecnia
+    if (state.pinFrenado !== null) {
+        const el = $("badgeFrenado");
+        if (el) {
+            el.textContent = state.pinFrenado === 1 ? "ACTIVADO" : "DESACTIVADO";
+            el.className = `al-badge ${state.pinFrenado === 1 ? "crit" : "ok"}`;
+        }
+    }
+    if (state.pinPrincipal !== null) {
+        const el = $("badgePrincipal");
+        if (el) {
+            el.textContent = state.pinPrincipal === 1 ? "ACTIVADO" : "DESACTIVADO";
+            el.className = `al-badge ${state.pinPrincipal === 1 ? "crit" : "ok"}`;
+        }
     }
 }
 
@@ -1021,6 +1132,16 @@ function renderLogs() {            // ~4 Hz
     const maxAcc = Math.max(Math.abs(state.ax ?? 0), Math.abs(state.ay ?? 0), Math.abs(state.az ?? 0));
     if (maxAcc >= 9.5) {
         alerts.push({ badge: "warn", text: "Aceleración cercana al límite", val: `${fmt(maxAcc, 1)} g` });
+    }
+
+    if (state.pinFrenado === 1) {
+        alerts.push({ badge: "warn", text: "Línea pirotécnica 1 activada (Drogue)", val: "ACTIVADO" });
+    }
+    if (state.pinPrincipal === 1) {
+        alerts.push({ badge: "warn", text: "Línea pirotécnica 2 activada (Principal)", val: "ACTIVADO" });
+    }
+    if (state.tempImu !== null && state.tempImu > 65) {
+        alerts.push({ badge: "warn", text: "Temperatura alta sensor IMU", val: `${fmt(state.tempImu, 1)} °C` });
     }
 
     if (Number(state.stats.invalid ?? 0) > 0) {

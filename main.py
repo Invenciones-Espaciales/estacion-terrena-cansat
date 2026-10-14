@@ -1013,7 +1013,12 @@ class FrameBuffer:
                 if not self.resyncing:
                     self.invalid_frames += 1
 
-                if not sync and self.parser.config.crc_type:
+                if sync:
+                    # Ante un falso byte de sync en ruido o trama corrupta,
+                    # descartamos el sync para avanzar y reencontrar el sync genuino.
+                    del self.buffer[:len(sync)]
+                    self.resyncing = True
+                elif self.parser.config.crc_type:
                     # Sin SYNC, una lectura UART que comienza a mitad de
                     # paquete desplaza todos los frames. Deslizamos un byte
                     # hasta recuperar un frame validado por CRC.
