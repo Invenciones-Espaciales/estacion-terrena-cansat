@@ -49,7 +49,7 @@
  *   Bytes 44-47   : Latitude [float32 LE, decimal degrees]
  *   Bytes 48-51   : Longitude [float32 LE, decimal degrees]
  *   Bytes 52-55   : Altitud GPS [float32 LE, meters ASL]
- *   Byte 56       : Satellites [uint8, GNSS count]
+ *   Byte 56       : Satellites [uint8, GPS count]
  *   Bytes 57-60   : Ground Speed [float32 LE, m/s]
  *   Byte 61       : Pin Frenado [uint8, 0/1]
  *   Byte 62       : Pin Principal [uint8, 0/1]
@@ -146,7 +146,7 @@ struct FlightState
     float   groundSpeed_ms;  // m/s
     uint8_t statusCode;      // bit flags / phase code
     int8_t  rssi;            // dBm (-128..127)
-    uint8_t satellites;      // GNSS satellite count
+    uint8_t satellites;      // GPS satellite count
     uint8_t pinFrenado;      // 0 or 1
     uint8_t pinPrincipal;    // 0 or 1
     float   downrangeDrift;  // 0.0 to 1.0 progress southeast

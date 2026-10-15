@@ -116,8 +116,8 @@ All multi-byte integer and float fields are formatted in **Little-Endian** byte 
 | **44..47** | 4 | `latitude` | `float32` | Little | 1.0 | `deg` | GPS latitude in decimal degrees |
 | **48..51** | 4 | `longitude` | `float32` | Little | 1.0 | `deg` | GPS longitude in decimal degrees |
 | **52..55** | 4 | `altitud_gps` | `float32` | Little | 1.0 | `m` | GPS geometric altitude above mean sea level (MSL) |
-| **56** | 1 | `satellites` | `uint8` | — | 1.0 | — | Count of actively tracked GNSS satellites |
-| **57..60** | 4 | `ground_speed` | `float32` | Little | 1.0 | `m/s` | Horizontal ground speed calculated by GNSS receiver |
+| **56** | 1 | `satellites` | `uint8` | — | 1.0 | — | Count of actively tracked GPS satellites |
+| **57..60** | 4 | `ground_speed` | `float32` | Little | 1.0 | `m/s` | Horizontal ground speed calculated by GPS receiver |
 | **61** | 1 | `pin_frenado` | `uint8` | — | 1.0 | — | Logic state of drogue/braking deployment pin (`0` = OFF, `1` = ACTIVE) |
 | **62** | 1 | `pin_principal`| `uint8` | — | 1.0 | — | Logic state of main parachute deployment pin (`0` = OFF, `1` = ACTIVE) |
 | **63..64** | 2 | `crc` | `uint16` | Little | — | — | CRC-16/CCITT-FALSE calculated across bytes 0 to 62 inclusive |
