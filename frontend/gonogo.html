@@ -7,143 +7,31 @@
 <title>Go / No-Go Checklist — Estación Terrena</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
 <link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
+<link rel="stylesheet" href="/frontend/css/common.css">
+<script src="/frontend/js/common.js"></script>
 
 <style>
-:root {
-    --bg: #ffffff;
-    --ink: #000000;
-    --gray: #2d3748;
-    --muted: #555555;
-    --soft: #f4f5f7;
-    --soft-border: #cbd5e1;
-    --ok: #087a3b;
-    --ok-bg: #e6f6ec;
-    --warn: #b27b00;
-    --warn-bg: #fff8e6;
-    --bad: #b00020;
-    --bad-bg: #fde8eb;
-    --accent: #0056b3;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: Arial, Helvetica, sans-serif;
-}
-
-.num { font-variant-numeric: tabular-nums; font-family: "JetBrains Mono", Consolas, monospace; }
-
 /* ===== APP: FULL SCREEN VIEWPORT ===== */
 .app {
     width: 100vw;
     height: 100vh;
-    padding: 8px 12px;
+    padding: 6px 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     box-sizing: border-box;
+    overflow: hidden;
 }
-
-/* ===== CABECERA PRE-LANZAMIENTO ===== */
-header {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    border: 3px solid #000;
-    padding: 8px 18px;
-    background: #fff;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-.brand img {
-    height: 48px;
-    width: auto;
-    object-fit: contain;
-}
-.brand h1 {
-    font-size: 18px;
-    font-weight: 950;
-    line-height: 1.1;
-    letter-spacing: .02em;
-}
-.view-tag {
-    font-size: 10px;
-    font-weight: 900;
-    color: var(--muted);
-    letter-spacing: .12em;
-    margin-top: 2px;
-}
-
-.view-nav {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 18px;
-    background: var(--soft);
-    padding: 4px;
-    border: 2px solid #000;
-}
-.nav-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 18px;
-    font-size: 13px;
-    font-weight: 950;
-    letter-spacing: .08em;
-    text-decoration: none;
-    color: #000;
-    transition: background 0.1s ease, color 0.1s ease;
-}
-.nav-tab:hover { background: #e0e0e0; }
-.nav-tab.active { background: #000; color: #fff; }
-
-.hgroup {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-.hcell {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    padding: 0 16px;
-    border-left: 2px solid #000;
-    white-space: nowrap;
-}
-.hcell .k { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .1em; }
-.hcell .v { font-size: 22px; font-weight: 950; line-height: 1.1; }
-.hcell .v.clock { font-size: 28px; min-width: 5.5em; text-align: right; }
-.hcell .v.link-val { font-size: 20px; font-weight: 950; display: flex; align-items: center; }
-
-.phase { font-size: 15px; font-weight: 950; padding: 4px 12px; border: 2px solid #000; background: #000; color: #fff; letter-spacing: .05em; }
-.dot { display: inline-block; width: 15px; height: 15px; border-radius: 50%; background: var(--bad); border: 2px solid #000; vertical-align: middle; margin-right: 8px; }
-.dot.online { background: var(--ok); }
-.dot.warn { background: var(--warn); }
 
 /* ===== UNIFIED HERO BANNER (VERDICT + TIMER) ===== */
 .hero-banner {
     flex: none;
-    border: 3px solid #000;
-    padding: 12px 20px;
+    border: 2px solid #000;
+    padding: 6px 14px;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 .hero-banner.state-nogo {
@@ -159,38 +47,38 @@ header {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    min-width: 340px;
+    min-width: 220px;
 }
 .verdict-tag {
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 900;
     letter-spacing: .12em;
     color: var(--muted);
 }
 .verdict-main {
-    font-size: 58px;
+    font-size: 32px;
     font-weight: 950;
     letter-spacing: .04em;
     line-height: 1;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
 }
 .hero-banner.state-nogo .verdict-main { color: var(--bad); }
 .hero-banner.state-go .verdict-main { color: var(--ok); }
 
 .verdict-msg {
-    font-size: 15px;
+    font-size: 11px;
     font-weight: 900;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 /* TIMER MIDDLE */
 .timer-center {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 0 10px;
+    gap: 4px;
+    padding: 0 6px;
 }
 .timer-header-row {
     display: flex;
@@ -198,25 +86,25 @@ header {
     align-items: baseline;
 }
 .timer-label {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 900;
     letter-spacing: .08em;
     color: var(--muted);
 }
 .timer-nums {
-    font-size: 34px;
+    font-size: 20px;
     font-weight: 950;
 }
 .timer-nums .target {
-    font-size: 20px;
+    font-size: 13px;
     color: var(--muted);
     font-weight: 800;
 }
 
 .progress-track {
-    height: 20px;
+    height: 12px;
     background: #fff;
-    border: 3px solid #000;
+    border: 2px solid #000;
     position: relative;
     overflow: hidden;
 }
@@ -231,7 +119,7 @@ header {
 .timer-sub-row {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 900;
     color: var(--gray);
 }
@@ -240,7 +128,7 @@ header {
 .hero-actions {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     align-items: flex-end;
 }
 
@@ -248,7 +136,7 @@ header {
 .checklist-card {
     flex: 1 1 0;
     min-height: 0;
-    border: 3px solid #000;
+    border: 2px solid #000;
     background: #fff;
     display: flex;
     flex-direction: column;
@@ -259,18 +147,18 @@ header {
     flex: none;
     background: #000;
     color: #fff;
-    padding: 8px 18px;
+    padding: 4px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 .checklist-head-title {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 900;
     letter-spacing: .1em;
 }
 .checklist-head-hint {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 800;
     color: #ccc;
 }
@@ -289,17 +177,17 @@ table.cl-table {
 
 table.cl-table th {
     text-align: left;
-    font-size: 11px;
+    font-size: 9.5px;
     font-weight: 900;
     letter-spacing: .08em;
     color: var(--muted);
     background: var(--soft);
-    border-bottom: 2px solid #000;
-    padding: 6px 18px;
+    border-bottom: 1.5px solid #000;
+    padding: 3px 10px;
 }
 
 table.cl-table td {
-    padding: 8px 18px;
+    padding: 3px 10px;
     border-bottom: 1px solid var(--soft-border);
     vertical-align: middle;
 }
@@ -310,57 +198,57 @@ table.cl-table tr:last-child td { border-bottom: none; }
 }
 
 .subsys-title {
-    font-size: 18px;
+    font-size: 13px;
     font-weight: 950;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 .subsys-desc {
-    font-size: 12px;
+    font-size: 9.5px;
     color: var(--muted);
     font-weight: 800;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .live-val {
-    font-size: 26px;
+    font-size: 15px;
     font-weight: 950;
     line-height: 1.1;
 }
 .live-sub {
-    font-size: 13px;
+    font-size: 9.5px;
     color: var(--gray);
     font-weight: 800;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .rule-box {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
 }
 .rule-tag {
     display: inline-block;
     background: var(--soft);
-    border: 2px solid var(--soft-border);
-    padding: 4px 10px;
-    font-size: 13px;
+    border: 1.5px solid var(--soft-border);
+    padding: 2px 6px;
+    font-size: 10px;
     font-weight: 800;
     border-radius: 2px;
 }
 
 /* BADGES */
 .badge {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 950;
-    padding: 8px 18px;
-    border-radius: 3px;
-    letter-spacing: .05em;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: .04em;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     white-space: nowrap;
 }
 .badge.ok { background: var(--ok); color: #fff; }
@@ -372,32 +260,32 @@ table.cl-table tr:last-child td { border-bottom: none; }
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
 }
 .in-group {
     display: inline-flex;
     align-items: center;
-    border: 2px solid #000;
+    border: 1.5px solid #000;
     background: #fff;
-    padding: 3px 8px;
-    gap: 6px;
+    padding: 2px 6px;
+    gap: 4px;
 }
 .in-group input {
-    width: 65px;
+    width: 48px;
     border: none;
     outline: none;
-    font-size: 18px;
+    font-size: 13px;
     font-weight: 950;
     font-family: inherit;
     text-align: right;
 }
 .in-label {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 900;
     color: var(--muted);
 }
 .in-unit {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 900;
     color: var(--muted);
 }
@@ -405,35 +293,35 @@ table.cl-table tr:last-child td { border-bottom: none; }
 .officer-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: #fff;
-    border: 2px solid #000;
-    padding: 6px 14px;
-    font-size: 13px;
+    border: 1.5px solid #000;
+    padding: 3px 8px;
+    font-size: 11px;
     font-weight: 950;
     cursor: pointer;
 }
 .officer-toggle input {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     cursor: pointer;
     accent-color: var(--ok);
 }
 
 /* BUTTONS */
 .btn {
-    padding: 10px 20px;
-    font-size: 13px;
+    padding: 5px 12px;
+    font-size: 11px;
     font-weight: 950;
     letter-spacing: .06em;
-    border: 2px solid #000;
+    border: 1.5px solid #000;
     background: #fff;
     cursor: pointer;
     transition: background 0.1s ease, color 0.1s ease;
 }
 .btn:hover { background: #000; color: #fff; }
-.btn.btn-sm { padding: 4px 10px; font-size: 12px; font-weight: 900; }
-.btn.btn-reset { background: var(--bad); color: #fff; border: 3px solid #000; }
+.btn.btn-sm { padding: 3px 8px; font-size: 10px; font-weight: 900; }
+.btn.btn-reset { background: var(--bad); color: #fff; border: 2px solid #000; }
 .btn.btn-reset:hover { background: #850017; }
 
 /* BOTTOM CONTROLS BAR */
@@ -442,8 +330,8 @@ table.cl-table tr:last-child td { border-bottom: none; }
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 14px;
-    border: 2px solid #000;
+    padding: 4px 10px;
+    border: 1.5px solid #000;
     background: var(--soft);
 }
 </style>
@@ -453,36 +341,25 @@ table.cl-table tr:last-child td { border-bottom: none; }
 
 <div class="app">
 
-    <!-- ==================== CABECERA PRE-LANZAMIENTO ==================== -->
-    <header>
+    <!-- ==================== CABECERA GLOBAL (10%) ==================== -->
+    <header class="global-header">
         <div class="brand">
             <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
-            <div>
-                <h1>ESTACIÓN TERRENA</h1>
-                <div class="view-tag">CONTROL DE RAMPA • GO / NO-GO</div>
-            </div>
+            <h1>ESTACIÓN<br>TERRENA</h1>
             <nav class="view-nav">
-                <a href="/" class="nav-tab">TELEMETRÍA</a>
                 <a href="/gonogo" class="nav-tab active">GO / NO-GO</a>
+                <a href="/" class="nav-tab">TELEMETRÍA</a>
+                <a href="/recovery" class="nav-tab">RECUPERACIÓN</a>
             </nav>
         </div>
 
         <div class="hgroup">
-            <div class="hcell">
-                <span class="k">HORA LOCAL</span>
-                <span class="v clock num" id="localTime">00:00:00</span>
-            </div>
-            <div class="hcell">
-                <span class="k">FASE DEL COHETE</span>
-                <span class="phase" id="phase">STANDBY</span>
-            </div>
-            <div class="hcell">
-                <span class="k">ENLACE RF</span>
-                <span class="v link-val">
-                    <span class="dot" id="linkDot"></span>
-                    <span id="linkStatus">DESCONECTADO</span>
-                </span>
-            </div>
+            <div class="hcell"><span class="k">HORA LOCAL</span><span class="v clock num" id="localTime">00:00:00</span></div>
+            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
+            <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
+            <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
+            <div class="hcell"><span class="k">PÉRDIDA DE PAQUETES</span><span class="v num" id="lossPercent">0,0 %</span></div>
+            <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
         </div>
     </header>
 
@@ -691,8 +568,6 @@ table.cl-table tr:last-child td { border-bottom: none; }
 <script>
 "use strict";
 
-const $ = id => document.getElementById(id);
-
 // Configuración de umbrales gobernada por app.yaml vía /api/status
 let CFG = {
     required_hold_s: 30.0,
@@ -718,12 +593,19 @@ const state = {
     seqWindow: [],
     lastSeq: null,
 
+    rssi: null,
+    liftoffDetected: false,
+    liftoffAt: null,
+
     altitude: null,
     ax: null, ay: null, az: null, accMag: null,
     lat: null, lon: null,
     gpsFix: 0,
     status: "STANDBY",
     timestampMs: 0,
+    pressure: null,
+    tempImu: null,
+    satellites: null,
 
     gpsAnchor: null,
     gpsDriftM: null,
@@ -815,7 +697,7 @@ function scheduleReconnect() {
     }, 1500);
 }
 
-function handleMessage(msg) {
+function handleMessage(msg, isHistory = false) {
     if (msg.type === "connection") {
         state.connected = !!msg.connected;
         updateLinkStatus();
@@ -827,7 +709,9 @@ function handleMessage(msg) {
 
     const now = Date.now();
     state.lastPacketAt = now;
-    state.packetTimes.push(now);
+    if (!isHistory) {
+        state.packetTimes.push(now);
+    }
 
     const seq = Number(d.frame_number);
     let lostInStep = 0;
@@ -842,6 +726,19 @@ function handleMessage(msg) {
         state.lastSeq = seq;
     }
     state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
+
+    if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) {
+        state.rssi = Number(d.rssi);
+    }
+    if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) {
+        state.pressure = Number(d.pressure);
+    }
+    if (d.temp_imu !== undefined && Number.isFinite(Number(d.temp_imu))) {
+        state.tempImu = Number(d.temp_imu);
+    }
+    if (d.satellites !== undefined && Number.isFinite(Number(d.satellites))) {
+        state.satellites = Number(d.satellites);
+    }
 
     if (Number.isFinite(Number(d.timestamp))) {
         state.timestampMs = Number(d.timestamp);
@@ -875,14 +772,18 @@ function handleMessage(msg) {
 
     if (d.gps_fix !== undefined && Number.isFinite(Number(d.gps_fix))) {
         state.gpsFix = Number(d.gps_fix);
-    } else if (d.satellites !== undefined && Number.isFinite(Number(d.satellites))) {
-        state.gpsFix = Number(d.satellites) >= 4 ? 2 : (Number(d.satellites) > 0 ? 1 : 0);
+    } else if (state.satellites !== null) {
+        state.gpsFix = state.satellites >= 4 ? 2 : (state.satellites > 0 ? 1 : 0);
     } else if (state.lat !== null && (state.lat !== 0 || state.lon !== 0)) {
         state.gpsFix = 2; // 3D Fix heurístico si hay coordenadas válidas
     }
 
     if (d.status !== undefined) {
         state.status = typeof d.status === "string" ? d.status : (STATUS_NAMES[d.status] || "STANDBY");
+        if (!state.liftoffDetected && (state.status === "POWERED" || (state.altitude !== null && state.altitude > 30))) {
+            state.liftoffDetected = true;
+            state.liftoffAt = now;
+        }
     }
 }
 
@@ -990,10 +891,15 @@ function renderUI(checks) {
     const now = Date.now();
     const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
 
-    // Header clocks
-    const date = new Date();
-    $("localTime").textContent = date.toTimeString().split(" ")[0];
-    $("phase").textContent = state.status;
+    // Unified 6-cell Global Header
+    updateGlobalHeader({
+        missionTimeMs: state.liftoffDetected ? Math.max(0, Date.now() - state.liftoffAt) : 0,
+        status: state.status,
+        rssi: state.rssi,
+        lossPercent: state.loss5s,
+        connected: state.connected,
+        lastPacketAt: state.lastPacketAt
+    });
 
     // Hero Banner & Progress
     const targetHoldMs = CFG.required_hold_s * 1000;
@@ -1203,11 +1109,49 @@ async function fetchBackendConfig() {
     }
 }
 
-// Inicialización
-applyConfigUI();
-fetchBackendConfig();
-connectWs();
-requestAnimationFrame(frameLoop);
+// Inicialización con precarga de 60 segundos
+async function initGoNoGo() {
+    applyConfigUI();
+    await fetchBackendConfig();
+
+    let prevRocketTs = null;
+    await fetchHistory60s(
+        (item) => {
+            const d = item.data || item.telemetry || item;
+            handleMessage(item, true);
+
+            // Compute delta time between consecutive historical frames
+            const curRocketTs = Number(d.timestamp);
+            let dtMs = 100;
+            if (prevRocketTs !== null && Number.isFinite(curRocketTs) && curRocketTs > prevRocketTs) {
+                const diff = curRocketTs - prevRocketTs;
+                if (diff > 0 && diff < 1000) dtMs = diff;
+            }
+            prevRocketTs = curRocketTs;
+
+            const checks = evaluateSubsystems();
+            updateStabilityClock(dtMs, checks);
+        },
+        (res) => {
+            if (res && res.connected !== undefined) state.connected = Boolean(res.connected);
+            if (res && res.frames && res.frames.length > 0) {
+                const now = Date.now();
+                state.packetTimes = [];
+                for (let i = 0; i < 10; i++) {
+                    state.packetTimes.push(now - (9 - i) * 100);
+                }
+                state.rxRate = 10.0;
+            }
+            const checks = evaluateSubsystems();
+            renderUI(checks);
+        }
+    );
+
+    connectWs();
+    requestAnimationFrame(frameLoop);
+}
+
+initGoNoGo();
 
 </script>
 

@@ -7,63 +7,20 @@
 <title>Recuperación y Seguimiento — Estación Terrena</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
 <link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
+<link rel="stylesheet" href="/frontend/css/common.css">
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
 >
+<script src="/frontend/js/common.js"></script>
 
 <style>
-/* ============================================================
-   REQUISITOS DE COMPETICIÓN:
-   G12: Alta visibilidad bajo luz solar intensa (texto oscuro sobre fondo claro,
-        trazos/ejes en negrita, números de telemetría de gran tamaño).
-   G13: Todo simultáneo en pantalla principal, sin pestañas operativas internas.
-   G14: Contador de paquetes recibidos en tierra (RX tierra).
-   ============================================================ */
-
-:root {
-    --bg: #f8fafc;
-    --card: #ffffff;
-    --ink: #0f172a;
-    --gray: #334155;
-    --muted: #64748b;
-    --soft: #f1f5f9;
-    --border: #0f172a;
-    --border-light: #cbd5e1;
-    --ok: #087a3b;
-    --ok-bg: #ecfdf5;
-    --warn: #b45309;
-    --warn-bg: #fffbeb;
-    --bad: #b91c1c;
-    --bad-bg: #fef2f2;
-    --accent: #1d4ed8;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-}
-
-.num {
-    font-variant-numeric: tabular-nums;
-    font-family: "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    font-weight: 700;
-}
-
 /* ===== APP LAYOUT (100VH GRID EN ESCRITORIO) ===== */
 .app {
     height: 100vh;
-    padding: 6px 8px;
+    padding: 6px 10px;
     display: grid;
     grid-template-rows: auto auto 1fr;
     gap: 6px;
@@ -71,146 +28,26 @@ html, body {
     overflow: hidden;
 }
 
-/* ===== CABECERA GLOBAL (COMPACTA Y DE ALTO CONTRASTE) ===== */
-header {
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    border: 2px solid var(--border);
-    padding: 4px 10px;
-    background: var(--card);
-    border-radius: 4px;
-    flex: none;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 0 1 auto;
-    min-width: 0;
-}
-.brand img {
-    height: 36px;
-    width: auto;
-    object-fit: contain;
-}
-.brand h1 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: 0.02em;
-}
-
-.view-nav {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    margin-left: 10px;
-    background: var(--soft);
-    padding: 2px;
-    border: 2px solid var(--border);
-    border-radius: 4px;
-}
-.nav-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px 12px;
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    text-decoration: none;
-    color: var(--ink);
-    border-radius: 2px;
-    transition: background 0.12s ease, color 0.12s ease;
-}
-.nav-tab:hover { background: #e2e8f0; }
-.nav-tab.active { background: #000000; color: #ffffff; }
-
-.hgroup {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex: none;
-}
-.hcell {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    padding: 0 8px;
-    border-left: 1.5px solid var(--border-light);
-    white-space: nowrap;
-}
-.hcell:first-child { border-left: none; }
-.hcell .k {
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
-.hcell .v {
-    font-size: 14px;
-    font-weight: 900;
-    line-height: 1.15;
-}
-.hcell .v.clock {
-    font-size: 15px;
-    min-width: 4.8em;
-    text-align: right;
-}
-
-.phase {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 900;
-    padding: 2px 8px;
-    border: 1.5px solid var(--border);
-    border-radius: 3px;
-    background: #0f172a;
-    color: #ffffff;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.dot {
-    display: inline-block;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--bad);
-    border: 1.5px solid #000000;
-    vertical-align: middle;
-    margin-right: 4px;
-}
-.dot.online { background: var(--ok); }
-.dot.warn { background: var(--warn); }
-
 /* ===== HERO GUIDANCE BANNER ===== */
 .hero-guidance {
     flex: none;
     border: 2px solid var(--border);
     border-radius: 4px;
-    padding: 8px 14px;
+    padding: 4px 10px;
     background: var(--card);
     display: grid;
     grid-template-columns: 1fr 1fr 1.2fr auto;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
 }
 
 .guidance-box {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
 }
 .guidance-box .lbl {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     color: var(--muted);
     letter-spacing: 0.06em;
@@ -225,18 +62,18 @@ header {
     gap: 4px;
 }
 .guidance-box .big {
-    font-size: 26px;
+    font-size: 18px;
     font-weight: 900;
     line-height: 1.05;
     color: var(--ink);
 }
 .guidance-box .unit {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 800;
     color: var(--muted);
 }
 .guidance-box .sub {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--gray);
 }
@@ -244,12 +81,12 @@ header {
 .compass-visual {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 .compass-dial {
-    width: 44px;
-    height: 44px;
-    border: 2px solid var(--border);
+    width: 32px;
+    height: 32px;
+    border: 1.5px solid var(--border);
     border-radius: 50%;
     background: var(--soft);
     position: relative;
@@ -259,16 +96,16 @@ header {
     flex-shrink: 0;
 }
 .compass-arrow {
-    width: 3px;
-    height: 30px;
+    width: 2px;
+    height: 22px;
     background: var(--bad);
     border-radius: 2px;
     transform-origin: center center;
     transition: transform 0.25s ease;
 }
 .compass-center {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     background: #000;
     border-radius: 50%;
     position: absolute;
@@ -278,16 +115,16 @@ header {
 .action-buttons {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
     justify-content: center;
 }
 .btn-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 6px 14px;
-    font-size: 11px;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.04em;
     border: 1.5px solid var(--border);
@@ -311,8 +148,8 @@ header {
     flex: 1 1 0;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 6px;
+    grid-template-columns: 1fr 280px;
+    gap: 4px;
 }
 
 .panel-map {
@@ -326,7 +163,7 @@ header {
 }
 .panel-header {
     flex: none;
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-bottom: 2px solid var(--border);
     display: flex;
     align-items: center;
@@ -334,7 +171,7 @@ header {
     background: var(--soft);
 }
 .panel-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -348,8 +185,8 @@ header {
     gap: 4px;
 }
 .map-btn {
-    padding: 3px 8px;
-    font-size: 11px;
+    padding: 2px 6px;
+    font-size: 10px;
     font-weight: 800;
     border: 1.5px solid var(--border);
     border-radius: 3px;
@@ -363,35 +200,35 @@ header {
 #recoveryMap {
     flex: 1 1 0;
     width: 100%;
-    min-height: 250px;
+    min-height: 180px;
 }
 
 /* PANEL LATERAL DERECHO */
 .side-panel {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     min-height: 0;
     overflow-y: auto;
 }
 
 .card {
     border: 2px solid var(--border);
-    border-radius: 4px;
+    border-radius: 3px;
     background: var(--card);
-    padding: 8px 10px;
+    padding: 4px 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     flex-shrink: 0;
 }
 .card-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     border-bottom: 1.5px solid var(--border-light);
-    padding-bottom: 3px;
+    padding-bottom: 2px;
     margin-bottom: 2px;
     display: flex;
     justify-content: space-between;
@@ -403,19 +240,19 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    padding: 2px 0;
+    padding: 1px 0;
     border-bottom: 1px solid #f1f5f9;
 }
 .data-row:last-child { border-bottom: none; }
 .data-row .k {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     color: var(--muted);
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 .data-row .v {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 800;
     text-align: right;
     color: var(--ink);
@@ -515,44 +352,6 @@ header {
         min-height: 360px;
     }
 }
-
-@media (max-width: 600px) {
-    header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
-    }
-    .brand {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-    .view-nav {
-        margin-left: 0;
-        width: 100%;
-        justify-content: space-between;
-    }
-    .nav-tab {
-        flex: 1;
-        text-align: center;
-        padding: 5px 4px;
-    }
-    .hgroup {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-    }
-    .hcell {
-        align-items: flex-start;
-        border-left: none;
-        padding: 2px 4px;
-        background: var(--soft);
-        border-radius: 3px;
-    }
-    .hero-guidance {
-        grid-template-columns: 1fr;
-    }
-}
 </style>
 </head>
 
@@ -560,49 +359,25 @@ header {
 
 <div class="app">
 
-    <!-- CABECERA GLOBAL -->
-    <header>
+    <!-- ==================== CABECERA GLOBAL (10%) ==================== -->
+    <header class="global-header">
         <div class="brand">
             <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
-            <div>
-                <h1>ESTACIÓN TERRENA</h1>
-                <div style="font-size:10px;font-weight:800;color:var(--muted);letter-spacing:0.04em;">RECUPERACIÓN Y LOCALIZACIÓN</div>
-            </div>
+            <h1>ESTACIÓN<br>TERRENA</h1>
             <nav class="view-nav">
-                <a href="/" class="nav-tab">TELEMETRÍA</a>
                 <a href="/gonogo" class="nav-tab">GO / NO-GO</a>
+                <a href="/" class="nav-tab">TELEMETRÍA</a>
                 <a href="/recovery" class="nav-tab active">RECUPERACIÓN</a>
             </nav>
         </div>
 
         <div class="hgroup">
-            <div class="hcell">
-                <span class="k">HORA LOCAL</span>
-                <span class="v clock num" id="localTime">00:00:00</span>
-            </div>
-            <div class="hcell">
-                <span class="k">TIEMPO MISIÓN</span>
-                <span class="v clock num">T+ <span id="clock">00:00:00</span></span>
-            </div>
-            <div class="hcell">
-                <span class="k">ESTADO VUELO</span>
-                <span class="phase" id="phase">---</span>
-            </div>
-            <div class="hcell">
-                <span class="k">PAQUETES RX (TIERRA)</span>
-                <span class="v num" id="rxCount">0</span>
-            </div>
-            <div class="hcell">
-                <span class="k">SEÑAL RF (RSSI)</span>
-                <span class="v num" id="rssi">N/D</span>
-            </div>
-            <div class="hcell">
-                <span class="k">ENLACE</span>
-                <span class="v" style="font-size:13px">
-                    <span class="dot" id="linkDot"></span>
-                    <span id="linkStatus">DESCONECTADO</span>
-                </span>
-            </div>
+            <div class="hcell"><span class="k">HORA LOCAL</span><span class="v clock num" id="localTime">00:00:00</span></div>
+            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
+            <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
+            <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
+            <div class="hcell"><span class="k">PÉRDIDA DE PAQUETES</span><span class="v num" id="lossPercent">0,0 %</span></div>
+            <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
         </div>
     </header>
 
@@ -699,11 +474,11 @@ header {
         <!-- PANELES LATERALES DE INFORMACIÓN -->
         <section class="side-panel">
 
-            <!-- COORDENADAS EXACTAS GNSS -->
+            <!-- COORDENADAS EXACTAS GPS -->
             <div class="card">
                 <div class="card-title">
                     <span>COORDENADAS DEL VEHÍCULO</span>
-                    <span class="status-badge ok" id="fixBadge" style="font-size:10px;padding:2px 5px;">GNSS FIX</span>
+                    <span class="status-badge ok" id="fixBadge" style="font-size:10px;padding:2px 5px;">GPS FIX</span>
                 </div>
                 <div class="data-row">
                     <span class="k">LATITUD</span>
@@ -714,7 +489,7 @@ header {
                     <span class="v num" id="recLon">---</span>
                 </div>
                 <div class="data-row">
-                    <span class="k">ALTITUD GNSS</span>
+                    <span class="k">ALTITUD GPS</span>
                     <span class="v num" id="recAlt">--- m</span>
                 </div>
                 <div class="data-row">
@@ -799,19 +574,7 @@ header {
 <script>
 "use strict";
 
-const $ = id => document.getElementById(id);
-
-const PHASE_NAMES = {
-    STANDBY: "En espera",
-    POWERED: "Motor encendido",
-    BURNOUT: "Fin de empuje",
-    APOGEE: "Apogeo",
-    DROGUE_ORD: "Orden de drogue",
-    DROGUE_CONF: "Drogue desplegado",
-    MAIN_ORD: "Orden de principal",
-    MAIN_CONF: "Principal desplegado",
-    LANDED: "Aterrizado"
-};
+const packetTracker = new PacketTracker(5000);
 
 const recoveryState = {
     connected: false,
@@ -830,6 +593,12 @@ const recoveryState = {
     lat: null,
     lon: null,
     alt: null,
+    altitudGps: null,
+    groundSpeed: null,
+    pressure: null,
+    tempImu: null,
+    pinFrenado: null,
+    pinPrincipal: null,
     satellites: null,
     rssi: null,
     lastSeq: null,
@@ -849,19 +618,6 @@ const recoveryState = {
     routeLine: null,
     vectorLine: null,
 };
-
-function fmt(n, dec = 2) {
-    const num = Number(n);
-    return Number.isFinite(num)
-        ? new Intl.NumberFormat("es-AR", { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(num)
-        : "---";
-}
-
-function elapsed(ms) {
-    const s = Math.max(0, Math.floor(ms / 1000));
-    const p = v => String(v).padStart(2, "0");
-    return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
-}
 
 function missionTime() {
     if (!recoveryState.liftoffDetected) return 0;
@@ -971,7 +727,7 @@ function updateRecoveryMap() {
 }
 
 /* INGESTA DE TRAMAS */
-function ingestFrame(frameItem) {
+function ingestFrame(frameItem, isHistory = false) {
     const d = frameItem.data || frameItem.telemetry || frameItem;
     if (!d || typeof d !== "object") return;
 
@@ -983,9 +739,19 @@ function ingestFrame(frameItem) {
         recoveryState.framesReceived++;
     }
 
-    if (d.frame_number !== undefined) recoveryState.lastSeq = Number(d.frame_number);
+    if (d.frame_number !== undefined) {
+        recoveryState.lastSeq = Number(d.frame_number);
+    }
+    packetTracker.recordPacket(recoveryState.lastSeq, now, isHistory);
+
     if (d.rssi !== undefined) recoveryState.rssi = Number(d.rssi);
     if (d.satellites !== undefined) recoveryState.satellites = Number(d.satellites);
+    if (d.pressure !== undefined) recoveryState.pressure = Number(d.pressure);
+    if (d.temp_imu !== undefined) recoveryState.tempImu = Number(d.temp_imu);
+    if (d.ground_speed !== undefined) recoveryState.groundSpeed = Number(d.ground_speed);
+    if (d.pin_frenado !== undefined) recoveryState.pinFrenado = Number(d.pin_frenado);
+    if (d.pin_principal !== undefined) recoveryState.pinPrincipal = Number(d.pin_principal);
+    if (d.altitud_gps !== undefined) recoveryState.altitudGps = Number(d.altitud_gps);
 
     // Coordenadas
     const lat = Number(d.latitude);
@@ -1022,7 +788,7 @@ function ingestFrame(frameItem) {
     const text = d.status_label || (d.status !== undefined ? String(d.status) : null);
     if (text && text !== recoveryState.statusText) {
         recoveryState.statusText = text;
-        const pName = PHASE_NAMES[text] || text;
+        const pName = getPhaseName(text);
         addEvent(`Fase: ${pName}`);
 
         if (!recoveryState.liftoffDetected && (text === "POWERED" || (alt !== null && alt > 30))) {
@@ -1063,25 +829,23 @@ function renderEvents() {
 
 /* PRESENTACIÓN Y RENDER */
 function renderRecoveryUI() {
-    const now = new Date();
-    const pad = n => String(n).padStart(2, "0");
-    $("localTime").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    $("clock").textContent = elapsed(missionTime());
+    packetTracker.prune(Date.now());
 
-    if (recoveryState.statusText) {
-        $("phase").textContent = PHASE_NAMES[recoveryState.statusText] || recoveryState.statusText;
-    }
+    // 1. Unified Global Header
+    updateGlobalHeader({
+        missionTimeMs: missionTime(),
+        status: recoveryState.statusText,
+        rssi: recoveryState.rssi,
+        lossPercent: packetTracker.lossPercent,
+        connected: recoveryState.connected,
+        lastPacketAt: recoveryState.lastPacketAt
+    });
 
-    // G14: Ground packet counter
-    $("rxCount").textContent = recoveryState.framesReceived.toLocaleString("es-AR");
+    // 2. Diagnóstico del Enlace en Panel Lateral
     $("diagRxCount").textContent = recoveryState.framesReceived.toLocaleString("es-AR");
     $("diagSeq").textContent = recoveryState.lastSeq !== null ? recoveryState.lastSeq.toLocaleString("es-AR") : "---";
-    $("rssi").textContent = recoveryState.rssi !== null ? `${fmt(recoveryState.rssi, 0)} dBm` : "N/D";
+    $("diagLoss").textContent = `${fmt(packetTracker.lossPercent, 1)} %`;
     $("diagApogee").textContent = `${fmt(recoveryState.maxAlt, 0)} m`;
-
-    const stale = recoveryState.lastPacketAt !== null && Date.now() - recoveryState.lastPacketAt > 3000;
-    $("linkDot").className = `dot ${recoveryState.connected ? (stale ? "warn" : "online") : ""}`;
-    $("linkStatus").textContent = !recoveryState.connected ? "DESCONECTADO" : (stale ? "SEÑAL DEGRADADA" : "CONECTADO");
 
     // Coordenadas
     if (recoveryState.lat !== null && recoveryState.lon !== null) {
@@ -1133,18 +897,16 @@ function renderRecoveryUI() {
     $("touchdownVz").textContent = recoveryState.vz !== null ? `${fmt(recoveryState.vz, 1)} m/s` : "---";
 }
 
-/* HISTORIAL INICIAL DESDE /api/history */
+/* HISTORIAL INICIAL DESDE /api/history (60 SEGUNDOS) */
 async function loadHistory() {
-    try {
-        const res = await fetch("/api/history?seconds=300&limit=1200");
-        if (!res.ok) return;
-        const body = await res.json();
-        if (body.frames && Array.isArray(body.frames)) {
-            for (const f of body.frames) {
-                ingestFrame(f);
-            }
-            if (body.frames_received !== undefined) {
+    await fetchHistory60s(
+        f => ingestFrame(f, true),
+        body => {
+            if (body && body.frames_received !== undefined) {
                 recoveryState.framesReceived = body.frames_received;
+            }
+            if (body && body.connected !== undefined) {
+                recoveryState.connected = Boolean(body.connected);
             }
             if (recoveryState.map && recoveryState.routePoints.length > 0 && recoveryState.routeLine) {
                 recoveryState.routeLine.setLatLngs(recoveryState.routePoints);
@@ -1155,10 +917,9 @@ async function loadHistory() {
                     recoveryState.map.fitBounds(L.latLngBounds(pts).pad(0.25));
                 }
             }
+            renderRecoveryUI();
         }
-    } catch (err) {
-        console.warn("No se pudo precargar historial:", err);
-    }
+    );
 }
 
 /* WEBSOCKET */

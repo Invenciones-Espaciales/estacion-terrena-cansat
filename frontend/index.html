@@ -7,12 +7,14 @@
 <title>Estación Terrena de Telemetría</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
 <link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
+<link rel="stylesheet" href="/frontend/css/common.css">
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
 >
+<script src="/frontend/js/common.js"></script>
 
 <style>
 :root {
@@ -40,83 +42,17 @@ html, body {
 
 .num { font-variant-numeric: tabular-nums; }
 
-/* ===== APP: 10% cabecera / 65% instrumentos / 25% registros ===== */
+/* ===== APP: cabecera unificada / instrumentos / registros ===== */
 
 .app {
     height: 100vh;
     padding: 6px 10px;
     display: grid;
-    grid-template-rows: minmax(0, 10fr) minmax(0, 65fr) minmax(0, 25fr);
+    grid-template-rows: auto minmax(0, 68fr) minmax(0, 26fr);
     gap: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
-
-/* ===== CABECERA ===== */
-
-header {
-    min-height: 0;
-    display: flex;
-    align-items: stretch;
-    justify-content: space-between;
-    gap: 8px;
-    border: 3px solid #000;
-    padding: 4px 8px;
-}
-
-.brand { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; overflow: hidden; }
-.brand img { height: 100%; max-height: 44px; width: auto; object-fit: contain; }
-.brand h1 { margin: 0; font-size: 17px; font-weight: 900; line-height: 1.05; }
-
-.view-nav {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 14px;
-    background: var(--soft);
-    padding: 3px;
-    border: 2px solid #000;
-}
-.nav-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px 12px;
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: .08em;
-    text-decoration: none;
-    color: #000;
-    transition: background 0.1s ease, color 0.1s ease;
-}
-.nav-tab:hover {
-    background: #e0e0e0;
-}
-.nav-tab.active {
-    background: #000;
-    color: #fff;
-}
-
-.hgroup { display: flex; gap: 6px; align-items: stretch; flex: none; }
-
-.hcell {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    padding: 0 10px;
-    border-left: 2px solid #000;
-    flex: none;
-    white-space: nowrap;
-}
-.hcell .k { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .08em; }
-.hcell .v { font-size: 20px; font-weight: 900; line-height: 1.1; }
-.hcell .v.clock { font-size: 28px; min-width: 7.2em; text-align: right; white-space: nowrap; }
-.hcell .v.nd { color: var(--muted); }
-
-.phase { font-size: 14px; font-weight: 900; padding: 3px 10px; border: 2px solid #000; background: #000; color: #fff; }
-
-.dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--bad); border: 2px solid #000; vertical-align: middle; margin-right: 6px; }
-.dot.online { background: var(--ok); }
-.dot.warn { background: var(--warn); }
 
 /* ===== GRID 25 / 45 / 30 ===== */
 
@@ -226,13 +162,14 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
 <div class="app">
 
     <!-- ==================== CABECERA GLOBAL (10%) ==================== -->
-    <header>
+    <header class="global-header">
         <div class="brand">
             <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
             <h1>ESTACIÓN<br>TERRENA</h1>
             <nav class="view-nav">
-                <a href="/" class="nav-tab active">TELEMETRÍA</a>
                 <a href="/gonogo" class="nav-tab">GO / NO-GO</a>
+                <a href="/" class="nav-tab active">TELEMETRÍA</a>
+                <a href="/recovery" class="nav-tab">RECUPERACIÓN</a>
             </nav>
         </div>
 
@@ -391,8 +328,6 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
  * de impacto, actitud, alarmas) están documentados en
  * docs/calculos-futuros.md
  */
-
-const $ = id => document.getElementById(id);
 
 const CFG = {
     windowMs: 60000,     // ventana de los gráficos
@@ -589,14 +524,17 @@ function addEvent(message, markerLabel = null) {
     if (state.markers.length > 30) state.markers.shift();
 }
 
-function ingest(message) {
-    const d = message.data || message.telemetry || {};
+function ingest(message, isHistory = false) {
+    const d = message.data || message.telemetry || message;
     if (!d || typeof d !== "object") return;
 
+    const frameEpochMs = message.timestamp ? Math.round(message.timestamp * 1000) : Date.now();
     const now = Date.now();
     state.lastArrivalAt = now;
     state.lastPacketAt = now;
-    state.packetTimes.push(now);
+    if (!isHistory) {
+        state.packetTimes.push(now);
+    }
 
     // Detección de saltos de secuencia para ventana de 5s y conteo post-paquete 0
     const seq = Number(d.frame_number);
@@ -619,7 +557,7 @@ function ingest(message) {
         }
         state.lastSeq = seq;
     }
-    state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
+    state.seqWindow.push({ t: isHistory ? frameEpochMs : now, rec: 1, lost: lostInStep });
 
     const hasTs = Number.isFinite(Number(d.timestamp));
     let ts;
@@ -643,7 +581,7 @@ function ingest(message) {
     // RF (solo si el backend lo envía)
     if (Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
 
-    // Satélites GNSS
+    // Satélites GPS
     if (Number.isFinite(Number(d.satellites))) {
         state.satellites = Number(d.satellites);
         setText("satellites", String(state.satellites));
@@ -1040,24 +978,14 @@ function setOptional(id, value, fmtFn) {
 }
 
 function renderHeader() {          // ~2 Hz
-    const now = new Date();
-    const pad = n => String(n).padStart(2, "0");
-    setText("localTime", `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
-    setText("clock", elapsed(missionTime()));
-    if (state.statusText) setText("phase", phaseName(state.statusText));
-    setOptional("rssi", state.rssi, v => `${fmt(v, 0)} dBm`);
-    setText("lossPercent", `${fmt(state.lossRecentPercent, 1)} %`);
-    if (state.lossRecentPercent > 15) {
-        $("lossPercent").style.color = "var(--bad)";
-    } else if (state.lossRecentPercent > 5) {
-        $("lossPercent").style.color = "var(--warn)";
-    } else {
-        $("lossPercent").style.color = "var(--ink)";
-    }
-
-    const stale = state.connected && state.lastPacketAt !== null && Date.now() - state.lastPacketAt > 2000;
-    $("linkDot").classList.toggle("warn", stale);
-    setText("linkStatus", !state.connected ? "DESCONECTADO" : (stale ? "DEGRADADO" : "CONECTADO"));
+    updateGlobalHeader({
+        missionTimeMs: missionTime(),
+        status: state.statusText,
+        rssi: state.rssi,
+        lossPercent: state.lossRecentPercent,
+        connected: state.connected,
+        lastPacketAt: state.lastPacketAt
+    });
 }
 
 let eventsRendered = -1;
@@ -1219,6 +1147,22 @@ async function loadStatus() {
     }
 }
 
+async function loadHistory() {
+    await fetchHistory60s(
+        item => ingest(item, true),
+        res => {
+            if (res && res.frames && res.frames.length > 0) {
+                drawTape(performance.now());
+                renderCharts();
+                renderText();
+                updateMap();
+                renderLogs();
+                renderHeader();
+            }
+        }
+    );
+}
+
 /* ---------- bucle: requestAnimationFrame (frecuencia de la pantalla) ----------
    cinta y gráficos: cada cuadro · números: ~30 Hz · mapa/logs: 4 Hz · cabecera: 2 Hz */
 
@@ -1232,8 +1176,9 @@ function loop(now) {
     requestAnimationFrame(loop);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     initMap();
+    await loadHistory();
     loadStatus();
     connect();
     requestAnimationFrame(loop);
