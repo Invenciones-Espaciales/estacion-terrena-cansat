@@ -1,24 +1,27 @@
 # Rocket Telemetry Ground Station
 
+> **Language / Idioma:** [ 🇬🇧 English ](README.md) | [ 🇪🇸 Español ](README.es.md)
+
 A modular, asynchronous telemetry ground station designed for sounding and experimental rockets. The platform acquires high-frequency binary telemetry frames over a serial link (UART/USB/RF modem), validates packet integrity via CRC-16/CCITT-FALSE, decodes fields dynamically according to declarative YAML specifications, simultaneously persists data to SQLite and CSV, and broadcasts live metrics to a high-contrast web dashboard over WebSockets.
 
 ---
 
 ## Technical Documentation Suite
 
-The complete technical documentation is organized under the [`docs/`](docs/) directory and project guides:
+The complete technical documentation is available in both **English** and **Spanish** under [`docs/`](docs/) and [`docs/es/`](docs/es/):
 
-| Document | Description |
-|---|---|
-| **[System Architecture](docs/architecture.md)** | End-to-end data flow pipeline, `asyncio` concurrency model, task lifecycle, and decoupled multi-tiered frontend render engine. |
-| **[Protocol Specification](docs/protocol.md)** | 65-byte definitive LoRa binary frame structure, bit-level memory map, data types, physical scale factors, flight states, and CRC-16/CCITT-FALSE specification. |
-| **[Frame Schema Specification](docs/frame-schema.md)** | Generic declarative schema specification: field properties, scaling, data types, and parser operation. |
-| **[Dashboard Visual Specification](docs/frontend-dashboard.md)** | Telemetry dashboard UI layout, visual hierarchy, instrument wireframes, and ergonomic design guidelines. |
-| **[API & WebSocket Specification](docs/api.md)** | REST endpoints (`GET /`, `GET /gonogo`, `GET /api/status`, `GET /api/telemetry`), WebSocket protocol schemas, packet statistics, and reconnection state machines. |
-| **[Getting Started & Operations](docs/getting-started.md)** | Detailed developer setup, Linux serial permissions (`dialout`), configuration guide, hardware-free testing (`socat`), and troubleshooting. |
-| **[Contributing & Team Onboarding](CONTRIBUTING.md)** | Complete onboarding walkthrough, Git workflow, branch strategy, coding conventions, testing requirements, and PR review process. |
-| **[Windows Executable Packaging](docs/packaging-exe.md)** | Instructions for compiling standalone Windows `.exe` using PyInstaller, `build_windows.bat`, or automated GitHub Actions. |
-| **[Future Calculations Reference](docs/calculos-futuros.md)** | Extended avionics algorithms: Kalman filter fusion, variometer ($V_z$), landing ellipse, antenna tracking, and ISA-18.2 alarm specifications. |
+| English | Español | Description / Descripción |
+|---|---|---|
+| **[System Architecture](docs/architecture.md)** | **[Arquitectura](docs/es/architecture.md)** | End-to-end data pipeline, `asyncio` concurrency, and decoupled frontend render engine. |
+| **[Protocol Specification](docs/protocol.md)** | **[Protocolo Binario](docs/es/protocol.md)** | 65-byte definitive LoRa binary frame structure, memory map, and CRC-16 specification. |
+| **[Frame Schema (YAML)](docs/frame-schema.md)** | **[Esquema de Trama](docs/es/frame-schema.md)** | Generic declarative schema specification: field properties, scaling, and parser rules. |
+| **[Dashboard Specification](docs/frontend-dashboard.md)** | **[Tablero de Control](docs/es/frontend-dashboard.md)** | UI layout, visual hierarchy, instrument wireframes, and ergonomic design guidelines. |
+| **[API & WebSocket](docs/api.md)** | **[API y WebSockets](docs/es/api.md)** | REST endpoints (`GET /`, `/gonogo`, `/api/status`), WebSocket schemas, and packet statistics. |
+| **[Getting Started](docs/getting-started.md)** | **[Guía de Inicio](docs/es/getting-started.md)** | Developer setup, Linux serial permissions (`dialout`), and hardware-free simulation. |
+| **[Contributing Guide](CONTRIBUTING.md)** | **[Guía de Contribución](CONTRIBUTING.es.md)** | Onboarding walkthrough, Git workflow, testing requirements, and PR review process. |
+| **[Windows Packaging](docs/packaging-exe.md)** | **[Compilación Windows](docs/es/packaging-exe.md)** | Compiling standalone `.exe` with PyInstaller, `build_windows.bat`, or GitHub Actions. |
+| **[Future Calculations](docs/calculos-futuros.md)** | **[Cálculos Futuros](docs/es/calculos-futuros.md)** | Kalman filter fusion, variometer ($V_z$), landing ellipse, and ISA-18.2 alarm specifications. |
+| **[Pending Cleanups](docs/pending-deletions-list.md)** | **[Limpieza Pendiente](docs/es/pending-deletions-list.md)** | Inventory of relocated and clean-up candidate files for review. |
 
 ---
 

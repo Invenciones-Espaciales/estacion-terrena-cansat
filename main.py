@@ -1,4 +1,10 @@
-# main.py
+"""Rocket Telemetry Ground Station Core Application.
+
+Asynchronous FastAPI service for real-time sounding rocket telemetry acquisition,
+validation, persistence, and WebSocket broadcasting.
+"""
+
+from __future__ import annotations
 
 import asyncio
 import csv
@@ -15,16 +21,15 @@ from typing import Any, Optional
 
 try:
     import serial_asyncio
+    import uvicorn
     import yaml
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-    from fastapi.staticfiles import StaticFiles
-    import uvicorn
     from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles
 except ModuleNotFoundError as exc:
     missing_mod = exc.name or "required dependencies"
     sys.stderr.write(
-        "\n"
-        "====================================================================\n"
+        "\n====================================================================\n"
         f"[ERROR] Missing required dependency: '{missing_mod}'\n"
         "The Ground Station requires packages installed in the virtual environment.\n\n"
         "To resolve this issue:\n"
@@ -41,19 +46,13 @@ except ModuleNotFoundError as exc:
     )
     sys.exit(1)
 
-
-
 # ============================================================
-# WINDOWS / ASYNCIO
+# WINDOWS / ASYNCIO COMPATIBILITY
 # ============================================================
 
-# pyserial-asyncio trabaja de forma más estable con SelectorEventLoop
-# en Windows.
+# pyserial-asyncio operates more reliably with WindowsSelectorEventLoopPolicy on Windows
 if sys.platform == "win32":
-    asyncio.set_event_loop_policy(
-        asyncio.WindowsSelectorEventLoopPolicy()
-    )
-
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # ============================================================
 # PATHS & RUNTIME ENVIRONMENT
@@ -83,7 +82,6 @@ FRAME_CONFIG_FILE = CONFIG_DIR / "frame.yaml"
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-
 # ============================================================
 # LOGGING
 # ============================================================
@@ -92,12 +90,10 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
-
 logger = logging.getLogger("telemetry")
 
-
 # ============================================================
-# CONFIGURATION
+# CONFIGURATION DATA STRUCTURES
 # ============================================================
 
 @dataclass
@@ -131,30 +127,19 @@ class FrameConfig:
 
     @property
     def payload_size(self) -> int:
-        return sum(field_size(field) for field in self.fields)
+        return sum(field_size(f) for f in self.fields)
 
     @property
     def frame_size(self) -> int:
         if self.frame_length is not None:
             return self.frame_length
 
-        if all(field_config.byte_offset is not None for field_config in self.fields):
-            field_end = max(
-                field_config.byte_offset + field_size(field_config)
-                for field_config in self.fields
-            )
-            crc_end = (
-                self.crc_offset + self.crc_size
-                if self.crc_offset is not None
-                else 0
-            )
+        if all(f.byte_offset is not None for f in self.fields):
+            field_end = max(f.byte_offset + field_size(f) for f in self.fields)
+            crc_end = (self.crc_offset + self.crc_size) if self.crc_offset is not None else 0
             return max(field_end, crc_end, len(self.sync))
 
-        return (
-            len(self.sync)
-            + self.payload_size
-            + self.crc_size
-        )
+        return len(self.sync) + self.payload_size + self.crc_size
 
 
 @dataclass
@@ -207,78 +192,53 @@ class AppConfig:
 # ============================================================
 
 # type -> (struct format, size)
-TYPE_FORMATS = {
+TYPE_FORMATS: dict[str, tuple[str, int]] = {
     "uint8": ("B", 1),
     "int8": ("b", 1),
-
     "uint16": ("H", 2),
     "int16": ("h", 2),
     "uint24": ("", 3),
     "int24": ("", 3),
-
     "uint32": ("I", 4),
     "int32": ("i", 4),
-
     "uint64": ("Q", 8),
     "int64": ("q", 8),
-
     "float32": ("f", 4),
     "float64": ("d", 8),
-
     "bool": ("?", 1),
     "bytes": ("", 0),
 }
 
 
 # ============================================================
-# CONFIG LOADING
+# CONFIG LOADING & VALIDATION
 # ============================================================
 
 def load_yaml(path: Path) -> dict[str, Any]:
-
     if not path.exists():
-        raise FileNotFoundError(
-            f"No existe el archivo de configuración: {path}"
-        )
+        raise FileNotFoundError(f"Configuration file not found: {path}")
 
     with path.open("r", encoding="utf-8") as file:
         data = yaml.safe_load(file)
 
     if not isinstance(data, dict):
-        raise ValueError(
-            f"Configuración inválida: {path}"
-        )
+        raise ValueError(f"Invalid configuration format: {path}")
 
     return data
 
 
 def parse_hex_bytes(value: Any) -> bytes:
-
     if value is None:
         return b""
-
     if isinstance(value, list):
         return bytes(value)
-
     if isinstance(value, str):
-
-        value = value.strip()
-
-        if not value:
-            return b""
-
-        value = value.replace(" ", "").replace("0x", "")
-
-        return bytes.fromhex(value)
-
-    raise ValueError(
-        "El campo sync debe ser una lista de bytes "
-        "o una cadena hexadecimal."
-    )
+        value = value.strip().replace(" ", "").replace("0x", "")
+        return bytes.fromhex(value) if value else b""
+    raise ValueError("The sync field must be a list of bytes or a hexadecimal string.")
 
 
 def load_app_config() -> AppConfig:
-
     data = load_yaml(APP_CONFIG_FILE)
 
     serial_data = data.get("serial", {})
@@ -286,54 +246,19 @@ def load_app_config() -> AppConfig:
     storage_data = data.get("storage", {})
 
     serial_config = SerialConfig(
-        port=str(
-            serial_data.get(
-                "port",
-                "COM6",
-            )
-        ),
-        baudrate=int(
-            serial_data.get(
-                "baudrate",
-                115200,
-            )
-        ),
-        reconnect_delay=float(
-            serial_data.get(
-                "reconnect_delay",
-                3,
-            )
-        ),
+        port=str(serial_data.get("port", "COM6")),
+        baudrate=int(serial_data.get("baudrate", 115200)),
+        reconnect_delay=float(serial_data.get("reconnect_delay", 3)),
     )
 
     websocket_config = WebSocketConfig(
-        host=str(
-            websocket_data.get(
-                "host",
-                "0.0.0.0",
-            )
-        ),
-        port=int(
-            websocket_data.get(
-                "port",
-                8000,
-            )
-        ),
+        host=str(websocket_data.get("host", "0.0.0.0")),
+        port=int(websocket_data.get("port", 8000)),
     )
 
     storage_config = StorageConfig(
-        database=str(
-            storage_data.get(
-                "database",
-                str(DATA_DIR / "telemetry.db"),
-            )
-        ),
-        csv=str(
-            storage_data.get(
-                "csv",
-                str(DATA_DIR / "telemetry.csv"),
-            )
-        ),
+        database=str(storage_data.get("database", str(DATA_DIR / "telemetry.db"))),
+        csv=str(storage_data.get("csv", str(DATA_DIR / "telemetry.csv"))),
     )
 
     gonogo_data = data.get("gonogo", {})
@@ -364,200 +289,94 @@ def load_app_config() -> AppConfig:
 
 
 def load_frame_config() -> FrameConfig:
-
     data = load_yaml(FRAME_CONFIG_FILE)
+    protocol_data = data.get("protocol", {})
+    frame_data = data.get("frame", {})
 
-    protocol_data = data.get(
-        "protocol",
-        {},
-    )
-
-    frame_data = data.get(
-        "frame",
-        {},
-    )
-
-    endian_value = frame_data.get(
-        "byte_order",
-        protocol_data.get("endian", "little"),
-    )
-    endian_value = str(endian_value).lower()
-    endian = {
-        "little_endian": "little",
-        "big_endian": "big",
-    }.get(endian_value, endian_value)
-
+    endian_value = str(frame_data.get("byte_order", protocol_data.get("endian", "little"))).lower()
+    endian = {"little_endian": "little", "big_endian": "big"}.get(endian_value, endian_value)
     if endian not in ("little", "big"):
-        raise ValueError(
-            "El byte order debe ser 'little' o 'big' "
-            "(también se acepta little_endian/big_endian)."
-        )
+        raise ValueError("Byte order must be 'little' or 'big' (little_endian/big_endian accepted).")
 
-    fields_data = data.get(
-        "fields",
-        frame_data.get("fields", []),
-    )
-
+    fields_data = data.get("fields", frame_data.get("fields", []))
     if not fields_data:
-        raise ValueError("No hay campos definidos en fields.")
+        raise ValueError("No fields defined in fields configuration.")
 
-    fields = []
-
+    fields: list[FieldConfig] = []
     for item in fields_data:
-
         if not isinstance(item, dict):
-            raise ValueError(
-                "Cada campo de frame.fields debe ser un objeto."
-            )
+            raise ValueError("Each field in frame.fields must be an object/dict.")
 
         name = item.get("name")
         field_type = item.get("type")
 
         if not name:
-            raise ValueError(
-                "Existe un campo sin 'name'."
-            )
+            raise ValueError("Field missing required 'name' attribute.")
 
         if field_type not in TYPE_FORMATS:
-            raise ValueError(
-                f"Tipo desconocido '{field_type}' "
-                f"para el campo '{name}'."
-            )
+            raise ValueError(f"Unknown data type '{field_type}' for field '{name}'.")
 
         declared_length = item.get("length")
         if field_type == "bytes" and declared_length is None:
-            raise ValueError(
-                f"El campo '{name}' de tipo bytes necesita declarar length."
-            )
-        if field_type != "bytes" and (
-            declared_length is not None
-            and int(declared_length) != TYPE_FORMATS[field_type][1]
-        ):
-            raise ValueError(
-                f"El campo '{name}' declara {declared_length} bytes, "
-                f"pero el tipo '{field_type}' requiere "
-                f"{TYPE_FORMATS[field_type][1]}."
-            )
+            raise ValueError(f"Field '{name}' of type bytes requires length declaration.")
+        if field_type != "bytes" and (declared_length is not None and int(declared_length) != TYPE_FORMATS[field_type][1]):
+            raise ValueError(f"Field '{name}' declares {declared_length} bytes, but type '{field_type}' requires {TYPE_FORMATS[field_type][1]}.")
         if field_type == "bytes" and int(declared_length) <= 0:
-            raise ValueError(
-                f"El campo '{name}' debe tener length mayor que cero."
-            )
+            raise ValueError(f"Field '{name}' length must be greater than zero.")
 
-        byte_offset = item.get("offset")
-        byte_offset = (
-            int(byte_offset)
-            if byte_offset is not None
-            else None
-        )
-        value_offset = item.get(
-            "offset_value",
-            item.get("offset", 0.0)
-            if byte_offset is None
-            else 0.0,
-        )
+        byte_offset = int(item["offset"]) if item.get("offset") is not None else None
+        value_offset = item.get("offset_value", item.get("offset", 0.0) if byte_offset is None else 0.0)
+
         values = item.get("values", {})
         if not isinstance(values, dict):
-            raise ValueError(
-                f"Los valores enumerados del campo '{name}' "
-                "deben ser un objeto."
-            )
+            raise ValueError(f"Enumerated values for field '{name}' must be an object/dict.")
 
         fields.append(
             FieldConfig(
                 name=str(name),
                 type=str(field_type),
-                scale=float(
-                    item.get("scale", 1.0)
-                ),
+                scale=float(item.get("scale", 1.0)),
                 value_offset=float(value_offset),
                 byte_offset=byte_offset,
-                byte_length=(
-                    int(declared_length)
-                    if declared_length is not None
-                    else None
-                ),
-                values={
-                    int(value): str(label)
-                    for value, label in values.items()
-                },
-                expected_value=(
-                    int(item["expected_value"])
-                    if "expected_value" in item
-                    else None
-                ),
+                byte_length=int(declared_length) if declared_length is not None else None,
+                values={int(v): str(lbl) for v, lbl in values.items()},
+                expected_value=int(item["expected_value"]) if "expected_value" in item else None,
             )
         )
 
     sequence_field = frame_data.get("sequence_field")
     if sequence_field is None:
         sequence_field = next(
-            (
-                field_config.name
-                for field_config in fields
-                if field_config.name in ("frame_number", "sequence")
-            ),
+            (fc.name for fc in fields if fc.name in ("frame_number", "sequence")),
             None,
         )
 
     sync = parse_hex_bytes(frame_data.get("sync"))
-
     crc_data = frame_data.get("crc", {})
     if not isinstance(crc_data, dict):
-        raise ValueError("frame.crc debe ser un objeto.")
+        raise ValueError("frame.crc must be an object/dict.")
 
     crc_enabled = crc_data.get("enabled", True)
-    crc_type = (
-        crc_data.get("algorithm", crc_data.get("type"))
-        if crc_enabled
-        else None
-    )
+    crc_type = crc_data.get("algorithm", crc_data.get("type")) if crc_enabled else None
+    crc_size = int(crc_data.get("length", crc_data.get("size", 0))) if crc_enabled else 0
+    crc_offset = int(crc_data["offset"]) if crc_data.get("offset") is not None else None
 
-    crc_size = (
-        int(crc_data.get("length", crc_data.get("size", 0)))
-        if crc_enabled
-        else 0
-    )
-    crc_offset = crc_data.get("offset")
-    crc_offset = int(crc_offset) if crc_offset is not None else None
-    crc_endian_value = str(
-        crc_data.get("byte_order", endian)
-    ).lower()
-    crc_endian = {
-        "little_endian": "little",
-        "big_endian": "big",
-    }.get(crc_endian_value, crc_endian_value)
+    crc_endian_value = str(crc_data.get("byte_order", endian)).lower()
+    crc_endian = {"little_endian": "little", "big_endian": "big"}.get(crc_endian_value, crc_endian_value)
     if crc_endian not in ("little", "big"):
-        raise ValueError("El byte order del CRC debe ser 'little' o 'big'.")
+        raise ValueError("CRC byte order must be 'little' or 'big'.")
 
     crc_algorithm = (
-        str(crc_type)
-        .upper()
-        .replace("-", "")
-        .replace("_", "")
-        .replace("/", "")
-        if crc_type
-        else None
+        str(crc_type).upper().replace("-", "").replace("_", "").replace("/", "")
+        if crc_type else None
     )
-    if crc_algorithm not in (
-        None,
-        "CRC16CCITT",
-        "CRC16CCITTFALSE",
-    ):
-        raise ValueError(f"CRC no implementado: {crc_type}")
-    if crc_enabled and (
-        crc_data.get("reflect_input", False)
-        or crc_data.get("reflect_output", False)
-    ):
-        raise ValueError(
-            "CRC con reflexión de bits no está implementado."
-        )
+    if crc_algorithm not in (None, "CRC16CCITT", "CRC16CCITTFALSE"):
+        raise ValueError(f"CRC algorithm not implemented: {crc_type}")
+    if crc_enabled and (crc_data.get("reflect_input", False) or crc_data.get("reflect_output", False)):
+        raise ValueError("Reflected bit CRC is not implemented.")
 
     frame_length_value = frame_data.get("length")
-    frame_length = (
-        int(frame_length_value)
-        if frame_length_value is not None
-        else None
-    )
+    frame_length = int(frame_length_value) if frame_length_value is not None else None
 
     config = FrameConfig(
         endian=endian,
@@ -569,91 +388,51 @@ def load_frame_config() -> FrameConfig:
         frame_length=frame_length,
         crc_offset=crc_offset,
         crc_endian=crc_endian,
-        crc_calculate_from=(
-            int(crc_data["calculate_from"])
-            if "calculate_from" in crc_data
-            else None
-        ),
-        crc_calculate_to=(
-            int(crc_data["calculate_to"])
-            if "calculate_to" in crc_data
-            else None
-        ),
+        crc_calculate_from=int(crc_data["calculate_from"]) if "calculate_from" in crc_data else None,
+        crc_calculate_to=int(crc_data["calculate_to"]) if "calculate_to" in crc_data else None,
         crc_polynomial=int(crc_data.get("polynomial", 0x1021)),
-        crc_initial_value=int(
-            crc_data.get("initial_value", 0xFFFF)
-        ),
+        crc_initial_value=int(crc_data.get("initial_value", 0xFFFF)),
         crc_final_xor=int(crc_data.get("final_xor", 0)),
     )
 
     if config.crc_type and config.crc_size <= 0:
-        raise ValueError("El CRC está habilitado pero no tiene length/size.")
+        raise ValueError("CRC is enabled but missing length/size.")
     if config.frame_length is not None and config.frame_length <= 0:
-        raise ValueError("frame.length debe ser mayor que cero.")
+        raise ValueError("frame.length must be greater than zero.")
 
-    occupied = []
-    for field_config in fields:
-        field_offset = field_config.byte_offset
-        if field_offset is None:
+    occupied: list[tuple[int, int]] = []
+    for fc in fields:
+        if fc.byte_offset is None:
             continue
-        end = field_offset + field_size(field_config)
-        if field_offset < 0 or (
-            config.frame_length is not None and end > config.frame_length
-        ):
-            raise ValueError(
-                f"El campo '{field_config.name}' queda fuera de la trama."
-            )
-        if any(
-            field_offset < previous_end and previous_start < end
-            for previous_start, previous_end in occupied
-        ):
-            raise ValueError(
-                f"El campo '{field_config.name}' se superpone con otro campo."
-            )
-        occupied.append((field_offset, end))
+        end = fc.byte_offset + field_size(fc)
+        if fc.byte_offset < 0 or (config.frame_length is not None and end > config.frame_length):
+            raise ValueError(f"Field '{fc.name}' exceeds frame boundaries.")
+        if any(fc.byte_offset < prev_end and prev_start < end for prev_start, prev_end in occupied):
+            raise ValueError(f"Field '{fc.name}' overlaps with another field.")
+        occupied.append((fc.byte_offset, end))
 
     if config.crc_offset is not None:
         crc_end = config.crc_offset + config.crc_size
-        if (
-            config.crc_offset < 0
-            or (
-                config.frame_length is not None
-                and crc_end > config.frame_length
-            )
-        ):
-            raise ValueError("El CRC queda fuera de la trama.")
-        if any(
-            config.crc_offset < field_end and field_start < crc_end
-            for field_start, field_end in occupied
-        ):
-            raise ValueError("El CRC se superpone con un campo.")
+        if config.crc_offset < 0 or (config.frame_length is not None and crc_end > config.frame_length):
+            raise ValueError("CRC exceeds frame boundaries.")
+        if any(config.crc_offset < field_end and field_start < crc_end for field_start, field_end in occupied):
+            raise ValueError("CRC overlaps with another field.")
 
-    if config.frame_length is not None and not all(
-        field_config.byte_offset is not None
-        for field_config in fields
-    ):
-        raise ValueError(
-            "Todos los campos necesitan offset cuando se define frame.length."
-        )
+    if config.frame_length is not None and not all(fc.byte_offset is not None for fc in fields):
+        raise ValueError("All fields must specify an explicit offset when frame.length is defined.")
 
-    logger.info(
-        "Frame configurado | payload=%d bytes | frame=%d bytes",
-        config.payload_size,
-        config.frame_size,
-    )
-
+    logger.info("Frame configured | payload=%d bytes | frame=%d bytes", config.payload_size, config.frame_size)
     return config
 
 
 def field_size(field_config: FieldConfig) -> int:
     if field_config.type == "bytes":
         return field_config.byte_length or 0
-
     return TYPE_FORMATS[field_config.type][1]
 
 
 # ============================================================
-# CRC
+# CRC-16 ALGORITHMS & INTEGRITY VERIFICATION
 # ============================================================
 
 def crc16_ccitt(
@@ -662,24 +441,14 @@ def crc16_ccitt(
     initial_value: int = 0xFFFF,
     final_xor: int = 0,
 ) -> int:
-
     crc = initial_value
-
     for byte in data:
-
         crc ^= byte << 8
-
         for _ in range(8):
-
             if crc & 0x8000:
-                crc = (
-                    (crc << 1) ^ polynomial
-                ) & 0xFFFF
+                crc = ((crc << 1) ^ polynomial) & 0xFFFF
             else:
-                crc = (
-                    crc << 1
-                ) & 0xFFFF
-
+                crc = (crc << 1) & 0xFFFF
     return crc ^ final_xor
 
 
@@ -692,38 +461,20 @@ def validate_crc(
     initial_value: int = 0xFFFF,
     final_xor: int = 0,
 ) -> bool:
-
     if not crc_type:
         return True
 
     crc_algorithm = (
-        crc_type.upper()
-        .replace("-", "")
-        .replace("_", "")
-        .replace("/", "")
+        crc_type.upper().replace("-", "").replace("_", "").replace("/", "")
     )
     if crc_algorithm in ("CRC16CCITT", "CRC16CCITTFALSE"):
-
         if len(crc_bytes) != 2:
             return False
-
-        calculated = crc16_ccitt(
-            data,
-            polynomial,
-            initial_value,
-            final_xor,
-        )
-
-        received = int.from_bytes(
-            crc_bytes,
-            byteorder=endian,
-        )
-
+        calculated = crc16_ccitt(data, polynomial, initial_value, final_xor)
+        received = int.from_bytes(crc_bytes, byteorder=endian)
         return calculated == received
 
-    raise ValueError(
-        f"CRC no implementado: {crc_type}"
-    )
+    raise ValueError(f"CRC algorithm not implemented: {crc_type}")
 
 
 # ============================================================
@@ -731,74 +482,35 @@ def validate_crc(
 # ============================================================
 
 class FrameParser:
-
-    def __init__(
-        self,
-        config: FrameConfig,
-    ):
+    def __init__(self, config: FrameConfig):
         self.config = config
+        self.struct_prefix = "<" if config.endian == "little" else ">"
 
-        self.struct_prefix = (
-            "<"
-            if config.endian == "little"
-            else ">"
-        )
-
-    def parse(
-        self,
-        frame: bytes,
-    ) -> Optional[dict[str, Any]]:
-
+    def parse(self, frame: bytes) -> Optional[dict[str, Any]]:
         expected_size = self.config.frame_size
-
         if len(frame) != expected_size:
-            logger.warning(
-                "Frame con tamaño incorrecto: %d, esperado %d",
-                len(frame),
-                expected_size,
-            )
-
+            logger.warning("Invalid frame size: %d, expected %d", len(frame), expected_size)
             return None
 
         offset = 0
 
-        # ----------------------------------------------------
-        # SYNC
-        # ----------------------------------------------------
-
+        # Validate SYNC header
         if self.config.sync:
-
-            sync_size = len(
-                self.config.sync
-            )
-
-            received_sync = frame[
-                :sync_size
-            ]
-
+            sync_size = len(self.config.sync)
+            received_sync = frame[:sync_size]
             if received_sync != self.config.sync:
-                logger.warning(
-                    "SYNC inválido: %s",
-                    received_sync.hex(),
-                )
-
+                logger.warning("Invalid SYNC byte: %s", received_sync.hex())
                 return None
-
             offset += sync_size
 
-        # ----------------------------------------------------
-        # CRC
-        # ----------------------------------------------------
-
+        # Validate CRC Checksum
         if self.config.crc_type and self.config.crc_size:
             crc_offset = (
                 self.config.crc_offset
                 if self.config.crc_offset is not None
                 else len(frame) - self.config.crc_size
             )
-            crc_bytes = frame[
-                crc_offset:crc_offset + self.config.crc_size
-            ]
+            crc_bytes = frame[crc_offset : crc_offset + self.config.crc_size]
             calculate_from = (
                 self.config.crc_calculate_from
                 if self.config.crc_calculate_from is not None
@@ -809,15 +521,11 @@ class FrameParser:
                 if self.config.crc_calculate_to is not None
                 else crc_offset - 1
             )
-            if (
-                calculate_from < 0
-                or calculate_to < calculate_from
-                or calculate_to >= len(frame)
-            ):
-                logger.warning("Rango de cálculo de CRC inválido")
+            if calculate_from < 0 or calculate_to < calculate_from or calculate_to >= len(frame):
+                logger.warning("Invalid CRC calculation range")
                 return None
-            crc_data = frame[calculate_from:calculate_to + 1]
 
+            crc_data = frame[calculate_from : calculate_to + 1]
             if not validate_crc(
                 crc_data,
                 crc_bytes,
@@ -827,13 +535,10 @@ class FrameParser:
                 self.config.crc_initial_value,
                 self.config.crc_final_xor,
             ):
-                logger.warning(
-                    "CRC inválido"
-                )
-
+                logger.warning("Invalid CRC checksum")
                 return None
 
-        result = {}
+        result: dict[str, Any] = {}
         payload_offset = offset
 
         for field_config in self.config.fields:
@@ -845,20 +550,17 @@ class FrameParser:
                 else payload_offset
             )
             if field_offset < 0 or field_offset + size > len(frame):
-                logger.warning(
-                    "Campo fuera de la trama: %s",
-                    field_config.name,
-                )
+                logger.warning("Field exceeds frame boundaries: %s", field_config.name)
                 return None
 
             if field_config.type in ("uint24", "int24"):
                 raw_value = int.from_bytes(
-                    frame[field_offset:field_offset + size],
+                    frame[field_offset : field_offset + size],
                     byteorder=self.config.endian,
                     signed=field_config.type == "int24",
                 )
             elif field_config.type == "bytes":
-                raw_value = frame[field_offset:field_offset + size].hex()
+                raw_value = frame[field_offset : field_offset + size].hex()
             else:
                 raw_value = struct.unpack_from(
                     self.struct_prefix + struct_format,
@@ -866,12 +568,9 @@ class FrameParser:
                     field_offset,
                 )[0]
 
-            if (
-                field_config.expected_value is not None
-                and raw_value != field_config.expected_value
-            ):
+            if field_config.expected_value is not None and raw_value != field_config.expected_value:
                 logger.warning(
-                    "Valor inesperado para %s: %s, esperado %s",
+                    "Unexpected value for %s: %s, expected %s",
                     field_config.name,
                     raw_value,
                     field_config.expected_value,
@@ -881,26 +580,19 @@ class FrameParser:
             if field_config.type == "bytes":
                 value = raw_value
             else:
-                value = (
-                    raw_value
-                    * field_config.scale
-                    + field_config.value_offset
-                )
+                value = raw_value * field_config.scale + field_config.value_offset
 
-            # Evita devolver 10.0 cuando realmente es entero.
+            # Preserve integer type when no scaling or offset is applied
             if (
                 field_config.scale == 1.0
                 and field_config.value_offset == 0.0
-                and field_config.type
-                not in ("float32", "float64")
+                and field_config.type not in ("float32", "float64")
             ):
                 value = raw_value
 
             result[field_config.name] = value
             if field_config.values:
-                result[f"{field_config.name}_label"] = (
-                    field_config.values.get(raw_value)
-                )
+                result[f"{field_config.name}_label"] = field_config.values.get(raw_value)
 
             if field_config.byte_offset is None:
                 payload_offset += size
@@ -909,88 +601,48 @@ class FrameParser:
 
 
 # ============================================================
-# FRAME BUFFER
+# FRAME BUFFER & RESYNCHRONIZATION
 # ============================================================
 
 class FrameBuffer:
-
-    def __init__(
-        self,
-        parser: FrameParser,
-    ):
+    def __init__(self, parser: FrameParser):
         self.parser = parser
         self.buffer = bytearray()
         self.invalid_frames = 0
         self.last_raw_frames: list[bytes] = []
         self.resyncing = False
 
-    def feed(
-        self,
-        data: bytes,
-    ) -> list[dict[str, Any]]:
-
+    def feed(self, data: bytes) -> list[dict[str, Any]]:
         self.buffer.extend(data)
-
-        frames = []
+        frames: list[dict[str, Any]] = []
         self.last_raw_frames = []
 
-        frame_size = (
-            self.parser.config.frame_size
-        )
-
-        sync = (
-            self.parser.config.sync
-        )
-
+        frame_size = self.parser.config.frame_size
+        sync = self.parser.config.sync
         min_frame_size = frame_size
 
         while True:
-
             if len(self.buffer) < min_frame_size:
                 break
 
-            # ------------------------------------------------
-            # Buscar SYNC si está definido
-            # ------------------------------------------------
-
+            # Search SYNC header if configured
             if sync:
-
-                sync_index = self.buffer.find(
-                    sync
-                )
-
+                sync_index = self.buffer.find(sync)
                 if sync_index == -1:
-
-                    # Conservamos solamente lo necesario
-                    # para poder detectar un SYNC partido
-                    # entre dos paquetes UART.
-                    keep = max(
-                        0,
-                        len(sync) - 1,
-                    )
-
+                    # Retain minimal bytes to detect SYNC split across UART chunks
+                    keep = max(0, len(sync) - 1)
                     if keep:
-                        self.buffer = (
-                            self.buffer[-keep:]
-                        )
+                        self.buffer = self.buffer[-keep:]
                     else:
                         self.buffer.clear()
-
                     break
 
                 if sync_index > 0:
-
-                    del self.buffer[
-                        :sync_index
-                    ]
-
+                    del self.buffer[:sync_index]
                     if len(self.buffer) < min_frame_size:
                         break
 
-            # ------------------------------------------------
-            # Extraer frame
-            # ------------------------------------------------
-
+            # Extract frame candidate
             candidate_parsed = None
             candidate_size = 0
             raw_frame = None
@@ -1003,7 +655,6 @@ class FrameBuffer:
                     candidate_size = frame_size
                     raw_frame = raw_cand
 
-
             if candidate_parsed is not None:
                 del self.buffer[:candidate_size]
                 frames.append(candidate_parsed)
@@ -1014,14 +665,11 @@ class FrameBuffer:
                     self.invalid_frames += 1
 
                 if sync:
-                    # Ante un falso byte de sync en ruido o trama corrupta,
-                    # descartamos el sync para avanzar y reencontrar el sync genuino.
+                    # Discard first sync byte to advance sliding window and find genuine sync
                     del self.buffer[:len(sync)]
                     self.resyncing = True
                 elif self.parser.config.crc_type:
-                    # Sin SYNC, una lectura UART que comienza a mitad de
-                    # paquete desplaza todos los frames. Deslizamos un byte
-                    # hasta recuperar un frame validado por CRC.
+                    # Slide 1 byte forward until recovered via CRC
                     del self.buffer[0]
                     self.resyncing = True
                 else:
@@ -1036,77 +684,32 @@ class FrameBuffer:
 # ============================================================
 
 class PacketStatistics:
-
-    def __init__(
-        self,
-        sequence_field: Optional[str],
-    ):
-        self.sequence_field = (
-            sequence_field
-        )
-
+    def __init__(self, sequence_field: Optional[str]):
+        self.sequence_field = sequence_field
         self.received = 0
         self.lost = 0
         self.invalid = 0
+        self.last_sequence: Optional[int] = None
 
-        self.last_sequence = None
-
-    def register(
-        self,
-        frame: dict[str, Any],
-    ):
-
+    def register(self, frame: dict[str, Any]):
         self.received += 1
-
-        if not self.sequence_field:
+        if not self.sequence_field or self.sequence_field not in frame:
             return
 
-        if (
-            self.sequence_field
-            not in frame
-        ):
-            return
-
-        sequence = frame[
-            self.sequence_field
-        ]
-
+        sequence = frame[self.sequence_field]
         if self.last_sequence is None:
-
             self.last_sequence = sequence
             return
 
-        expected = (
-            self.last_sequence + 1
-        )
-
-        if sequence != expected:
-
-            # Diferencia modular genérica.
-            # El tamaño del contador dependerá del tipo
-            # configurado, por eso solamente contabilizamos
-            # saltos hacia adelante.
-            if sequence > expected:
-
-                self.lost += (
-                    sequence - expected
-                )
+        expected = self.last_sequence + 1
+        if sequence != expected and sequence > expected:
+            self.lost += sequence - expected
 
         self.last_sequence = sequence
 
     def snapshot(self) -> dict[str, Any]:
-
-        total = (
-            self.received
-            + self.lost
-        )
-
-        loss_percent = (
-            (self.lost / total) * 100
-            if total
-            else 0.0
-        )
-
+        total = self.received + self.lost
+        loss_percent = (self.lost / total) * 100 if total else 0.0
         return {
             "received": self.received,
             "frames_received": self.received,
@@ -1117,33 +720,17 @@ class PacketStatistics:
 
 
 # ============================================================
-# DATABASE
+# DATABASE (SQLITE)
 # ============================================================
 
 class Database:
-
-    def __init__(
-        self,
-        path: str,
-    ):
+    def __init__(self, path: str):
         self.path = Path(path)
-
         if not self.path.is_absolute():
-            if len(self.path.parts) == 1:
-                self.path = DATA_DIR / self.path
-            else:
-                self.path = BASE_DIR / self.path
+            self.path = DATA_DIR / self.path if len(self.path.parts) == 1 else BASE_DIR / self.path
 
-        self.path.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        self.connection = sqlite3.connect(
-            self.path,
-            check_same_thread=False,
-        )
-
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.connection = sqlite3.connect(self.path, check_same_thread=False)
         self.connection.execute(
             """
             CREATE TABLE IF NOT EXISTS telemetry (
@@ -1154,55 +741,26 @@ class Database:
             )
             """
         )
-
         self.connection.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_telemetry_timestamp
             ON telemetry(timestamp)
             """
         )
-
         self.connection.commit()
 
-    def insert(
-        self,
-        data: dict[str, Any],
-        sequence_field: Optional[str],
-    ):
-
-        sequence = None
-
-        if sequence_field:
-            sequence = data.get(
-                sequence_field
-            )
-
+    def insert(self, data: dict[str, Any], sequence_field: Optional[str]):
+        sequence = data.get(sequence_field) if sequence_field else None
         self.connection.execute(
             """
-            INSERT INTO telemetry (
-                timestamp,
-                sequence,
-                payload
-            )
+            INSERT INTO telemetry (timestamp, sequence, payload)
             VALUES (?, ?, ?)
             """,
-            (
-                time.time(),
-                sequence,
-                json.dumps(
-                    data,
-                    ensure_ascii=False,
-                ),
-            ),
+            (time.time(), sequence, json.dumps(data, ensure_ascii=False)),
         )
-
         self.connection.commit()
 
-    def get_recent(
-        self,
-        seconds: float = 60.0,
-        limit: int = 1200,
-    ) -> list[dict[str, Any]]:
+    def get_recent(self, seconds: float = 60.0, limit: int = 1200) -> list[dict[str, Any]]:
         try:
             cursor = self.connection.cursor()
             min_ts = time.time() - max(1.0, seconds)
@@ -1233,24 +791,21 @@ class Database:
             for ts, seq, payload in rows:
                 try:
                     payload_data = json.loads(payload)
-                    results.append(
-                        {
-                            "timestamp": ts,
-                            "sequence": seq,
-                            "data": payload_data,
-                            "raw_hex": None,
-                            "crc_value": None,
-                        }
-                    )
+                    results.append({
+                        "timestamp": ts,
+                        "sequence": seq,
+                        "data": payload_data,
+                        "raw_hex": None,
+                        "crc_value": None,
+                    })
                 except Exception:
                     continue
             return results
         except Exception:
-            logger.exception("Error consultando historial en SQLite")
+            logger.exception("Error querying history from SQLite")
             return []
 
     def close(self):
-
         self.connection.close()
 
 
@@ -1259,65 +814,25 @@ class Database:
 # ============================================================
 
 class CSVLogger:
-
-    def __init__(
-        self,
-        path: str,
-        fields: list[str],
-    ):
-
+    def __init__(self, path: str, fields: list[str]):
         self.path = Path(path)
-
         if not self.path.is_absolute():
-            if len(self.path.parts) == 1:
-                self.path = DATA_DIR / self.path
-            else:
-                self.path = BASE_DIR / self.path
+            self.path = DATA_DIR / self.path if len(self.path.parts) == 1 else BASE_DIR / self.path
 
-        self.path.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         self.fields = fields
-
-        self.file = self.path.open(
-            "a",
-            newline="",
-            encoding="utf-8",
-        )
-
-        self.writer = csv.DictWriter(
-            self.file,
-            fieldnames=[
-                "timestamp",
-                *self.fields,
-            ],
-        )
-
+        self.file = self.path.open("a", newline="", encoding="utf-8")
+        self.writer = csv.DictWriter(self.file, fieldnames=["timestamp", *self.fields])
         if self.path.stat().st_size == 0:
             self.writer.writeheader()
             self.file.flush()
 
-    def write(
-        self,
-        data: dict[str, Any],
-    ):
-
-        row = {
-            "timestamp": time.time(),
-        }
-
-        for field_name in self.fields:
-            row[field_name] = data.get(
-                field_name
-            )
-
+    def write(self, data: dict[str, Any]):
+        row = {"timestamp": time.time(), **{f: data.get(f) for f in self.fields}}
         self.writer.writerow(row)
         self.file.flush()
 
     def close(self):
-
         self.file.close()
 
 
@@ -1326,85 +841,38 @@ class CSVLogger:
 # ============================================================
 
 class WebSocketManager:
-
     def __init__(self):
-
-        self.clients: set[
-            WebSocket
-        ] = set()
-
+        self.clients: set[WebSocket] = set()
         self.lock = asyncio.Lock()
 
-    async def connect(
-        self,
-        websocket: WebSocket,
-    ):
-
+    async def connect(self, websocket: WebSocket):
         await websocket.accept()
-
         async with self.lock:
-            self.clients.add(
-                websocket
-            )
+            self.clients.add(websocket)
+        logger.info("WebSocket connected | clients=%d", len(self.clients))
 
-        logger.info(
-            "WebSocket conectado | clientes=%d",
-            len(self.clients),
-        )
-
-    async def disconnect(
-        self,
-        websocket: WebSocket,
-    ):
-
+    async def disconnect(self, websocket: WebSocket):
         async with self.lock:
-            self.clients.discard(
-                websocket
-            )
+            self.clients.discard(websocket)
+        logger.info("WebSocket disconnected | clients=%d", len(self.clients))
 
-        logger.info(
-            "WebSocket desconectado | clientes=%d",
-            len(self.clients),
-        )
-
-    async def broadcast(
-        self,
-        message: dict[str, Any],
-    ):
-
+    async def broadcast(self, message: dict[str, Any]):
         if not self.clients:
             return
-
         dead_clients = []
-
         async with self.lock:
-
-            clients = list(
-                self.clients
-            )
+            clients = list(self.clients)
 
         for websocket in clients:
-
             try:
-
-                await websocket.send_json(
-                    message
-                )
-
+                await websocket.send_json(message)
             except Exception:
-
-                dead_clients.append(
-                    websocket
-                )
+                dead_clients.append(websocket)
 
         if dead_clients:
-
             async with self.lock:
-
                 for websocket in dead_clients:
-                    self.clients.discard(
-                        websocket
-                    )
+                    self.clients.discard(websocket)
 
 
 # ============================================================
@@ -1413,145 +881,65 @@ class WebSocketManager:
 
 @dataclass
 class RuntimeState:
-
     connected: bool = False
-
-    last_frame: Optional[
-        dict[str, Any]
-    ] = None
-
-    last_timestamp: Optional[
-        float
-    ] = None
-
+    last_frame: Optional[dict[str, Any]] = None
+    last_timestamp: Optional[float] = None
     frames_received: int = 0
     last_raw_frame: Optional[str] = None
     last_crc_value: Optional[str] = None
-    history: deque = field(
-        default_factory=lambda: deque(maxlen=3600)
-    )
+    history: deque = field(default_factory=lambda: deque(maxlen=3600))
 
 
 # ============================================================
-# GLOBAL STATE
+# GLOBAL INSTANCES
 # ============================================================
 
-app_config: Optional[
-    AppConfig
-] = None
-
-frame_config: Optional[
-    FrameConfig
-] = None
-
-parser: Optional[
-    FrameParser
-] = None
-
-frame_buffer: Optional[
-    FrameBuffer
-] = None
-
-statistics: Optional[
-    PacketStatistics
-] = None
-
-database: Optional[
-    Database
-] = None
-
-csv_logger: Optional[
-    CSVLogger
-] = None
-
-websocket_manager = (
-    WebSocketManager()
-)
-
+app_config: Optional[AppConfig] = None
+frame_config: Optional[FrameConfig] = None
+parser: Optional[FrameParser] = None
+frame_buffer: Optional[FrameBuffer] = None
+statistics: Optional[PacketStatistics] = None
+database: Optional[Database] = None
+csv_logger: Optional[CSVLogger] = None
+websocket_manager = WebSocketManager()
 runtime = RuntimeState()
 
-
-# ============================================================
-# ASYNC TASK HELPER
-# ============================================================
-
-background_tasks: set[
-    asyncio.Task
-] = set()
+background_tasks: set[asyncio.Task] = set()
 
 
-def create_background_task(
-    coroutine,
-):
-
-    task = asyncio.create_task(
-        coroutine
-    )
-
+def create_background_task(coroutine) -> asyncio.Task:
+    task = asyncio.create_task(coroutine)
     background_tasks.add(task)
+    task.add_done_callback(background_tasks.discard)
 
-    task.add_done_callback(
-        background_tasks.discard
-    )
-
-    def log_task_exception(
-        completed_task,
-    ):
-
+    def log_task_exception(completed_task):
         try:
             completed_task.result()
-
         except asyncio.CancelledError:
             pass
-
         except Exception:
-            logger.exception(
-                "Error en tarea background"
-            )
+            logger.exception("Error in background task")
 
-    task.add_done_callback(
-        log_task_exception
-    )
-
+    task.add_done_callback(log_task_exception)
     return task
 
 
 # ============================================================
-# PROCESS FRAME
+# FRAME PROCESSING PIPELINE
 # ============================================================
 
-async def process_frame(
-    frame: dict[str, Any],
-    raw_frame: Optional[bytes] = None,
-):
-
-    if statistics is None:
+async def process_frame(frame: dict[str, Any], raw_frame: Optional[bytes] = None):
+    if statistics is None or database is None or csv_logger is None:
         return
 
-    if database is None:
-        return
-
-    if csv_logger is None:
-        return
-
-    statistics.register(
-        frame
-    )
-
-    database.insert(
-        frame,
-        frame_config.sequence_field
-        if frame_config
-        else None,
-    )
-
-    csv_logger.write(
-        frame
-    )
+    statistics.register(frame)
+    database.insert(frame, frame_config.sequence_field if frame_config else None)
+    csv_logger.write(frame)
 
     runtime.last_frame = frame
     runtime.last_timestamp = time.time()
     runtime.frames_received += 1
+
     if raw_frame is not None:
         runtime.last_raw_frame = raw_frame.hex(" ").upper()
         if frame_config is not None and frame_config.crc_size:
@@ -1560,318 +948,170 @@ async def process_frame(
                 if frame_config.crc_offset is not None
                 else len(raw_frame) - frame_config.crc_size
             )
-            crc_bytes = raw_frame[
-                crc_offset:crc_offset + frame_config.crc_size
-            ]
+            crc_bytes = raw_frame[crc_offset : crc_offset + frame_config.crc_size]
             runtime.last_crc_value = crc_bytes.hex().upper()
 
     snapshot = statistics.snapshot()
     snapshot["frames_received"] = runtime.frames_received
 
-    runtime.history.append(
-        {
-            "timestamp": runtime.last_timestamp,
-            "sequence": frame.get(
-                frame_config.sequence_field
-                if frame_config
-                else "frame_number"
-            ),
-            "data": frame,
-            "raw_hex": runtime.last_raw_frame,
-            "crc_value": runtime.last_crc_value,
-            "frames_received": runtime.frames_received,
-        }
-    )
+    runtime.history.append({
+        "timestamp": runtime.last_timestamp,
+        "sequence": frame.get(frame_config.sequence_field if frame_config else "frame_number"),
+        "data": frame,
+        "raw_hex": runtime.last_raw_frame,
+        "crc_value": runtime.last_crc_value,
+        "frames_received": runtime.frames_received,
+    })
 
-    await websocket_manager.broadcast(
-        {
-            "type": "telemetry",
-            "timestamp": runtime.last_timestamp,
-            "frame_length": (
-                frame_config.frame_size
-                if frame_config is not None
-                else None
-            ),
-            "crc_valid": True,
-            "crc_value": runtime.last_crc_value,
-            "raw_hex": runtime.last_raw_frame,
-            "data": frame,
-            "statistics": snapshot,
-        }
-    )
+    await websocket_manager.broadcast({
+        "type": "telemetry",
+        "timestamp": runtime.last_timestamp,
+        "frame_length": frame_config.frame_size if frame_config is not None else None,
+        "crc_valid": True,
+        "crc_value": runtime.last_crc_value,
+        "raw_hex": runtime.last_raw_frame,
+        "data": frame,
+        "statistics": snapshot,
+    })
 
 
 # ============================================================
-# SERIAL PROTOCOL
+# SERIAL ACQUISITION PROTOCOL
 # ============================================================
 
 class SerialProtocol(asyncio.Protocol):
-
     def __init__(self, loop):
         self.loop = loop
         self.transport = None
         self.disconnected = asyncio.Event()
 
     def connection_made(self, transport):
-
         self.transport = transport
         runtime.connected = True
-
-        logger.info("UART conectada")
-
-        create_background_task(
-            websocket_manager.broadcast(
-                {
-                    "type": "connection",
-                    "connected": True,
-                }
-            )
-        )
+        logger.info("UART interface connected")
+        create_background_task(websocket_manager.broadcast({"type": "connection", "connected": True}))
 
     def data_received(self, data: bytes):
-
-        if frame_buffer is None or statistics is None:
+        if frame_buffer is None or statistics is None or not data:
             return
 
-        if not data:
-            return
-
-        logger.debug(
-            "UART RX: %s",
-            data.hex(" "),
-        )
-
+        logger.debug("UART RX: %s", data.hex(" "))
         try:
-
             frames = frame_buffer.feed(data)
             previous_invalid = statistics.invalid
             statistics.invalid = frame_buffer.invalid_frames
 
-            for frame, raw_frame in zip(
-                frames,
-                frame_buffer.last_raw_frames,
-            ):
-                create_background_task(
-                    process_frame(frame, raw_frame)
-                )
+            for frame, raw_frame in zip(frames, frame_buffer.last_raw_frames):
+                create_background_task(process_frame(frame, raw_frame))
+
             if statistics.invalid > previous_invalid:
                 create_background_task(
-                    websocket_manager.broadcast(
-                        {
-                            "type": "statistics",
-                            "statistics": statistics.snapshot(),
-                        }
-                    )
+                    websocket_manager.broadcast({
+                        "type": "statistics",
+                        "statistics": statistics.snapshot(),
+                    })
                 )
-
         except Exception:
-            logger.exception(
-                "Error procesando datos UART"
-            )
+            logger.exception("Error processing incoming UART data")
 
     def connection_lost(self, exc):
-
         runtime.connected = False
-
         if exc:
-            logger.error(
-                "UART desconectada | %r | tipo=%s",
-                exc,
-                type(exc).__name__,
-            )
+            logger.error("UART disconnected | exception=%r (%s)", exc, type(exc).__name__)
         else:
-            logger.warning(
-                "UART desconectada | sin excepción"
-            )
+            logger.warning("UART disconnected | normal closure")
 
         self.disconnected.set()
+        create_background_task(websocket_manager.broadcast({"type": "connection", "connected": False}))
 
-        create_background_task(
-            websocket_manager.broadcast(
-                {
-                    "type": "connection",
-                    "connected": False,
-                }
-            )
-        )
-
-# ============================================================
-# SERIAL LOOP
-# ============================================================
 
 async def serial_loop():
-
     while True:
-
         if app_config is None:
             await asyncio.sleep(1)
             continue
 
         transport = None
-        protocol = None
-
         try:
-
-            logger.info(
-                "Conectando UART %s @ %d",
-                app_config.serial.port,
-                app_config.serial.baudrate,
-            )
-
+            logger.info("Connecting UART to %s @ %d baud", app_config.serial.port, app_config.serial.baudrate)
             loop = asyncio.get_running_loop()
-
-            transport, protocol = (
-                await serial_asyncio.create_serial_connection(
-                    loop,
-                    lambda: SerialProtocol(loop),
-                    app_config.serial.port,
-                    baudrate=app_config.serial.baudrate,
-                )
+            transport, protocol = await serial_asyncio.create_serial_connection(
+                loop,
+                lambda: SerialProtocol(loop),
+                app_config.serial.port,
+                baudrate=app_config.serial.baudrate,
             )
-
-            logger.info(
-                "Puerto UART abierto correctamente"
-            )
-
-            # IMPORTANTE:
-            # Esperamos a que connection_lost() indique
-            # realmente que la UART se desconectó.
+            logger.info("UART port opened successfully")
             await protocol.disconnected.wait()
-
         except asyncio.CancelledError:
-
-            logger.info(
-                "Serial loop cancelado"
-            )
-
+            logger.info("Serial loop cancelled")
             if transport is not None:
                 transport.close()
-
             raise
-
         except Exception:
-
             runtime.connected = False
-
-            logger.exception(
-                "Error en UART"
-            )
-
+            logger.exception("UART communication error")
         finally:
-
             runtime.connected = False
-
             if transport is not None:
-
                 try:
                     transport.close()
                 except Exception:
                     pass
 
-        logger.info(
-            "Reintentando UART en %.1f segundos",
-            app_config.serial.reconnect_delay,
-        )
+        logger.info("Retrying UART connection in %.1f seconds", app_config.serial.reconnect_delay)
+        await asyncio.sleep(app_config.serial.reconnect_delay)
 
-        await asyncio.sleep(
-            app_config.serial.reconnect_delay
-        )
 
 # ============================================================
-# FASTAPI
+# FASTAPI APPLICATION & ENDPOINTS
 # ============================================================
 
 app = FastAPI(
-    title="Estación Terrena de Telemetría",
+    title="Rocket Telemetry Ground Station",
+    description="Real-time telemetry acquisition, processing, and monitoring server",
     version="1.0.0",
 )
-app.mount(
-    "/frontend",
-    StaticFiles(directory=FRONTEND_DIR),
-    name="frontend",
-)
 
+app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR), name="frontend")
 
-# ============================================================
-# HTTP ROUTES
-# ============================================================
 
 @app.get("/")
 async def root():
-
     index_file = FRONTEND_DIR / "index.html"
-
     if not index_file.exists():
-
-        logger.error(
-            "Frontend no encontrado: %s",
-            index_file,
-        )
-
-        return {
-            "error": "Frontend no encontrado",
-            "path": str(index_file),
-        }
-
-    return FileResponse(
-        index_file
-    )
+        logger.error("Frontend dashboard not found: %s", index_file)
+        return {"error": "Frontend not found", "path": str(index_file)}
+    return FileResponse(index_file)
 
 
 @app.get("/gonogo")
 async def gonogo():
-
     gonogo_file = FRONTEND_DIR / "gonogo.html"
-
     if not gonogo_file.exists():
-        logger.error(
-            "Vista Go/No-Go no encontrada: %s, fallback a index.html",
-            gonogo_file,
-        )
-        return FileResponse(
-            FRONTEND_DIR / "index.html"
-        )
-
-    return FileResponse(
-        gonogo_file
-    )
+        logger.error("Go/No-Go view not found: %s, falling back to index.html", gonogo_file)
+        return FileResponse(FRONTEND_DIR / "index.html")
+    return FileResponse(gonogo_file)
 
 
 @app.get("/recovery")
 async def recovery():
-
     recovery_file = FRONTEND_DIR / "recovery.html"
-
     if not recovery_file.exists():
-        logger.error(
-            "Vista Recovery no encontrada: %s, fallback a index.html",
-            recovery_file,
-        )
-        return FileResponse(
-            FRONTEND_DIR / "index.html"
-        )
-
-    return FileResponse(
-        recovery_file
-    )
+        logger.error("Recovery view not found: %s, falling back to index.html", recovery_file)
+        return FileResponse(FRONTEND_DIR / "index.html")
+    return FileResponse(recovery_file)
 
 
 @app.get("/api/history")
-async def history(
-    seconds: float = 60.0,
-    limit: int = 1200,
-):
-    """
-    Devuelve los datos de telemetría de los últimos N segundos
-    (por defecto 60 s) para hidratar gráficos y vistas sin perder historial.
-    """
+async def history(seconds: float = 60.0, limit: int = 1200):
+    """Return historical telemetry records for the past N seconds (default: 60s)."""
     now = time.time()
     min_ts = now - max(1.0, seconds)
 
-    # 1. Intentar desde buffer en memoria (ultra rápido)
+    # 1. Attempt ultra-fast in-memory cache lookup
     in_memory = [
-        frame
-        for frame in runtime.history
+        frame for frame in runtime.history
         if frame.get("timestamp") and frame["timestamp"] >= min_ts
     ]
 
@@ -1887,12 +1127,9 @@ async def history(
             "frames": in_memory,
         }
 
-    # 2. Si hay pocos frames en memoria (ej. tras reinicio), recurrir a SQLite
+    # 2. Fall back to SQLite database if in-memory cache is sparse
     if database is not None:
-        db_frames = database.get_recent(
-            seconds=seconds,
-            limit=limit,
-        )
+        db_frames = database.get_recent(seconds=seconds, limit=limit)
         return {
             "count": len(db_frames),
             "seconds": seconds,
@@ -1914,26 +1151,13 @@ async def history(
 
 @app.get("/api/status")
 async def status():
-
     return {
         "connected": runtime.connected,
         "frames_received": runtime.frames_received,
         "last_timestamp": runtime.last_timestamp,
-        "serial_port": (
-            app_config.serial.port
-            if app_config is not None
-            else None
-        ),
-        "baudrate": (
-            app_config.serial.baudrate
-            if app_config is not None
-            else None
-        ),
-        "statistics": (
-            statistics.snapshot()
-            if statistics
-            else {}
-        ),
+        "serial_port": app_config.serial.port if app_config is not None else None,
+        "baudrate": app_config.serial.baudrate if app_config is not None else None,
+        "statistics": statistics.snapshot() if statistics else {},
         "gonogo": (
             {
                 "required_hold_s": app_config.gonogo.required_hold_s,
@@ -1956,258 +1180,129 @@ async def status():
 
 @app.get("/api/telemetry")
 async def telemetry():
-
     return {
         "connected": runtime.connected,
         "timestamp": runtime.last_timestamp,
         "data": runtime.last_frame,
-        "frame_length": (
-            frame_config.frame_size
-            if frame_config is not None
-            else None
-        ),
+        "frame_length": frame_config.frame_size if frame_config is not None else None,
         "crc_valid": runtime.last_frame is not None,
         "crc_value": runtime.last_crc_value,
         "raw_hex": runtime.last_raw_frame,
-        "statistics": (
-            statistics.snapshot()
-            if statistics
-            else {}
-        ),
+        "statistics": statistics.snapshot() if statistics else {},
     }
 
 
 @app.websocket("/ws/telemetry")
 @app.websocket("/ws")
-async def websocket_endpoint(
-    websocket: WebSocket,
-):
-
-    await websocket_manager.connect(
-        websocket
-    )
-
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket_manager.connect(websocket)
     try:
-
-        # Enviar inmediatamente el estado actual.
-        await websocket.send_json(
-            {
-                "type": "connection",
-                "connected": runtime.connected,
-            }
-        )
+        # Immediately send current connection status
+        await websocket.send_json({"type": "connection", "connected": runtime.connected})
 
         if runtime.last_frame is not None:
+            await websocket.send_json({
+                "type": "telemetry",
+                "timestamp": runtime.last_timestamp,
+                "frame_length": frame_config.frame_size if frame_config is not None else None,
+                "crc_valid": True,
+                "crc_value": runtime.last_crc_value,
+                "raw_hex": runtime.last_raw_frame,
+                "data": runtime.last_frame,
+                "statistics": statistics.snapshot() if statistics else {},
+            })
 
-            await websocket.send_json(
-                {
-                    "type": "telemetry",
-                    "timestamp": runtime.last_timestamp,
-                    "frame_length": (
-                        frame_config.frame_size
-                        if frame_config is not None
-                        else None
-                    ),
-                    "crc_valid": True,
-                    "crc_value": runtime.last_crc_value,
-                    "raw_hex": runtime.last_raw_frame,
-                    "data": runtime.last_frame,
-                    "statistics": (
-                        statistics.snapshot()
-                        if statistics
-                        else {}
-                    ),
-                }
-            )
-
-        # Mantener abierta la conexión.
         while True:
-
             await websocket.receive_text()
-
     except WebSocketDisconnect:
         pass
-
     except Exception:
-
-        logger.exception(
-            "Error WebSocket"
-        )
-
+        logger.exception("WebSocket communication error")
     finally:
-
-        await websocket_manager.disconnect(
-            websocket
-        )
+        await websocket_manager.disconnect(websocket)
 
 
 # ============================================================
-# STARTUP
+# STARTUP & SHUTDOWN LIFECYCLE
 # ============================================================
 
 @app.on_event("startup")
 async def startup():
+    global app_config, frame_config, parser, frame_buffer, statistics, database, csv_logger
 
-    global app_config
-    global frame_config
-    global parser
-    global frame_buffer
-    global statistics
-    global database
-    global csv_logger
+    logger.info("Initializing Ground Station...")
 
-    logger.info(
-        "Inicializando Ground Station..."
-    )
-
-    # --------------------------------------------------------
-    # CONFIG
-    # --------------------------------------------------------
-
+    # Load configuration
     app_config = load_app_config()
+    frame_config = load_frame_config()
+    parser = FrameParser(frame_config)
+    frame_buffer = FrameBuffer(parser)
+    statistics = PacketStatistics(frame_config.sequence_field)
 
-    frame_config = (
-        load_frame_config()
-    )
-
-    parser = FrameParser(
-        frame_config
-    )
-
-    frame_buffer = FrameBuffer(
-        parser
-    )
-
-    statistics = PacketStatistics(
-        frame_config.sequence_field
-    )
-
-    # --------------------------------------------------------
-    # STORAGE
-    # --------------------------------------------------------
-
-    database = Database(
-        app_config.storage.database
-    )
-
+    # Initialize persistence
+    database = Database(app_config.storage.database)
     csv_logger = CSVLogger(
         app_config.storage.csv,
         [
-            output_name
-            for frame_field in frame_config.fields
-            for output_name in (
-                [frame_field.name, f"{frame_field.name}_label"]
-                if frame_field.values
-                else [frame_field.name]
-            )
+            out_name
+            for ff in frame_config.fields
+            for out_name in ([ff.name, f"{ff.name}_label"] if ff.values else [ff.name])
         ],
     )
 
-    logger.info(
-        "Base de datos: %s",
-        database.path,
-    )
+    logger.info("Database: %s", database.path)
+    logger.info("CSV Log: %s", csv_logger.path)
 
-    logger.info(
-        "CSV: %s",
-        csv_logger.path,
-    )
-
-    # Precargar historial reciente en memoria para continuidad sin pérdidas
+    # Pre-hydrate recent history from SQLite
     try:
         recent_frames = database.get_recent(seconds=120.0, limit=1200)
         for rf in recent_frames:
             runtime.history.append(rf)
         if recent_frames:
-            logger.info(
-                "Historial precargado desde SQLite: %d tramas",
-                len(recent_frames),
-            )
+            logger.info("Pre-loaded history from SQLite: %d frames", len(recent_frames))
     except Exception:
-        logger.exception("Error al precargar historial desde SQLite")
+        logger.exception("Error pre-loading history from SQLite")
 
-    # --------------------------------------------------------
-    # UART
-    # --------------------------------------------------------
+    # Start serial background acquisition
+    create_background_task(serial_loop())
+    logger.info("Ground Station initialized successfully")
 
-    create_background_task(
-        serial_loop()
-    )
-
-    logger.info(
-        "Ground Station iniciada"
-    )
-
-
-# ============================================================
-# SHUTDOWN
-# ============================================================
 
 @app.on_event("shutdown")
 async def shutdown():
-
     runtime.connected = False
+    logger.info("Shutting down Ground Station...")
 
-    logger.info(
-        "Cerrando Ground Station..."
-    )
-
-    # Cancelar tareas background.
-    current_task = (
-        asyncio.current_task()
-    )
-
-    tasks_to_cancel = [
-        task
-        for task in background_tasks
-        if task is not current_task
-    ]
-
-    for task in tasks_to_cancel:
-        task.cancel()
+    # Cancel background tasks
+    current_task = asyncio.current_task()
+    tasks_to_cancel = [t for t in background_tasks if t is not current_task]
+    for t in tasks_to_cancel:
+        t.cancel()
 
     if tasks_to_cancel:
-
-        await asyncio.gather(
-            *tasks_to_cancel,
-            return_exceptions=True,
-        )
+        await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
 
     if database is not None:
-
         try:
             database.close()
-
         except Exception:
-            logger.exception(
-                "Error cerrando SQLite"
-            )
+            logger.exception("Error closing SQLite connection")
 
     if csv_logger is not None:
-
         try:
             csv_logger.close()
-
         except Exception:
-            logger.exception(
-                "Error cerrando CSV"
-            )
+            logger.exception("Error closing CSV file")
 
-    logger.info(
-        "Ground Station cerrada"
-    )
+    logger.info("Ground Station shutdown complete")
 
 
 # ============================================================
-# MAIN
+# APPLICATION ENTRYPOINT
 # ============================================================
 
 if __name__ == "__main__":
-
-    # Cargar configuración solamente para obtener
-    # host/puerto del servidor HTTP.
     startup_config = load_app_config()
-
     uvicorn.run(
         app,
         host=startup_config.websocket.host,

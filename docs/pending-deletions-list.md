@@ -1,5 +1,7 @@
 # Pending Cleanups & File Deletion Inventory
 
+> **Language / Idioma:** [ 🇬🇧 English ](pending-deletions-list.md) | [ 🇪🇸 Español ](es/pending-deletions-list.md)
+
 > **User Direct Instruction Note:**
 > *"Todo lo que necesites borrar agrégalo a una lista y lo vemos mañana. Opera con la máxima autonomía que puedas."*
 > This document records all files relocated, staged for deletion, or proposed for cleanup as part of the repository reorganization and documentation unification effort. Review this list to verify all proposed removals before final commit/merge.

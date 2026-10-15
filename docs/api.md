@@ -1,5 +1,7 @@
 # API & WebSocket Interface Specification
 
+> **Language / Idioma:** [ 🇬🇧 English ](api.md) | [ 🇪🇸 Español ](es/api.md)
+
 This document defines the REST API endpoints and real-time WebSocket protocol exposed by the Ground Station backend (`main.py`).
 
 ---

@@ -1,5 +1,7 @@
 # Mathematical Calculations and Derived Metrics Reference
 
+> **Language / Idioma:** [ 🇬🇧 English ](calculos-futuros.md) | [ 🇪🇸 Español ](es/calculos-futuros.md)
+
 This document serves as the technical specification for derived avionics metrics, sensor fusion filters, and mathematical algorithms temporarily retired from the live dashboard (`frontend/index.html`).
 
 Currently, the primary dashboard displays **raw telemetry values directly as received in the binary frame** to ensure maximum reliability and minimal processing overhead during flight operations. All secondary interpretations and estimations are documented here for future reintegration.

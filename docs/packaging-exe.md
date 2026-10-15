@@ -1,5 +1,7 @@
 # Packaging the Ground Station as a Windows Executable (.exe)
 
+> **Language / Idioma:** [ 🇬🇧 English ](packaging-exe.md) | [ 🇪🇸 Español ](es/packaging-exe.md)
+
 This guide explains how to package the **Rocket Telemetry Ground Station** into a standalone Windows executable (`estacion-terrena.exe`) using **PyInstaller**.
 
 ---

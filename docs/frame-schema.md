@@ -1,5 +1,7 @@
 # Generic Frame Definition Schema Specification
 
+> **Language / Idioma:** [ 🇬🇧 English ](frame-schema.md) | [ 🇪🇸 Español ](es/frame-schema.md)
+
 ## 1. Objective
 
 The Ground Station system dynamically parses and validates arbitrary binary telemetry frame formats without requiring any code modifications to the core application.

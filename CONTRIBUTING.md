@@ -1,5 +1,7 @@
 # Contributing to Rocket Telemetry Ground Station
 
+> **Language / Idioma:** [ 🇬🇧 English ](CONTRIBUTING.md) | [ 🇪🇸 Español ](CONTRIBUTING.es.md)
+
 Welcome to the **Rocket Telemetry Ground Station** (`estacion-terrena-pc`) development team!
 
 This project is built to monitor experimental and sounding rocket avionics in real time. This guide outlines everything you need to know to get up and running, understand the system architecture, write quality code and tests, follow our Git workflow, and contribute effectively.

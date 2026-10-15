@@ -1,5 +1,7 @@
 # Getting Started & Operations Guide
 
+> **Language / Idioma:** [ 🇬🇧 English ](getting-started.md) | [ 🇪🇸 Español ](es/getting-started.md)
+
 This guide provides complete instructions for configuring, deploying, operating, and verifying the **Rocket Telemetry Ground Station** (`estacion-terrena-pc`).
 
 ---

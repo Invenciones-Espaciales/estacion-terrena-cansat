@@ -1,5 +1,7 @@
 # Definitive 65-Byte LoRa Telemetry Frame Specification & Protocol Reference
 
+> **Language / Idioma:** [ 🇬🇧 English ](protocol.md) | [ 🇪🇸 Español ](es/protocol.md)
+
 This document provides the authoritative technical reference for the definitive **65-byte LoRa telemetry frame** transmitted by the rocket avionics (ESP32 / MCU) and parsed in real time by the Ground Station (`estacion-terrena-pc`).
 
 ---

@@ -1,5 +1,7 @@
 # Rocket Telemetry Simulator (Arduino / ESP32 Firmware)
 
+> **Language / Idioma:** [ 🇬🇧 English ](README.md) | [ 🇪🇸 Español ](README.es.md)
+
 This firmware runs on any Arduino, ESP32, or microcontroller (Arduino Uno R3, Nano, Mega, ESP32, Teensy, RP2040) and simulates a **comprehensive 290-second mission profile** transmitting the **definitive 65-byte LoRa telemetry frame** at **10 Hz (100 ms interval)** and **115200 baud**, designed to test every instrument, chart, map, alert badge, and state machine transition in the Ground Station Dashboard (`estacion-terrena-pc`).
 
 ---

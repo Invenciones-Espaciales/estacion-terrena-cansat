@@ -1,5 +1,7 @@
 # Telemetry Dashboard Design & Ergonomic Specification
 
+> **Language / Idioma:** [ 🇬🇧 English ](frontend-dashboard.md) | [ 🇪🇸 Español ](es/frontend-dashboard.md)
+
 ## 1. Objective
 
 The **Telemetry Ground Station** dashboard displays telemetry data clearly, compactly, and ergonomically for real-time monitoring during live rocket flight operations.
