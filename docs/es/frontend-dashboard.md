@@ -77,4 +77,4 @@ Instrumento gráfico inspirado en las pantallas de vuelo primarias (PFD) aeroná
 
 - **[Arquitectura del Sistema](architecture.md):** Renderizado desacoplado a 60 FPS.
 - **[Especificación de la API](api.md):** Contratos de datos WebSocket consumidos por los instrumentos.
-- **[Cálculos Futuros y Algoritmos](calculos-futuros.md):** Fórmulas de velocidad vertical $V_z$ y orientación 3D.
+- **[Cálculos Futuros y Algoritmos](future-calculations.md):** Fórmulas de velocidad vertical $V_z$ y orientación 3D.

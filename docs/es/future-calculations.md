@@ -1,6 +1,6 @@
 # Referencia de Cálculos Matemáticos y Métricas Derivadas
 
-> **Idioma / Language:** [ 🇪🇸 Español ](calculos-futuros.md) | [ 🇬🇧 English ](../calculos-futuros.md)
+> **Idioma / Language:** [ 🇪🇸 Español ](future-calculations.md) | [ 🇬🇧 English ](../future-calculations.md)
 
 ---
 
@@ -11,7 +11,7 @@ Este documento recopila la especificación matemática de las métricas derivada
 Actualmente, el tablero de producción muestra **los valores directos de telemetría tal como son recibidos en la trama binaria**, garantizando la máxima fiabilidad y el menor retardo de procesamiento en operaciones de vuelo. Todas las estimaciones secundarias quedan documentadas aquí para su reintegración progresiva.
 
 > **Implementación Histórica de Referencia:**
-> El código funcional completo en JavaScript que implementa estos cálculos se encuentra archivado en [`docs/referencia/index_con_calculos.html`](../referencia/index_con_calculos.html). Puede ser probado sirviéndolo directamente o copiándolo sobre `frontend/index.html`.
+> El código funcional completo en JavaScript que implementa estos cálculos se encuentra archivado en [`docs/reference/index_with_calculations.html`](../reference/index_with_calculations.html). Puede ser probado sirviéndolo directamente o copiándolo sobre `frontend/index.html`.
 
 ---
 
@@ -81,4 +81,4 @@ $$y_{\text{impacto}} = y_{\text{actual}} + V_{\text{viento}, y} \times \frac{h_{
 
 - **[Especificación del Protocolo Binario](protocol.md):** Estructura de la trama de 65 bytes.
 - **[Diseño del Frontend y Tablero](frontend-dashboard.md):** Guía de visualización y jerarquía.
-- **[Implementación Histórica en JavaScript](../referencia/index_con_calculos.html):** Código fuente archivado.
+- **[Implementación Histórica en JavaScript](../reference/index_with_calculations.html):** Código fuente archivado.

@@ -1,13 +1,13 @@
 # Mathematical Calculations and Derived Metrics Reference
 
-> **Language / Idioma:** [ 🇬🇧 English ](calculos-futuros.md) | [ 🇪🇸 Español ](es/calculos-futuros.md)
+> **Language / Idioma:** [ 🇬🇧 English ](future-calculations.md) | [ 🇪🇸 Español ](es/future-calculations.md)
 
 This document serves as the technical specification for derived avionics metrics, sensor fusion filters, and mathematical algorithms temporarily retired from the live dashboard (`frontend/index.html`).
 
 Currently, the primary dashboard displays **raw telemetry values directly as received in the binary frame** to ensure maximum reliability and minimal processing overhead during flight operations. All secondary interpretations and estimations are documented here for future reintegration.
 
 > **Historical Reference Implementation:**
-> The complete, operational JavaScript implementation containing these calculations is archived at [`docs/referencia/index_con_calculos.html`](referencia/index_con_calculos.html). It can be tested by serving it or copying it to `frontend/index.html` with the server running.
+> The complete, operational JavaScript implementation containing these calculations is archived at [`docs/reference/index_with_calculations.html`](reference/index_with_calculations.html). It can be tested by serving it or copying it to `frontend/index.html` with the server running.
 
 ---
 

@@ -20,7 +20,7 @@ La documentación técnica completa está disponible en **Español** e **Inglés
 | **[Guía de Inicio y Operaciones](docs/es/getting-started.md)** | **[Getting Started](docs/getting-started.md)** | Configuración para desarrolladores, permisos serie en Linux (`dialout`) y pruebas con virtualización. |
 | **[Guía de Contribución](CONTRIBUTING.es.md)** | **[Contributing Guide](CONTRIBUTING.md)** | Manual de incorporación para nuevos ingenieros, flujo Git, estándares de código y PR. |
 | **[Compilación Windows (.exe)](docs/es/packaging-exe.md)** | **[Windows Packaging](docs/packaging-exe.md)** | Generación de ejecutable independiente con PyInstaller, `build_windows.bat` o GitHub Actions. |
-| **[Cálculos Futuros](docs/es/calculos-futuros.md)** | **[Future Calculations](docs/calculos-futuros.md)** | Filtro de Kalman 1D, variómetro ($V_z$), elipse de aterrizaje y normas de alarma ISA-18.2. |
+| **[Cálculos Futuros](docs/es/future-calculations.md)** | **[Future Calculations](docs/future-calculations.md)** | Filtro de Kalman 1D, variómetro ($V_z$), elipse de aterrizaje y normas de alarma ISA-18.2. |
 | **[Limpieza Pendiente](docs/es/pending-deletions-list.md)** | **[Pending Cleanups](docs/pending-deletions-list.md)** | Inventario de archivos reubicados y propuestos para revisión. |
 
 ---
@@ -135,7 +135,7 @@ Abre tu navegador en:
 │   ├── es/                  # Documentación completa en Español
 │   │   ├── api.md
 │   │   ├── architecture.md
-│   │   ├── calculos-futuros.md
+│   │   ├── future-calculations.md
 │   │   ├── frame-schema.md
 │   │   ├── frontend-dashboard.md
 │   │   ├── getting-started.md

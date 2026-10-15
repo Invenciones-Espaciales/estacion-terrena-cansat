@@ -317,7 +317,7 @@ When transitioning from virtual loopback simulation to physical sounding rocket 
 
 #### 3. Antenna Sizing & Polarization Alignment
 - **Vehicle Airframe:** Deploy an omnidirectional, vertically polarized 1/4-wave whip or dipole along the rocket fuselage or within a radio-transparent fiberglass nosecone.
-- **Ground Station:** Deploy a matching vertically polarized high-gain antenna (e.g. ground plane collinear, or directional 3–5 element Yagi if operating beyond $2\text{ km}$ slant range). See [`docs/calculos-futuros.md`](calculos-futuros.md) Section 2.3 for antenna tracking calculations.
+- **Ground Station:** Deploy a matching vertically polarized high-gain antenna (e.g. ground plane collinear, or directional 3–5 element Yagi if operating beyond $2\text{ km}$ slant range). See [`docs/future-calculations.md`](future-calculations.md) Section 2.3 for antenna tracking calculations.
 
 #### 4. Pre-Flight RF Ground Verification Checklist
 1. **Device Enumeration:** Plug the ground radio into the PC and confirm device creation (`ls -l /dev/ttyUSB* /dev/ttyACM*`).
@@ -354,5 +354,5 @@ When transitioning from virtual loopback simulation to physical sounding rocket 
 - **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
 - **[Windows Executable Packaging](packaging-exe.md):** Compiling standalone Windows .exe using PyInstaller or GitHub Actions.
 - **[Contributing Guide](../CONTRIBUTING.md):** Onboarding, Git workflow, testing requirements, and PR process.
-- **[Extended Calculations & Future Reference](calculos-futuros.md):** Mathematical models for Kalman filtering, variometer ($V_z$), and antenna tracking.
+- **[Extended Calculations & Future Reference](future-calculations.md):** Mathematical models for Kalman filtering, variometer ($V_z$), and antenna tracking.
 

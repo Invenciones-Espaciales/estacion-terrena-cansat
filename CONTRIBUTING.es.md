@@ -88,7 +88,7 @@ Abre tu navegador en `http://localhost:8000`.
 │   ├── es/                     # Suite completa en Español
 │   │   ├── api.md
 │   │   ├── architecture.md
-│   │   ├── calculos-futuros.md
+│   │   ├── future-calculations.md
 │   │   ├── frame-schema.md
 │   │   ├── frontend-dashboard.md
 │   │   ├── getting-started.md

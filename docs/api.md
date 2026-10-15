@@ -392,4 +392,4 @@ stateDiagram-v2
 - **[Dashboard Visual Specification](frontend-dashboard.md):** Telemetry dashboard UI layout, visual hierarchy, and instrument wireframes.
 - **[Getting Started & Operations Guide](getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
 - **[Windows Executable Packaging](packaging-exe.md):** Compiling standalone Windows .exe using PyInstaller or GitHub Actions.
-- **[Extended Calculations & Future Reference](calculos-futuros.md):** Algorithmic extensions and mathematical derivations.
+- **[Extended Calculations & Future Reference](future-calculations.md):** Algorithmic extensions and mathematical derivations.

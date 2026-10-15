@@ -107,7 +107,7 @@ estacion-terrena-pc/
 │   ├── api.md               # REST endpoints and WebSocket message schemas
 │   ├── getting-started.md   # Deployment, operation, and troubleshooting manual
 │   ├── packaging-exe.md     # PyInstaller Windows standalone compilation
-│   └── calculos-futuros.md  # Kalman filter, variometer, landing ellipse algorithms
+│   └── future-calculations.md# Kalman filter, variometer, landing ellipse algorithms
 ├── frontend/
 │   ├── index.html           # High-contrast live mission dashboard
 │   ├── gonogo.html          # Pre-launch Go / No-Go qualification console

@@ -20,7 +20,7 @@ The complete technical documentation is available in both **English** and **Span
 | **[Getting Started](docs/getting-started.md)** | **[Guía de Inicio](docs/es/getting-started.md)** | Developer setup, Linux serial permissions (`dialout`), and hardware-free simulation. |
 | **[Contributing Guide](CONTRIBUTING.md)** | **[Guía de Contribución](CONTRIBUTING.es.md)** | Onboarding walkthrough, Git workflow, testing requirements, and PR review process. |
 | **[Windows Packaging](docs/packaging-exe.md)** | **[Compilación Windows](docs/es/packaging-exe.md)** | Compiling standalone `.exe` with PyInstaller, `build_windows.bat`, or GitHub Actions. |
-| **[Future Calculations](docs/calculos-futuros.md)** | **[Cálculos Futuros](docs/es/calculos-futuros.md)** | Kalman filter fusion, variometer ($V_z$), landing ellipse, and ISA-18.2 alarm specifications. |
+| **[Future Calculations](docs/future-calculations.md)** | **[Cálculos Futuros](docs/es/future-calculations.md)** | Kalman filter fusion, variometer ($V_z$), landing ellipse, and ISA-18.2 alarm specifications. |
 | **[Pending Cleanups](docs/pending-deletions-list.md)** | **[Limpieza Pendiente](docs/es/pending-deletions-list.md)** | Inventory of relocated and clean-up candidate files for review. |
 
 ---
@@ -138,7 +138,7 @@ Open your browser to:
 ├── docs/                    # Comprehensive technical documentation
 │   ├── api.md               # REST and WebSocket interface reference
 │   ├── architecture.md      # End-to-end system architecture and data pipeline
-│   ├── calculos-futuros.md  # Mathematical algorithms and future calculations
+│   ├── future-calculations.md# Mathematical algorithms and future calculations
 │   ├── frame-schema.md      # Declarative frame definition schema specification
 │   ├── frontend-dashboard.md# Telemetry dashboard design and ergonomic specification
 │   ├── getting-started.md   # Setup, operations, and developer testing manual

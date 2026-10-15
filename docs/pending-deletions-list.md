@@ -39,7 +39,7 @@
 - **Why it was changed:**
   - The file contained notes and layout specifications for the telemetry frontend dashboard (`frontend/index.html` and `frontend/gonogo.html`).
   - Moved into `docs/frontend-dashboard.md` alongside the rest of the documentation suite.
-  - Updated with instrument tables, ergonomic considerations, high-contrast mission theme guidelines, and cross-links to `docs/api.md` and `docs/calculos-futuros.md`.
+  - Updated with instrument tables, ergonomic considerations, high-contrast mission theme guidelines, and cross-links to `docs/api.md` and `docs/future-calculations.md`.
 - **Action for Tomorrow:** Confirm permanent deletion from repository root.
 
 ---
