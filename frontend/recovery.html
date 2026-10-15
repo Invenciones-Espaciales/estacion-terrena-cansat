@@ -136,12 +136,12 @@
     transition: background 0.1s ease, transform 0.05s ease;
 }
 .btn-action:hover { background: #334155; }
-.btn-action:active { transform: scale(0.98); }
 .btn-action.sec {
-    background: #ffffff;
-    color: #0f172a;
+    background: var(--card);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
 }
-.btn-action.sec:hover { background: #f1f5f9; }
+.btn-action.sec:hover { background: var(--soft-border); }
 
 /* ===== MAIN CONTENT GRID (MAPA + PANELES LATERALES) ===== */
 .recovery-grid {
@@ -190,12 +190,12 @@
     font-weight: 800;
     border: 1.5px solid var(--border);
     border-radius: 3px;
-    background: #ffffff;
-    color: #0f172a;
+    background: var(--card);
+    color: var(--ink);
     cursor: pointer;
     transition: background 0.1s ease;
 }
-.map-btn:hover { background: #e2e8f0; }
+.map-btn:hover { background: var(--soft-border); }
 
 #recoveryMap {
     flex: 1 1 0;
@@ -369,6 +369,10 @@
                 <a href="/" class="nav-tab">TELEMETRÍA</a>
                 <a href="/recovery" class="nav-tab active">RECUPERACIÓN</a>
             </nav>
+            <button type="button" class="theme-toggle" id="btnThemeToggle" title="Alternar modo oscuro / claro" aria-label="Alternar modo oscuro / claro">
+                <span class="theme-icon" id="themeIcon">🌙</span>
+                <span class="theme-label" id="themeLabel">OSCURO</span>
+            </button>
         </div>
 
         <div class="hgroup">
@@ -661,8 +665,9 @@ function initRecoveryMap() {
         attribution: '&copy; OpenStreetMap'
     }).addTo(recoveryState.map);
 
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
     recoveryState.routeLine = L.polyline([], {
-        color: "#0f172a",
+        color: isDark ? "#38bdf8" : "#0f172a",
         weight: 3.5,
         opacity: 0.85
     }).addTo(recoveryState.map);
@@ -676,6 +681,12 @@ function initRecoveryMap() {
 
     setTimeout(() => recoveryState.map.invalidateSize(), 100);
     window.addEventListener("resize", () => recoveryState.map && recoveryState.map.invalidateSize());
+    window.addEventListener("themechange", e => {
+        const dark = e.detail?.theme === "dark";
+        if (recoveryState.routeLine) {
+            recoveryState.routeLine.setStyle({ color: dark ? "#38bdf8" : "#0f172a" });
+        }
+    });
 }
 
 function updateRecoveryMap() {
@@ -749,8 +760,20 @@ function ingestFrame(frameItem, isHistory = false) {
     if (d.pressure !== undefined) recoveryState.pressure = Number(d.pressure);
     if (d.temp_imu !== undefined) recoveryState.tempImu = Number(d.temp_imu);
     if (d.ground_speed !== undefined) recoveryState.groundSpeed = Number(d.ground_speed);
-    if (d.pin_frenado !== undefined) recoveryState.pinFrenado = Number(d.pin_frenado);
-    if (d.pin_principal !== undefined) recoveryState.pinPrincipal = Number(d.pin_principal);
+    if (d.pin_frenado !== undefined && Number.isFinite(Number(d.pin_frenado))) {
+        const pf = Number(d.pin_frenado);
+        if (recoveryState.pinFrenado === 0 && pf === 1) {
+            addEvent("Pirotecnia: Pin de frenado activado (Drogue)");
+        }
+        recoveryState.pinFrenado = pf;
+    }
+    if (d.pin_principal !== undefined && Number.isFinite(Number(d.pin_principal))) {
+        const pp = Number(d.pin_principal);
+        if (recoveryState.pinPrincipal === 0 && pp === 1) {
+            addEvent("Pirotecnia: Pin principal activado");
+        }
+        recoveryState.pinPrincipal = pp;
+    }
     if (d.altitud_gps !== undefined) recoveryState.altitudGps = Number(d.altitud_gps);
 
     // Coordenadas

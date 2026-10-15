@@ -3,6 +3,14 @@
  * High-contrast aerospace ground station frontend suite
  */
 
+// Apply saved theme immediately to prevent any white flash / FOUC
+(function applyEarlyTheme() {
+    try {
+        const saved = localStorage.getItem("ground_station_theme") || "light";
+        document.documentElement.setAttribute("data-theme", saved);
+    } catch (e) {}
+})();
+
 // Fast element selector
 window.$ = window.$ || (id => document.getElementById(id));
 var $ = window.$;
@@ -247,3 +255,42 @@ window.fetchHistory60s = window.fetchHistory60s || async function fetchHistory60
     }
 };
 var fetchHistory60s = window.fetchHistory60s;
+ 
+/**
+ * Theme toggle manager (light/dark)
+ */
+window.initThemeManager = window.initThemeManager || function initThemeManager() {
+    const updateThemeUI = () => {
+        const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+        const icon = window.$("themeIcon");
+        const label = window.$("themeLabel");
+        if (icon) icon.textContent = isDark ? "☀️" : "🌙";
+        if (label) label.textContent = isDark ? "CLARO" : "OSCURO";
+    };
+
+    const toggleTheme = () => {
+        const cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        const next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        try {
+            localStorage.setItem("ground_station_theme", next);
+        } catch (e) {}
+        updateThemeUI();
+        window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } }));
+    };
+
+    updateThemeUI();
+
+    const btn = window.$("btnThemeToggle");
+    if (btn && !btn._themeBound) {
+        btn._themeBound = true;
+        btn.addEventListener("click", toggleTheme);
+    }
+};
+var initThemeManager = window.initThemeManager;
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", window.initThemeManager);
+} else {
+    window.initThemeManager();
+}

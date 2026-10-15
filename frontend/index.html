@@ -17,17 +17,6 @@
 <script src="/frontend/js/common.js"></script>
 
 <style>
-:root {
-    --bg: #ffffff;
-    --ink: #000000;
-    --gray: #333333;
-    --muted: #666666;
-    --soft: #eeeeee;
-    --ok: #087a3b;
-    --warn: #f2b400;
-    --bad: #b00020;
-}
-
 * { box-sizing: border-box; }
 
 html, body {
@@ -66,7 +55,8 @@ html, body {
 .panel { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 
 .card {
-    border: 2px solid #000;
+    border: 2px solid var(--border);
+    background: var(--card);
     padding: 6px 8px;
     min-height: 0;
     min-width: 0;
@@ -98,7 +88,7 @@ canvas { display: block; }
 /* ===== ALTITUD ===== */
 
 .alt-body { flex: 1 1 0; min-height: 0; display: flex; gap: 8px; }
-.tape { width: 92px; flex: none; border: 2px solid #000; position: relative; }
+.tape { width: 92px; flex: none; border: 2px solid var(--border); position: relative; }
 .tape canvas { width: 100%; height: 100%; }
 .alt-side { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 6px; }
 .big { font-size: 40px; font-weight: 900; line-height: 1; }
@@ -107,7 +97,7 @@ canvas { display: block; }
 
 .basecard { flex: none; }
 .basecard .big { font-size: 34px; }
-.axis-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; border-bottom: 1px solid var(--soft); }
+.axis-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; border-bottom: 1px solid var(--soft-border); }
 .axis-row:last-child { border-bottom: none; }
 .axis-row .a { font-size: 16px; font-weight: 900; color: var(--gray); }
 .axis-row .n { font-size: 24px; font-weight: 900; }
@@ -122,7 +112,7 @@ canvas { display: block; }
 
 /* ===== MAPA ===== */
 
-#gpsMap { flex: 1; min-height: 80px; border: 2px solid #000; }
+#gpsMap { flex: 1; min-height: 80px; border: 2px solid var(--border); }
 .coords { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
 .coords .k { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .06em; }
 .coords .v { font-size: 17px; font-weight: 900; }
@@ -139,14 +129,14 @@ canvas { display: block; }
 .scroll { flex: 1; min-height: 0; overflow-y: auto; font-size: 12px; }
 
 table.t { width: 100%; border-collapse: collapse; font-size: 12px; }
-table.t th { text-align: left; font-size: 10px; letter-spacing: .06em; color: var(--muted); position: sticky; top: 0; background: #fff; border-bottom: 2px solid #000; padding: 1px 4px; }
-table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space: nowrap; }
+table.t th { text-align: left; font-size: 10px; letter-spacing: .06em; color: var(--muted); position: sticky; top: 0; background: var(--card); border-bottom: 2px solid var(--border); padding: 1px 4px; }
+table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); white-space: nowrap; }
 
 .empty { color: var(--muted); font-style: italic; padding: 4px; }
 .ev-time { font-weight: 900; width: 95px; flex-shrink: 0; display: inline-block; }
-.ev-row { padding: 3px 0; border-bottom: 1px solid var(--soft); display: flex; align-items: baseline; gap: 8px; }
+.ev-row { padding: 3px 0; border-bottom: 1px solid var(--soft-border); display: flex; align-items: baseline; gap: 8px; }
 
-.al-row { padding: 3px 4px; border-bottom: 1px solid var(--soft); display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.al-row { padding: 3px 4px; border-bottom: 1px solid var(--soft-border); display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
 .al-badge { font-weight: 900; font-size: 10px; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
 .al-badge.crit { background: var(--bad); color: #fff; }
 .al-badge.warn { background: var(--warn); color: #000; }
@@ -171,6 +161,10 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
                 <a href="/" class="nav-tab active">TELEMETRÍA</a>
                 <a href="/recovery" class="nav-tab">RECUPERACIÓN</a>
             </nav>
+            <button type="button" class="theme-toggle" id="btnThemeToggle" title="Alternar modo oscuro / claro" aria-label="Alternar modo oscuro / claro">
+                <span class="theme-icon" id="themeIcon">🌙</span>
+                <span class="theme-label" id="themeLabel">OSCURO</span>
+            </button>
         </div>
 
         <div class="hgroup">
@@ -263,15 +257,18 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft); white-space
                 </div>
             </div>
             <div class="card basecard" style="padding: 6px 8px;">
-                <div class="card-title" style="margin-bottom:3px;">LÍNEAS DE RECUPERACIÓN (PIROTECNIA)</div>
-                <div style="display:flex; justify-content:space-around; align-items:center; padding: 4px 0;">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="font-size:11px; font-weight:800; color:var(--gray);">FRENADO:</span>
-                        <span id="badgeFrenado" class="al-badge ok" style="font-size:10px; padding:2px 8px;">DESACTIVADO</span>
+                <div class="card-title" style="margin-bottom:4px;">
+                    <span>EVENTOS PIROTÉCNICOS</span>
+                    <span class="hint">RECUPERACIÓN</span>
+                </div>
+                <div class="annun-grid">
+                    <div class="annun-card state-idle" id="annunDrogue">
+                        <div class="annun-label">DROGUE (FRENADO)</div>
+                        <div class="annun-state" id="annunDrogueState">[0: EN ESPERA]</div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="font-size:11px; font-weight:800; color:var(--gray);">PRINCIPAL:</span>
-                        <span id="badgePrincipal" class="al-badge ok" style="font-size:10px; padding:2px 8px;">DESACTIVADO</span>
+                    <div class="annun-card state-idle" id="annunMain">
+                        <div class="annun-label">MAIN (PRINCIPAL)</div>
+                        <div class="annun-state" id="annunMainState">[0: EN ESPERA]</div>
                     </div>
                 </div>
             </div>
@@ -768,15 +765,21 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
     const X = t => left + (t - start) * invTime;
     const Y = v => top + ph - (v - lo) * invRange;
 
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const textCol = isDark ? "#9ba7b4" : "#333333";
+    const gridCol = isDark ? "#1e2a38" : "#dddddd";
+    const zeroCol = isDark ? "#4a5c70" : "#888888";
+    const borderCol = isDark ? "#2d4057" : "#000000";
+
     ctx.font = "bold 11px Arial";
-    ctx.fillStyle = "#333";
-    ctx.strokeStyle = "#ddd";
+    ctx.fillStyle = textCol;
+    ctx.strokeStyle = gridCol;
     ctx.lineWidth = 1;
 
     ctx.textAlign = "right"; ctx.textBaseline = "middle";
     for (let i = 0; i <= 4; i++) {
         const v = lo + ((hi - lo) * i) / 4, y = Y(v);
-        ctx.strokeStyle = "#ddd";
+        ctx.strokeStyle = gridCol;
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + pw, y); ctx.stroke();
         ctx.fillText((signedLabels && v > 0 ? "+" : "") + fmt(v, decimals), left - 5, y);
@@ -785,7 +788,7 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
     // Línea de referencia del 0 bien visible si está dentro del marco
     if (lo <= 0 && hi >= 0) {
         const y0 = Y(0);
-        ctx.strokeStyle = "#888";
+        ctx.strokeStyle = zeroCol;
         ctx.lineWidth = 1.5;
         ctx.setLineDash([3, 2]);
         ctx.beginPath(); ctx.moveTo(left, y0); ctx.lineTo(left + pw, y0); ctx.stroke();
@@ -804,7 +807,11 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
     ctx.lineWidth = 2.2; ctx.lineJoin = "round";
     for (const s of series) {
         if (s.data.length < 2) continue;
-        ctx.strokeStyle = s.color;
+        let strokeColor = s.color;
+        if (isDark && (s.color === "#000" || s.color === "#000000")) {
+            strokeColor = (s.data === state.hist.alt) ? "#38bdf8" : "#e6edf3";
+        }
+        ctx.strokeStyle = strokeColor;
         ctx.beginPath();
         s.data.forEach((p, i) => {
             const x = X(p.t), y = Y(p.v);
@@ -821,19 +828,19 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
     for (const m of state.markers) {
         if (m.t < start || m.t > end) continue;
         const x = X(m.t);
-        ctx.strokeStyle = "#000";
+        ctx.strokeStyle = isDark ? "#38bdf8" : "#000";
         ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
         const tw = ctx.measureText(m.label).width + 4;
         ctx.setLineDash([]);
-        ctx.fillStyle = "#fff"; ctx.fillRect(x + 1, top + 1, tw, 12);
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = isDark ? "#17202d" : "#fff"; ctx.fillRect(x + 1, top + 1, tw, 12);
+        ctx.fillStyle = isDark ? "#e6edf3" : "#000";
         ctx.fillText(m.label, x + 3, top + 2);
         ctx.setLineDash([5, 4]);
     }
     ctx.setLineDash([]);
     ctx.restore();
 
-    ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+    ctx.strokeStyle = borderCol; ctx.lineWidth = 2;
     ctx.strokeRect(left, top, pw, ph);
 }
 
@@ -855,8 +862,9 @@ function drawTape(now) {
     const alt = state.altDisplay ?? 0;
     const ppm = h / CFG.tapeSpanM, cy = h / 2;
 
-    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = "#000"; ctx.fillStyle = "#000";
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    ctx.fillStyle = isDark ? "#090d14" : "#fff"; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = isDark ? "#2d4057" : "#000"; ctx.fillStyle = isDark ? "#e6edf3" : "#000";
     ctx.font = "bold 12px Arial"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
 
     const first = Math.floor((alt - CFG.tapeSpanM / 2) / 10) * 10;
@@ -882,9 +890,16 @@ function initMap() {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(state.map);
-    state.route = L.polyline([], { color: "#111", weight: 4 }).addTo(state.map);
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    state.route = L.polyline([], { color: isDark ? "#38bdf8" : "#111", weight: 4 }).addTo(state.map);
     setTimeout(() => state.map.invalidateSize(), 100);
     window.addEventListener("resize", () => state.map && state.map.invalidateSize());
+    window.addEventListener("themechange", e => {
+        const dark = e.detail?.theme === "dark";
+        if (state.route) {
+            state.route.setStyle({ color: dark ? "#38bdf8" : "#111" });
+        }
+    });
 }
 
 let lastRoutePush = 0;
@@ -953,19 +968,28 @@ function renderText() {            // ~10 Hz
         setText("tempImu", `${fmt(state.tempImu, 1)} °C`);
     }
 
-    // Estado visual de pines de pirotecnia
+    // Estado visual de pines de pirotecnia (Anunciadores tipo cabina)
     if (state.pinFrenado !== null) {
-        const el = $("badgeFrenado");
-        if (el) {
-            el.textContent = state.pinFrenado === 1 ? "ACTIVADO" : "DESACTIVADO";
-            el.className = `al-badge ${state.pinFrenado === 1 ? "crit" : "ok"}`;
-        }
+        setAnnunciator("annunDrogue", "annunDrogueState", state.pinFrenado);
     }
     if (state.pinPrincipal !== null) {
-        const el = $("badgePrincipal");
-        if (el) {
-            el.textContent = state.pinPrincipal === 1 ? "ACTIVADO" : "DESACTIVADO";
-            el.className = `al-badge ${state.pinPrincipal === 1 ? "crit" : "ok"}`;
+        setAnnunciator("annunMain", "annunMainState", state.pinPrincipal);
+    }
+}
+
+function setAnnunciator(cardId, stateId, val) {
+    const card = $(cardId);
+    const stateEl = $(stateId);
+    if (!card || !stateEl) return;
+
+    const isActive = Number(val) === 1;
+    const targetClass = isActive ? "annun-card state-active" : "annun-card state-idle";
+    if (card.className !== targetClass) {
+        card.className = targetClass;
+        if (isActive) {
+            stateEl.innerHTML = '<span class="annun-icon">[OK]</span>[1: DESPLEGADO]';
+        } else {
+            stateEl.textContent = "[0: EN ESPERA]";
         }
     }
 }
