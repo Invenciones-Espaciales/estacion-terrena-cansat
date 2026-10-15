@@ -196,6 +196,8 @@ When reintegrating these extended metrics, complete the following validation mil
 ## 5. Related Documentation
 
 - **[System Architecture Documentation](architecture.md):** Complete data flow pipeline and frontend render architecture.
-- **[Frame Specification & Binary Protocol](protocol.md):** 30-byte telemetry frame structure and CRC-16 specification.
+- **[Frame Specification & Binary Protocol](protocol.md):** 65-byte LoRa telemetry frame structure and CRC-16 specification.
+- **[Frame Schema Specification](frame-schema.md):** Declarative YAML frame definition reference and active production schema.
+- **[Dashboard Visual Specification](frontend-dashboard.md):** Telemetry dashboard UI layout, visual hierarchy, and instrument wireframes.
 - **[API & WebSocket Specification](api.md):** REST and WebSocket endpoints for ground station communication.
 - **[Getting Started & Operations Manual](getting-started.md):** Setup, hardware configuration, and developer testing guide.

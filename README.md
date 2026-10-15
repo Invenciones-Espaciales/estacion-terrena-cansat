@@ -6,29 +6,32 @@ A modular, asynchronous telemetry ground station designed for sounding and exper
 
 ## Technical Documentation Suite
 
-The complete technical documentation is organized under the [`docs/`](docs/) directory:
+The complete technical documentation is organized under the [`docs/`](docs/) directory and project guides:
 
 | Document | Description |
 |---|---|
 | **[System Architecture](docs/architecture.md)** | End-to-end data flow pipeline, `asyncio` concurrency model, task lifecycle, and decoupled multi-tiered frontend render engine. |
-| **[Protocol Specification](docs/protocol.md)** | 30-byte binary frame structure, bit-level memory map, data types, physical scale factors, flight states, and CRC-16/CCITT-FALSE specification. |
-| **[API & WebSocket Specification](docs/api.md)** | REST endpoints (`GET /`, `GET /api/status`, `GET /api/telemetry`), WebSocket protocol schemas, packet statistics, and reconnection state machines. |
+| **[Protocol Specification](docs/protocol.md)** | 65-byte definitive LoRa binary frame structure, bit-level memory map, data types, physical scale factors, flight states, and CRC-16/CCITT-FALSE specification. |
+| **[Frame Schema Specification](docs/frame-schema.md)** | Generic declarative schema specification: field properties, scaling, data types, and parser operation. |
+| **[Dashboard Visual Specification](docs/frontend-dashboard.md)** | Telemetry dashboard UI layout, visual hierarchy, instrument wireframes, and ergonomic design guidelines. |
+| **[API & WebSocket Specification](docs/api.md)** | REST endpoints (`GET /`, `GET /gonogo`, `GET /api/status`, `GET /api/telemetry`), WebSocket protocol schemas, packet statistics, and reconnection state machines. |
 | **[Getting Started & Operations](docs/getting-started.md)** | Detailed developer setup, Linux serial permissions (`dialout`), configuration guide, hardware-free testing (`socat`), and troubleshooting. |
-| **[Future Calculations Reference](docs/calculos-futuros.md)** | Extended avionics algorithms: Kalman filter fusion, variometer ($V_z$), landing ellipse, antenna tracking, and ISA-18.2 alarm specifications. |
-| **[Frame Schema Specification](config.md)** | Generic declarative schema specification: field properties, scaling, data types, and parser operation. |
-| **[Dashboard Visual Specification](front.md)** | Telemetry dashboard UI layout, visual hierarchy, instrument wireframes, and ergonomic design guidelines. |
+| **[Contributing & Team Onboarding](CONTRIBUTING.md)** | Complete onboarding walkthrough, Git workflow, branch strategy, coding conventions, testing requirements, and PR review process. |
 | **[Windows Executable Packaging](docs/packaging-exe.md)** | Instructions for compiling standalone Windows `.exe` using PyInstaller, `build_windows.bat`, or automated GitHub Actions. |
+| **[Future Calculations Reference](docs/calculos-futuros.md)** | Extended avionics algorithms: Kalman filter fusion, variometer ($V_z$), landing ellipse, antenna tracking, and ISA-18.2 alarm specifications. |
 
 ---
 
 ## Key Features
 
 - **Asynchronous Serial Engine:** Non-blocking serial acquisition powered by `pyserial-asyncio` with automatic reconnection if the USB or RF link drops.
-- **Declarative Protocol Schema:** Binary frame structure is governed entirely by [`config/frame.yaml`](config/frame.yaml). Modifying telemetry formats requires zero code changes.
-- **Strict Integrity Verification:** Frame length enforcement, CRC-16/CCITT-FALSE verification, and header sanity checks.
+- **Declarative Protocol Schema:** Binary frame structure is governed entirely by [`config/frame.yaml`](config/frame.yaml). Modifying telemetry formats requires zero Python code changes.
+- **Strict Integrity Verification:** Frame length enforcement, CRC-16/CCITT-FALSE verification, and fixed sync header (`0xAA`) noise immunity.
 - **Quantitative Link Diagnostics:** Automatic packet sequence tracking, real-time packet loss calculation, rolling reception rate (Hz), and silence timeout detection.
 - **Dual Persistent Storage:** Simultaneous recording to indexed SQLite database (`data/telemetry.db`) and immediately flushed flat-file CSV (`data/telemetry.csv`).
 - **High-Contrast Mission Dashboard:** Zero-dependency Canvas instruments (aerospace moving altitude tape, time-series oscilloscopes), Leaflet GPS mapping, and ISA-18.2 operational alert badges engineered for sunlight readability.
+- **Pre-Flight Go / No-Go Checklist:** Dedicated qualification console (`/gonogo`) verifying sensor baselines, stability hold counters, and weather limits.
+- **Microcontroller Mission Simulator:** Ready-to-flash 290-second mission firmware in [`arduino/telemetry_simulator/`](arduino/telemetry_simulator/) for full end-to-end hardware-in-the-loop simulation.
 
 ---
 
@@ -63,8 +66,16 @@ pip install -r requirements.txt
 
 > **Note:** Always ensure the virtual environment is active (`source .venv/bin/activate`). Executing `main.py` directly under system Python will trigger an automatic dependency check reminding you to activate `.venv`.
 
+### 3. Run Automated Tests
+Verify that the environment and frame parser pass all tests:
 
-### 3. Configure Hardware Link
+```bash
+python tests/test_telemetry_65b.py
+# or using unittest discovery:
+python -m unittest discover tests
+```
+
+### 4. Configure Hardware Link
 Edit [`config/app.yaml`](config/app.yaml) with your serial port and desired network port:
 
 ```yaml
@@ -82,12 +93,14 @@ storage:
   csv: "data/telemetry.csv"
 ```
 
-### 4. Run the Ground Station
+### 5. Run the Ground Station
 ```bash
 python main.py
 ```
 
-Open your browser to **`http://localhost:8000`** to access the live dashboard.
+Open your browser to:
+- **`http://localhost:8000`** $\to$ Real-time mission dashboard
+- **`http://localhost:8000/gonogo`** $\to$ Pre-flight Go / No-Go qualification view
 
 ---
 
@@ -96,6 +109,7 @@ Open your browser to **`http://localhost:8000`** to access the live dashboard.
 | Endpoint | Protocol | Description |
 |---|---|---|
 | `GET /` | HTTP | Serves the web dashboard (`frontend/index.html`) |
+| `GET /gonogo` | HTTP | Serves the Go / No-Go pre-flight qualification view (`frontend/gonogo.html`) |
 | `GET /api/status` | HTTP | System runtime health, serial link state, and packet loss metrics |
 | `GET /api/telemetry` | HTTP | Latest received frame snapshot, decoded values, and raw hex |
 | `WS /ws/telemetry` | WebSocket | Real-time bi-directional telemetry and event streaming |
@@ -109,29 +123,44 @@ Open your browser to **`http://localhost:8000`** to access the live dashboard.
 
 ```text
 .
-├── main.py              # Application core (FastAPI + serial_asyncio + parser + storage)
-├── arduino/             # Microcontroller firmware simulation (Arduino / ESP32 / STM32)
+├── main.py                  # Application core (FastAPI + serial_asyncio + parser + storage)
+├── arduino/                 # Microcontroller firmware simulation (Arduino / ESP32 / STM32)
+│   └── telemetry_simulator/ # 290-second flight profile simulator firmware
 ├── config/
-│   ├── app.yaml         # Serial port, HTTP/WebSocket, and storage paths
-│   └── frame.yaml       # Declarative binary frame schema and CRC configuration
-├── config.md            # Declarative frame definition schema specification
-├── data/                # Generated telemetry records (git-ignored)
-│   ├── telemetry.db     # SQLite database
-│   └── telemetry.csv    # Append-only CSV telemetry log
-├── docs/                # Comprehensive technical documentation
-│   ├── api.md           # REST and WebSocket interface reference
-│   ├── architecture.md  # End-to-end system architecture and data pipeline
-│   ├── calculos-futuros.md # Mathematical algorithms and future calculations
-│   ├── getting-started.md # Setup, operations, and developer testing manual
-│   └── protocol.md      # Binary frame specification and CRC-16 reference
-├── front.md             # Telemetry dashboard design and ergonomic specification
+│   ├── app.yaml             # Serial port, HTTP/WebSocket, and storage paths
+│   └── frame.yaml           # Declarative 65-byte LoRa frame schema and CRC parameters
+├── data/                    # Generated telemetry records (git-ignored)
+│   ├── telemetry.db         # SQLite database
+│   └── telemetry.csv        # Append-only CSV telemetry log
+├── docs/                    # Comprehensive technical documentation
+│   ├── api.md               # REST and WebSocket interface reference
+│   ├── architecture.md      # End-to-end system architecture and data pipeline
+│   ├── calculos-futuros.md  # Mathematical algorithms and future calculations
+│   ├── frame-schema.md      # Declarative frame definition schema specification
+│   ├── frontend-dashboard.md# Telemetry dashboard design and ergonomic specification
+│   ├── getting-started.md   # Setup, operations, and developer testing manual
+│   ├── packaging-exe.md     # PyInstaller Windows standalone compilation guide
+│   └── protocol.md          # 65-byte LoRa binary frame specification and CRC-16 reference
 ├── frontend/
-│   ├── index.html       # Single-page high-contrast mission dashboard
-│   ├── css/style.css    # Supplemental styling
-│   └── assets/          # Project graphics and logos
-├── README.md            # Project entry point and documentation index
-└── requirements.txt     # Python runtime dependencies
+│   ├── index.html           # Single-page high-contrast mission dashboard
+│   ├── gonogo.html          # Pre-launch Go / No-Go qualification view
+│   ├── css/style.css        # Supplemental styling
+│   └── assets/              # Project graphics and logos
+├── tests/
+│   ├── __init__.py          # Test suite package marker
+│   └── test_telemetry_65b.py# Automated verification (parser, CRC, sliding window, DB)
+├── build_windows.bat        # 1-click Windows executable builder
+├── ground_station.spec      # PyInstaller frozen bundle specification
+├── CONTRIBUTING.md          # Team contribution, onboarding, and PR guidelines
+├── README.md                # Project entry point and documentation index
+└── requirements.txt         # Python runtime dependencies
 ```
+
+---
+
+## Contributing & Onboarding
+
+We welcome contributions from everyone on the team! Before opening a pull request, please review [CONTRIBUTING.md](CONTRIBUTING.md) for onboarding instructions, code conventions, testing requirements, and Git workflow.
 
 ---
 

@@ -27,6 +27,10 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Run Automated Test Suite
+        run: |
+          python -m unittest discover tests
+
       - name: Compile Windows Executable with PyInstaller
         run: |
           pyinstaller --clean ground_station.spec

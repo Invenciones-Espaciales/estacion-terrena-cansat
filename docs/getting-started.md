@@ -190,40 +190,73 @@ You can test the entire pipeline without physical avionics hardware using `socat
      reconnect_delay: 3
    ```
 
-3. Send simulated 30-byte frames into `/dev/pts/3` using a lightweight Python generator:
+3. Send simulated 65-byte frames into `/dev/pts/3` using a lightweight Python generator:
    ```python
    # mock_feeder.py
-   import time
    import struct
+   import time
 
-   def crc16(data: bytes) -> int:
+   def crc16_ccitt(data: bytes) -> int:
        crc = 0xFFFF
        for b in data:
            crc ^= (b << 8)
            for _ in range(8):
-               crc = ((crc << 1) ^ 0x1021) & 0xFFFF if (crc & 0x8000) else (crc << 1) & 0xFFFF
+               if crc & 0x8000:
+                   crc = ((crc << 1) ^ 0x1021) & 0xFFFF
+               else:
+                   crc = (crc << 1) & 0xFFFF
        return crc
 
    with open("/dev/pts/3", "wb", buffering=0) as pty:
        seq = 0
+       t_start = time.time()
        while True:
-           t_ms = int(time.time() * 1000) & 0xFFFFFFFF
-           # Frame: id(1), type(1), seq(2), t(4), ax(2), ay(2), az(2), press(3), lat(4), lon(4), alt(2), stat(1)
-           payload = struct.pack(">BBHIhhh", 1, 1, seq, t_ms, 120, -45, 1015)
-           payload += (101325).to_bytes(3, "big") # Pressure 101325 Pa
-           payload += struct.pack(">iihB", -34603722, -58381592, 145, 2)
-           crc = crc16(payload)
-           frame = payload + struct.pack(">H", crc)
-           pty.write(frame)
+           t_ms = int((time.time() - t_start) * 1000) & 0xFFFFFFFF
+           # 63 bytes payload: sync(AA), seq, timestamp, status, pressure, alt,
+           # ax, ay, az, gx, gy, gz, temp, lat, lon, alt_gps, sats, spd, pin1, pin2
+           payload = struct.pack(
+               '<B H I B f f f f f f f f f f f f B f B B',
+               0xAA,           # sync
+               seq,            # frame_number
+               t_ms,           # timestamp (ms)
+               1,              # status (1 = POWERED)
+               1013.25,        # pressure (hPa)
+               120.5,          # altura_actual (m)
+               0.05, -0.02, 1.02, # accel_x, y, z (g)
+               0.5, -0.3, 12.4,   # gyro_x, y, z (deg/s)
+               28.5,           # temp_imu (°C)
+               -34.603722, -58.381592, # latitude, longitude
+               125.0,          # altitud_gps (m)
+               12,             # satellites
+               15.4,           # ground_speed (m/s)
+               0, 0            # pin_frenado, pin_principal
+           )
+           crc = crc16_ccitt(payload)
+           packet = payload + crc.to_bytes(2, byteorder='little')
+           pty.write(packet)
            seq = (seq + 1) & 0xFFFF
-           time.sleep(0.1) # 10 Hz
+           time.sleep(0.1)     # 10 Hz
    ```
 
 4. Run `python mock_feeder.py` and observe the live instruments updating on the browser dashboard!
 
+### 6.2 Running the Firmware Simulator (Arduino / ESP32)
+For end-to-end hardware-in-the-loop simulation, flash the complete 290-second mission profile simulator provided in [`arduino/telemetry_simulator/`](../arduino/telemetry_simulator/):
+- Emulates pre-launch pad noise, powered ascent (9.8g), burnout coast, apogee, drogue chute deployment, main parachute reefing, and touchdown.
+- Tests in-flight ISA-18.2 alerts: excessive lateral G-force, packet loss bursts, and CRC corruptions.
+- Refer to [`arduino/telemetry_simulator/README.md`](../arduino/telemetry_simulator/README.md) for 1-click flashing instructions.
+
+### 6.3 Running Automated Test Suite
+Execute the comprehensive automated test suite to verify configuration loading, field decoding, CRC rejection, sliding window resynchronization, and dual storage persistence:
+```bash
+python tests/test_telemetry_65b.py
+# or using unittest discovery
+python -m unittest discover tests
+```
+
 ---
 
-### 6.2 Verifying the REST API
+### 6.4 Verifying the REST API
 Check the health status endpoint:
 ```bash
 curl -s http://localhost:8000/api/status | jq
@@ -253,7 +286,7 @@ curl -s http://localhost:8000/api/telemetry | jq
 
 ---
 
-### 6.3 Verifying Persistent Storage
+### 6.5 Verifying Persistent Storage
 Confirm that telemetry is being recorded to SQLite and CSV:
 
 ```bash
@@ -266,7 +299,7 @@ tail -n 5 data/telemetry.csv
 
 ---
 
-### 6.4 Physical RF Hardware Deployment & Over-the-Air Verification (LoRa / SiK Radios)
+### 6.6 Physical RF Hardware Deployment & Over-the-Air Verification (LoRa / SiK Radios)
 
 When transitioning from virtual loopback simulation to physical sounding rocket flight operations, configure and verify the wireless radio link:
 
@@ -275,10 +308,10 @@ When transitioning from virtual loopback simulation to physical sounding rocket 
 - **LoRa Serial Transceivers (SX1262 / SX1276 / Ebyte E22):** Connect the ground transceiver module via a 3.3V USB-to-UART bridge (CP2102, FT232R) to `/dev/ttyUSB0` or `/dev/ttyACM0`. Ensure mode configuration pins (`M0=0, M1=0`) select transparent transmission mode.
 
 #### 2. Air Data Rate & Bandwidth Sizing
-- At the nominal 10 Hz telemetry rate, each 30-byte frame generates $300\text{ bytes/s}$ ($2,400\text{ bps}$) of raw payload.
+- At the nominal 10 Hz telemetry rate, each 65-byte frame generates $650\text{ bytes/s}$ ($5,200\text{ bps}$) of raw payload.
 - To prevent transmit buffer bloat, latency buildup, and packet loss on the radio modem FIFO:
-  - Configure the modem's **Over-The-Air Data Rate** (Air Rate) to **$\ge 9,600\text{ bps}$** (or LoRa Spreading Factor $\text{SF}\le 7$, Bandwidth $\ge 125\text{ kHz}$, Coding Rate 4/5).
-  - An air rate configured below $4,800\text{ bps}$ will cause modem FIFO overflow, manifesting as burst packet drops and triggering the dashboard's `PÉRDIDA DE PAQUETES` alarm badge.
+  - Configure the modem's **Over-The-Air Data Rate** (Air Rate) to **$\ge 9,600\text{ bps}$** (or LoRa Spreading Factor $\text{SF}\le 7$, Bandwidth $\ge 250\text{ kHz}$, Coding Rate 4/5).
+  - An air rate configured below $5,200\text{ bps}$ will cause modem FIFO overflow, manifesting as burst packet drops and triggering the dashboard's `PÉRDIDA DE PAQUETES` alarm badge.
 
 #### 3. Antenna Sizing & Polarization Alignment
 - **Vehicle Airframe:** Deploy an omnidirectional, vertically polarized 1/4-wave whip or dipole along the rocket fuselage or within a radio-transparent fiberglass nosecone.
@@ -313,7 +346,11 @@ When transitioning from virtual loopback simulation to physical sounding rocket 
 ## 8. Related Documentation
 
 - **[System Architecture & Component Documentation](architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
-- **[Frame Specification & Binary Protocol Reference](protocol.md):** 30-byte frame memory map, field data types, scales, and CRC-16 specification.
+- **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte LoRa frame memory map, field data types, scales, and CRC-16 specification.
+- **[Frame Schema Specification](frame-schema.md):** Declarative YAML frame definition reference and active production schema.
+- **[Dashboard Visual Specification](frontend-dashboard.md):** Telemetry dashboard UI layout, visual hierarchy, and instrument wireframes.
 - **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
+- **[Windows Executable Packaging](packaging-exe.md):** Compiling standalone Windows .exe using PyInstaller or GitHub Actions.
+- **[Contributing Guide](../CONTRIBUTING.md):** Onboarding, Git workflow, testing requirements, and PR process.
 - **[Extended Calculations & Future Reference](calculos-futuros.md):** Mathematical models for Kalman filtering, variometer ($V_z$), and antenna tracking.
 

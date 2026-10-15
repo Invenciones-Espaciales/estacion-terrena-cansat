@@ -210,3 +210,15 @@ void sendTelemetry(LoRaPacket &packet) {
     LoRa.endPacket();
 }
 ```
+
+---
+
+## 7. Related Documentation
+
+- **[System Architecture & Component Documentation](architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
+- **[Frame Schema Specification](frame-schema.md):** Generic declarative schema specification and active production schema.
+- **[Dashboard Visual Specification](frontend-dashboard.md):** Telemetry dashboard UI layout, visual hierarchy, and instrument wireframes.
+- **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
+- **[Getting Started & Operations Guide](getting-started.md):** Setup, Linux serial permissions, runtime operation, and verification.
+- **[Extended Calculations & Future Reference](calculos-futuros.md):** Mathematical models for Kalman filtering, variometer ($V_z$), and antenna tracking.
+

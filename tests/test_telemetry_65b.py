@@ -3,9 +3,10 @@ import os
 import struct
 import tempfile
 import asyncio
+import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import main
@@ -78,7 +79,7 @@ def build_test_packet(
     return packet
 
 
-def test_frame_config():
+def run_test_frame_config():
     print("[TEST 1] Testing Frame Configuration Loading...")
     cfg = load_frame_config()
     assert cfg.frame_size == 65, f"Expected frame_size 65, got {cfg.frame_size}"
@@ -101,7 +102,7 @@ def test_frame_config():
     print("  -> PASSED: 65-byte frame configuration loaded and validated.")
 
 
-def test_parser():
+def run_test_parser():
     print("[TEST 2] Testing FrameParser on Definitive 65-Byte Packet...")
     cfg = load_frame_config()
     parser = FrameParser(cfg)
@@ -157,7 +158,7 @@ def test_parser():
     print("  -> PASSED: All 20 fields decoded accurately with high floating-point precision.")
 
 
-def test_corrupted_crc():
+def run_test_corrupted_crc():
     print("[TEST 3] Testing CRC Integrity Rejection...")
     cfg = load_frame_config()
     parser = FrameParser(cfg)
@@ -168,7 +169,7 @@ def test_corrupted_crc():
     print("  -> PASSED: Corrupted CRC packet successfully rejected.")
 
 
-def test_buffer_sliding_window_with_noise():
+def run_test_buffer_sliding_window_with_noise():
     print("[TEST 4] Testing FrameBuffer Resynchronization & Noise Immunity...")
     cfg = load_frame_config()
     parser = FrameParser(cfg)
@@ -201,7 +202,7 @@ def test_buffer_sliding_window_with_noise():
     print("  -> PASSED: FrameBuffer sliding window cleanly handles noise and false syncs.")
 
 
-def test_storage():
+def run_test_storage():
     print("[TEST 5] Testing SQLite & CSV Logging with 65-Byte Telemetry Fields...")
     cfg = load_frame_config()
     parser = FrameParser(cfg)
@@ -260,15 +261,113 @@ def test_storage():
     print("  -> PASSED: SQLite and CSV successfully store new 65-byte telemetry payloads.")
 
 
+def run_test_fragmented_streaming():
+    print("[TEST 6] Testing Streaming Fragment Reassembly (UART Byte Fragmentation)...")
+    cfg = load_frame_config()
+    parser = FrameParser(cfg)
+    buf = FrameBuffer(parser)
+
+    pkt = build_test_packet(frame_number=88, timestamp_ms=8800)
+    assert len(pkt) == 65
+
+    # Feed packet in uneven chunks: 5 bytes at a time
+    accumulated_frames = []
+    chunk_size = 5
+    for i in range(0, len(pkt), chunk_size):
+        chunk = pkt[i:i + chunk_size]
+        new_frames = buf.feed(chunk)
+        accumulated_frames.extend(new_frames)
+        if i + chunk_size < len(pkt):
+            assert len(new_frames) == 0, f"Unexpected premature frame at offset {i}"
+
+    assert len(accumulated_frames) == 1, f"Expected 1 reassembled frame, got {len(accumulated_frames)}"
+    assert accumulated_frames[0]["frame_number"] == 88
+    print("  -> PASSED: Fragmented chunks correctly reassembled without frame loss.")
+
+
+def run_test_consecutive_false_syncs():
+    print("[TEST 7] Testing Consecutive False Sync Bytes (0xAA 0xAA 0xAA Noise)...")
+    cfg = load_frame_config()
+    parser = FrameParser(cfg)
+    buf = FrameBuffer(parser)
+
+    # Sequence of multiple false sync bytes with invalid lengths/CRC
+    noise = b"\xAA\xAA\xAA\x00\x01\x02\xAA\x55"
+    frames = buf.feed(noise)
+    assert len(frames) == 0
+
+    # Genuine frame right after
+    pkt = build_test_packet(frame_number=99, timestamp_ms=9900)
+    frames = buf.feed(pkt)
+    assert len(frames) == 1
+    assert frames[0]["frame_number"] == 99
+    print("  -> PASSED: Consecutive false sync sequences safely discarded and true frame recovered.")
+
+
+def run_test_packet_statistics_and_loss():
+    print("[TEST 8] Testing Packet Statistics & Sequence Loss Tracking...")
+    stats = PacketStatistics("frame_number")
+
+    # Frames 1, 2, 3 (nominal)
+    stats.register({"frame_number": 1})
+    stats.register({"frame_number": 2})
+    stats.register({"frame_number": 3})
+    snap = stats.snapshot()
+    assert snap["received"] == 3
+    assert snap["lost"] == 0
+    assert snap["loss_percent"] == 0.0
+
+    # Jump from 3 to 7 (4, 5, 6 lost = 3 lost)
+    stats.register({"frame_number": 7})
+    snap = stats.snapshot()
+    assert snap["received"] == 4
+    assert snap["lost"] == 3
+    # Total packets = 4 received + 3 lost = 7. loss % = 3/7 * 100 ~ 42.85%
+    assert abs(snap["loss_percent"] - (3 / 7 * 100)) < 0.1
+    print("  -> PASSED: Packet loss tracking accurately calculates missing sequences.")
+
+
+class TestTelemetry65BSuite(unittest.TestCase):
+    """Unittest test case runner ensuring standard python -m unittest discovery works."""
+
+    def test_01_frame_config(self):
+        run_test_frame_config()
+
+    def test_02_parser(self):
+        run_test_parser()
+
+    def test_03_corrupted_crc(self):
+        run_test_corrupted_crc()
+
+    def test_04_buffer_sliding_window_with_noise(self):
+        run_test_buffer_sliding_window_with_noise()
+
+    def test_05_storage(self):
+        run_test_storage()
+
+    def test_06_fragmented_streaming(self):
+        run_test_fragmented_streaming()
+
+    def test_07_consecutive_false_syncs(self):
+        run_test_consecutive_false_syncs()
+
+    def test_08_packet_statistics_and_loss(self):
+        run_test_packet_statistics_and_loss()
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("RUNNING AUTOMATED 65-BYTE LORA TELEMETRY FRAME VERIFICATION")
     print("=" * 60)
-    test_frame_config()
-    test_parser()
-    test_corrupted_crc()
-    test_buffer_sliding_window_with_noise()
-    test_storage()
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestTelemetry65BSuite)
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
     print("=" * 60)
-    print("ALL TESTS PASSED SUCCESSFULLY (100% PASS RATE)")
-    print("=" * 60)
+    if result.wasSuccessful():
+        print(f"ALL {result.testsRun} TESTS PASSED SUCCESSFULLY (100% PASS RATE)")
+        print("=" * 60)
+        sys.exit(0)
+    else:
+        print("TEST SUITE FAILED")
+        print("=" * 60)
+        sys.exit(1)

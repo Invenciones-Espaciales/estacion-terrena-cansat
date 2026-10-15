@@ -136,29 +136,39 @@ Retrieves the most recent decoded telemetry frame, raw hex representation, CRC v
 | `connected` | `boolean` | `true` if serial interface is active |
 | `timestamp` | `float` \| `null` | Unix timestamp of the last decoded frame |
 | `data` | `object` \| `null` | Decoded telemetry fields and labels (see [Telemetry Data Object](#231-telemetry-data-object)) |
-| `frame_length` | `integer` | Configured frame size in bytes (normally `30`) |
+| `frame_length` | `integer` | Configured frame size in bytes (e.g. `65` for definitive LoRa frame) |
 | `crc_valid` | `boolean` | `true` if the last frame passed CRC-16 verification |
-| `crc_value` | `string` \| `null` | Hexadecimal string of received CRC bytes (e.g. `"9DE2"`) |
-| `raw_hex` | `string` \| `null` | Space-separated uppercase hexadecimal dump of the 30-byte raw frame |
+| `crc_value` | `string` \| `null` | Hexadecimal string of received CRC bytes (e.g. `"B1A4"`) |
+| `raw_hex` | `string` \| `null` | Space-separated uppercase hexadecimal dump of the 65-byte raw frame |
 | `statistics` | `object` | Cumulative packet statistics snapshot |
 
 #### 2.3.1 Telemetry Data Object (`data`)
 
 | Key | Type | Unit | Description |
 |---|---|---|---|
-| `rocket_id` | `integer` | — | Rocket identifier (e.g. `1`) |
-| `frame_type` | `integer` | — | Frame type identifier (`1`) |
+| `sync` | `integer` | — | Synchronization byte (fixed `0xAA` / `170`) |
 | `frame_number` | `integer` | — | Sequential frame sequence number (`0`–`65535`) |
 | `timestamp` | `integer` | `ms` | Mission elapsed time / avionics boot time |
-| `accel_x` | `float` | `g` | X-axis acceleration ($1\text{ mg}$ resolution) |
-| `accel_y` | `float` | `g` | Y-axis acceleration ($1\text{ mg}$ resolution) |
-| `accel_z` | `float` | `g` | Z-axis acceleration ($0.5\text{ mg}$ resolution) |
-| `pressure` | `integer` | `Pa` | Atmospheric pressure |
-| `latitude` | `float` | `deg` | GPS latitude ($10^{-6}$ degree resolution) |
-| `longitude` | `float` | `deg` | GPS longitude ($10^{-6}$ degree resolution) |
-| `altitude` | `integer` | `m` | Geometric altitude |
-| `status` | `integer` | — | Current flight state code (`0`–`5`) |
-| `status_label` | `string` \| `null` | — | Human-readable phase label (e.g. `"Motor encendido / Ascenso"`) |
+| `status` | `integer` | — | Flight state code (`0`–`255`) |
+| `status_label` | `string` | — | Flight state label (`"STANDBY"`, `"POWERED"`, `"BURNOUT"`, `"APOGEE"`, `"DROGUE_CONF"`, `"MAIN_CONF"`, `"LANDED"`) |
+| `pressure` | `float` | `hPa` | Atmospheric pressure |
+| `altura_actual` | `float` | `m` | Geometric altitude |
+| `accel_x` | `float` | `g` | X-axis body acceleration |
+| `accel_y` | `float` | `g` | Y-axis body acceleration |
+| `accel_z` | `float` | `g` | Z-axis body acceleration |
+| `gyro_x` | `float` | `deg/s` | Roll rotational velocity |
+| `gyro_y` | `float` | `deg/s` | Pitch rotational velocity |
+| `gyro_z` | `float` | `deg/s` | Yaw rotational velocity |
+| `temp_imu` | `float` | `°C` | IMU temperature sensor readout |
+| `latitude` | `float` | `deg` | GPS latitude in decimal degrees |
+| `longitude` | `float` | `deg` | GPS longitude in decimal degrees |
+| `altitud_gps` | `float` | `m` | GPS geometric altitude |
+| `satellites` | `integer` | — | Number of tracked GPS satellites |
+| `ground_speed` | `float` | `m/s` | Horizontal ground speed |
+| `pin_frenado` | `integer` | — | Drogue pyro channel pin state (`0` or `1`) |
+| `pin_frenado_label` | `string` | — | Pyro state label (`"DESACTIVADO"` / `"ACTIVADO"`) |
+| `pin_principal` | `integer` | — | Main chute pyro channel pin state (`0` or `1`) |
+| `pin_principal_label` | `string` | — | Pyro state label (`"DESACTIVADO"` / `"ACTIVADO"`) |
 
 #### Example Response (`200 OK`)
 ```json
@@ -166,29 +176,39 @@ Retrieves the most recent decoded telemetry frame, raw hex representation, CRC v
   "connected": true,
   "timestamp": 1718300042.8125,
   "data": {
-    "rocket_id": 1,
-    "frame_type": 1,
-    "frame_number": 1450,
-    "timestamp": 145000,
-    "accel_x": 0.082,
-    "accel_y": -0.015,
-    "accel_z": 3.4215,
-    "pressure": 98450,
-    "latitude": -34.603722,
-    "longitude": -58.381592,
-    "altitude": 248,
-    "status": 2,
-    "status_label": "Motor encendido / Ascenso"
+    "sync": 170,
+    "frame_number": 105,
+    "timestamp": 155400,
+    "status": 1,
+    "status_label": "POWERED",
+    "pressure": 995.4,
+    "altura_actual": 152.8,
+    "accel_x": 0.15,
+    "accel_y": -0.12,
+    "accel_z": 4.85,
+    "gyro_x": 1.25,
+    "gyro_y": -0.85,
+    "gyro_z": 45.0,
+    "temp_imu": 31.5,
+    "latitude": -34.6038,
+    "longitude": -58.3817,
+    "altitud_gps": 177.8,
+    "satellites": 14,
+    "ground_speed": 18.6,
+    "pin_frenado": 0,
+    "pin_frenado_label": "DESACTIVADO",
+    "pin_principal": 0,
+    "pin_principal_label": "DESACTIVADO"
   },
-  "frame_length": 30,
+  "frame_length": 65,
   "crc_valid": true,
-  "crc_value": "9DE2",
-  "raw_hex": "01 01 05 AA 00 02 36 68 00 52 FF F1 1A BB 01 80 92 FD EF FD 36 FC 85 2A E8 00 F8 02 9D E2",
+  "crc_value": "B1A4",
+  "raw_hex": "AA 69 00 E8 5E 02 00 01 CD CC 78 44 66 66 18 43 9A 99 19 3E F6 28 F6 BD 66 66 9B 40 00 00 A0 3F 9A 99 59 BF 00 00 34 42 00 00 FC 41 F4 04 0A C2 ED 52 69 C2 66 66 31 43 0E CD CC 94 41 00 00 B1 A4",
   "statistics": {
-    "received": 1450,
-    "lost": 2,
+    "received": 105,
+    "lost": 0,
     "invalid": 0,
-    "loss_percent": 0.13774104683195593
+    "loss_percent": 0.0
   }
 }
 ```
@@ -199,7 +219,7 @@ Retrieves the most recent decoded telemetry frame, raw hex representation, CRC v
   "connected": false,
   "timestamp": null,
   "data": null,
-  "frame_length": 30,
+  "frame_length": 65,
   "crc_valid": false,
   "crc_value": null,
   "raw_hex": null,
@@ -248,37 +268,47 @@ The server supports two interchangeable route aliases:
 All messages transmitted over the WebSocket are UTF-8 encoded JSON objects containing a top-level `type` discriminator.
 
 #### 1. Telemetry Message (`type: "telemetry"`)
-Broadcast whenever a valid 30-byte frame is received and verified.
+Broadcast whenever a valid 65-byte frame is received and verified.
 
 ```json
 {
   "type": "telemetry",
   "timestamp": 1718300042.8125,
-  "frame_length": 30,
+  "frame_length": 65,
   "crc_valid": true,
-  "crc_value": "9DE2",
-  "raw_hex": "01 01 05 AA 00 02 36 68 00 52 FF F1 1A BB 01 80 92 FD EF FD 36 FC 85 2A E8 00 F8 02 9D E2",
+  "crc_value": "B1A4",
+  "raw_hex": "AA 69 00 E8 5E 02 00 01 CD CC 78 44 66 66 18 43 9A 99 19 3E F6 28 F6 BD 66 66 9B 40 00 00 A0 3F 9A 99 59 BF 00 00 34 42 00 00 FC 41 F4 04 0A C2 ED 52 69 C2 66 66 31 43 0E CD CC 94 41 00 00 B1 A4",
   "data": {
-    "rocket_id": 1,
-    "frame_type": 1,
-    "frame_number": 1450,
-    "timestamp": 145000,
-    "accel_x": 0.082,
-    "accel_y": -0.015,
-    "accel_z": 3.4215,
-    "pressure": 98450,
-    "latitude": -34.603722,
-    "longitude": -58.381592,
-    "altitude": 248,
-    "status": 2,
-    "status_label": "Motor encendido / Ascenso"
+    "sync": 170,
+    "frame_number": 105,
+    "timestamp": 155400,
+    "status": 1,
+    "status_label": "POWERED",
+    "pressure": 995.4,
+    "altura_actual": 152.8,
+    "accel_x": 0.15,
+    "accel_y": -0.12,
+    "accel_z": 4.85,
+    "gyro_x": 1.25,
+    "gyro_y": -0.85,
+    "gyro_z": 45.0,
+    "temp_imu": 31.5,
+    "latitude": -34.6038,
+    "longitude": -58.3817,
+    "altitud_gps": 177.8,
+    "satellites": 14,
+    "ground_speed": 18.6,
+    "pin_frenado": 0,
+    "pin_frenado_label": "DESACTIVADO",
+    "pin_principal": 0,
+    "pin_principal_label": "DESACTIVADO"
   },
   "statistics": {
-    "received": 1450,
-    "lost": 2,
+    "received": 105,
+    "lost": 0,
     "invalid": 0,
-    "loss_percent": 0.13774104683195593,
-    "frames_received": 1450
+    "loss_percent": 0.0,
+    "frames_received": 105
   }
 }
 ```
@@ -355,6 +385,9 @@ stateDiagram-v2
 ## 4. Related Documentation
 
 - **[System Architecture & Component Documentation](architecture.md):** Architectural design, FastAPI async concurrency model, and frontend render engine.
-- **[Frame Specification & Binary Protocol Reference](protocol.md):** 30-byte frame memory map, field data types, scales, and CRC-16 specification.
+- **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte LoRa frame memory map, field data types, scales, and CRC-16 specification.
+- **[Frame Schema Specification](frame-schema.md):** Declarative YAML frame definition reference and active production schema.
+- **[Dashboard Visual Specification](frontend-dashboard.md):** Telemetry dashboard UI layout, visual hierarchy, and instrument wireframes.
 - **[Getting Started & Operations Guide](getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
+- **[Windows Executable Packaging](packaging-exe.md):** Compiling standalone Windows .exe using PyInstaller or GitHub Actions.
 - **[Extended Calculations & Future Reference](calculos-futuros.md):** Algorithmic extensions and mathematical derivations.

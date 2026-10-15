@@ -2,9 +2,9 @@
 
 ## 1. Objective
 
-The Ground Station system must dynamically parse and validate arbitrary binary telemetry frame formats without requiring any code modifications to the core application.
+The Ground Station system dynamically parses and validates arbitrary binary telemetry frame formats without requiring any code modifications to the core application.
 
-To accomplish this, each telemetry frame is declaratively defined using an external YAML configuration file (e.g., [`config/frame.yaml`](config/frame.yaml)).
+To accomplish this, each telemetry frame is declaratively defined using an external YAML configuration file ([`config/frame.yaml`](../config/frame.yaml)).
 
 During runtime, the ground station engine:
 
@@ -29,8 +29,9 @@ id: 1
 description: "High-level description"
 
 frame:
-  length: 30
-  byte_order: "big_endian"
+  length: 65
+  byte_order: "little_endian"
+  sync: "0xAA"
 
   crc:
     enabled: true
@@ -40,23 +41,24 @@ frame:
     final_xor: 0x0000
     reflect_input: false
     reflect_output: false
-    offset: 28
+    offset: 63
     length: 2
-    byte_order: "big_endian"
+    byte_order: "little_endian"
     calculate_from: 0
-    calculate_to: 27
+    calculate_to: 62
 
 fields:
-  - name: "rocket_id"
+  - name: "sync"
     offset: 0
     length: 1
     type: "uint8"
+    expected_value: 0xAA
   # Additional field definitions...
 ```
 
 The schema consists of:
 * **Identification Metadata:** Top-level protocol name, ID, and description.
-* **General Frame Configuration:** Total length, byte ordering, and CRC validation parameters.
+* **General Frame Configuration:** Total length, byte ordering, synchronization byte, and CRC validation parameters.
 * **Field Definitions:** Array of bit-level/byte-level telemetry channels with data types, scaling, and enumerations.
 
 ---
@@ -67,7 +69,7 @@ The schema consists of:
 Human-readable label for the telemetry frame:
 
 ```yaml
-name: "High-Frequency Telemetry Frame"
+name: "Trama"
 ```
 
 *Note: This is informational metadata; the parser does not use this field for routing.*
@@ -89,7 +91,7 @@ Matches the protocol field identifying the packet type (e.g., `0x01` $\to$ High-
 Optional documentation string describing the intended purpose or mission phase:
 
 ```yaml
-description: "High-frequency sounding rocket telemetry stream"
+description: "Telemetría LoRa 65 bytes definitiva"
 ```
 
 ---
@@ -100,15 +102,16 @@ The `frame` mapping defines packet-level transport properties.
 
 ```yaml
 frame:
-  length: 30
-  byte_order: "big_endian"
+  length: 65
+  byte_order: "little_endian"
+  sync: "0xAA"
 ```
 
 ## `length`
 Total byte length of the frame:
 
 ```yaml
-length: 30
+length: 65
 ```
 
 The sliding window parser uses this length to accumulate candidate slices from the serial byte stream before triggering integrity verification.
@@ -119,10 +122,15 @@ The sliding window parser uses this length to accumulate candidate slices from t
 Defines default multi-byte endianness for fields that do not explicitly specify their own byte order.
 
 Supported values:
+- `"little_endian"` (Least Significant Byte first, standard on ARM/ESP32).
 - `"big_endian"` (Most Significant Byte first, Network Byte Order).
-- `"little_endian"` (Least Significant Byte first).
 
-Example: Two bytes `0x01 0x9F` in big-endian order represent $1 \times 256 + 159 = 415$.
+Example: Two bytes `0x9F 0x01` in little-endian order represent $159 + 1 \times 256 = 415$.
+
+---
+
+## `sync`
+Fixed synchronization marker byte or sequence (e.g. `"0xAA"`). When configured, the sliding byte window searches for this marker as the candidate frame boundary before validating length and CRC.
 
 ---
 
@@ -140,12 +148,12 @@ crc:
   reflect_input: false
   reflect_output: false
 
-  offset: 28
+  offset: 63
   length: 2
-  byte_order: "big_endian"
+  byte_order: "little_endian"
 
   calculate_from: 0
-  calculate_to: 27
+  calculate_to: 62
 ```
 
 ## `enabled`
@@ -171,17 +179,17 @@ Boolean indicating if the final CRC value is bit-reversed before XOR (`true` or 
 
 ## `offset`
 Zero-indexed byte position where the CRC checksum is stored in the frame:
-- `offset: 28` $\to$ Byte 28 is CRC MSB, Byte 29 is CRC LSB.
+- `offset: 63` $\to$ Byte 63 is CRC LSB, Byte 64 is CRC MSB (in little-endian).
 
 ## `length`
 Size of the CRC field in bytes (typically `2` for CRC-16).
 
 ## `byte_order`
-Endianness of the transmitted checksum bytes (`"big_endian"` or `"little_endian"`).
+Endianness of the transmitted checksum bytes (`"little_endian"` or `"big_endian"`).
 
 ## `calculate_from` and `calculate_to`
 Inclusive byte indices defining the calculation range. For example:
-- `calculate_from: 0`, `calculate_to: 27` computes the CRC over bytes 0 through 27 (28 total bytes). Bytes 28 and 29 contain the transmitted CRC and are excluded from the calculation.
+- `calculate_from: 0`, `calculate_to: 62` computes the CRC over bytes 0 through 62 (63 total bytes). Bytes 63 and 64 contain the transmitted CRC and are excluded from the calculation.
 
 ---
 
@@ -191,10 +199,11 @@ The `fields` list defines each telemetry metric embedded within the payload.
 
 ```yaml
 fields:
-  - name: "rocket_id"
+  - name: "sync"
     offset: 0
     length: 1
     type: "uint8"
+    expected_value: 0xAA
 ```
 
 ---
@@ -204,20 +213,20 @@ fields:
 ### `name`
 Internal identifier used by the application and emitted in JSON responses:
 ```yaml
-name: "rocket_id"
+name: "frame_number"
 ```
-Parsed into Python dictionary key `data["rocket_id"]`.
+Parsed into Python dictionary key `data["frame_number"]`.
 
 ### `description`
 Optional engineering description used for documentation and tooltips:
 ```yaml
-description: "Rocket airframe identifier"
+description: "Sequential incremental frame ID (0..65535)"
 ```
 
 ### `offset`
-Zero-indexed byte offset of the field within the 30-byte frame:
+Zero-indexed byte offset of the field within the frame:
 ```yaml
-offset: 8
+offset: 1
 ```
 
 ### `length`
@@ -268,7 +277,7 @@ offset_value: -40.0
 A raw value of `500` decodes to $(500 \times 0.1) - 40.0 = 10.0\text{ }^\circ\text{C}$.
 
 ### `unit`
-Informational engineering unit symbol (e.g. `"g"`, `"Pa"`, `"m"`, `"deg"`, `"V"`). Included in documentation and UI headers.
+Informational engineering unit symbol (e.g. `"g"`, `"Pa"`, `"m"`, `"deg"`, `"V"`, `"°C"`). Included in documentation and UI headers.
 
 ---
 
@@ -279,49 +288,60 @@ Maps discrete integer codes to human-readable strings:
 
 ```yaml
 - name: "status"
-  offset: 27
+  offset: 7
   length: 1
   type: "uint8"
   values:
-    0x00: "Standby"
-    0x01: "Pre-launch"
-    0x02: "Motor encendido / Ascenso"
-    0x03: "Apogeo"
-    0x04: "Descenso"
-    0x05: "Aterrizaje"
+    0x00: "STANDBY"
+    0x01: "POWERED"
+    0x02: "BURNOUT"
+    0x03: "BURNOUT"
+    0x04: "APOGEE"
+    0x07: "APOGEE"
+    0x08: "DROGUE_ORD"
+    0x0F: "DROGUE_ORD"
+    0x10: "DROGUE_CONF"
+    0x1F: "DROGUE_CONF"
+    0x20: "MAIN_ORD"
+    0x3F: "MAIN_ORD"
+    0x40: "MAIN_CONF"
+    0x7F: "MAIN_CONF"
+    0x80: "LANDED"
+    0xFF: "LANDED"
 ```
 
-When raw code `0x02` is received:
-- `data["status"] = 2`
-- `data["status_label"] = "Motor encendido / Ascenso"`
+When raw code `0x01` is received:
+- `data["status"] = 1`
+- `data["status_label"] = "POWERED"`
 
 ### `expected_value`
 Enforces packet filtering by requiring a specific field to match a fixed constant:
 
 ```yaml
-- name: "frame_type"
-  offset: 1
+- name: "sync"
+  offset: 0
   length: 1
   type: "uint8"
-  expected_value: 0x01
+  expected_value: 0xAA
 ```
 
-If the received byte at offset 1 does not equal `0x01`, the frame is rejected as invalid.
+If the received byte at offset 0 does not equal `0xAA`, the frame is rejected as invalid.
 
 ---
 
-# 10. Complete Production Example
+# 10. Active Production Schema (65-Byte LoRa Frame)
 
-Below is the standard production configuration utilized in `config/frame.yaml`:
+Below is the definitive 65-byte production configuration deployed in [`config/frame.yaml`](../config/frame.yaml):
 
 ```yaml
 name: "Trama"
 id: 1
-description: "Telemetría de alta frecuencia"
+description: "Telemetría LoRa 65 bytes definitiva"
 
 frame:
-  length: 30
-  byte_order: "big_endian"
+  length: 65
+  byte_order: "little_endian"
+  sync: "0xAA"
 
   crc:
     enabled: true
@@ -331,127 +351,159 @@ frame:
     final_xor: 0x0000
     reflect_input: false
     reflect_output: false
-
-    offset: 28
+    offset: 63
     length: 2
-    byte_order: "big_endian"
-
+    byte_order: "little_endian"
     calculate_from: 0
-    calculate_to: 27
+    calculate_to: 62
 
 fields:
-
-  - name: "rocket_id"
-    description: "Identificador del cohete"
+  - name: "sync"
     offset: 0
     length: 1
     type: "uint8"
-
-  - name: "frame_type"
-    description: "Tipo de trama"
-    offset: 1
-    length: 1
-    type: "uint8"
-    expected_value: 0x01
+    expected_value: 0xAA
 
   - name: "frame_number"
-    description: "Número secuencial de trama"
-    offset: 2
+    offset: 1
     length: 2
     type: "uint16"
 
   - name: "timestamp"
-    description: "Tiempo desde el despegue"
-    offset: 4
+    offset: 3
     length: 4
     type: "uint32"
     unit: "ms"
 
-  - name: "accel_x"
-    description: "Aceleración en eje X"
-    offset: 8
-    length: 2
-    type: "int16"
-    scale: 0.001
-    offset_value: 0
-    unit: "g"
-
-  - name: "accel_y"
-    description: "Aceleración en eje Y"
-    offset: 10
-    length: 2
-    type: "int16"
-    scale: 0.001
-    offset_value: 0
-    unit: "g"
-
-  - name: "accel_z"
-    description: "Aceleración en eje Z"
-    offset: 12
-    length: 2
-    type: "int16"
-    scale: 0.0005
-    offset_value: 0
-    unit: "g"
-
-  - name: "pressure"
-    description: "Presión atmosférica"
-    offset: 14
-    length: 3
-    type: "uint24"
-    scale: 1
-    offset_value: 0
-    unit: "Pa"
-
-  - name: "latitude"
-    description: "Latitud GPS"
-    offset: 17
-    length: 4
-    type: "int32"
-    scale: 0.000001
-    offset_value: 0
-    unit: "deg"
-
-  - name: "longitude"
-    description: "Longitud GPS"
-    offset: 21
-    length: 4
-    type: "int32"
-    scale: 0.000001
-    offset_value: 0
-    unit: "deg"
-
-  - name: "altitude"
-    description: "Altitud GPS"
-    offset: 25
-    length: 2
-    type: "int16"
-    scale: 1
-    offset_value: 0
-    unit: "m"
-
   - name: "status"
-    description: "Estado actual del cohete"
-    offset: 27
+    offset: 7
     length: 1
     type: "uint8"
     values:
-      0x00: "Standby"
-      0x01: "Pre-launch"
-      0x02: "Motor encendido / Ascenso"
-      0x03: "Apogeo"
-      0x04: "Descenso"
-      0x05: "Aterrizaje"
+      0x00: "STANDBY"
+      0x01: "POWERED"
+      0x02: "BURNOUT"
+      0x03: "BURNOUT"
+      0x04: "APOGEE"
+      0x07: "APOGEE"
+      0x08: "DROGUE_ORD"
+      0x0F: "DROGUE_ORD"
+      0x10: "DROGUE_CONF"
+      0x1F: "DROGUE_CONF"
+      0x20: "MAIN_ORD"
+      0x3F: "MAIN_ORD"
+      0x40: "MAIN_CONF"
+      0x7F: "MAIN_CONF"
+      0x80: "LANDED"
+      0xFF: "LANDED"
+
+  - name: "pressure"
+    offset: 8
+    length: 4
+    type: "float32"
+    unit: "hPa"
+
+  - name: "altura_actual"
+    offset: 12
+    length: 4
+    type: "float32"
+    unit: "m"
+
+  - name: "accel_x"
+    offset: 16
+    length: 4
+    type: "float32"
+    unit: "g"
+
+  - name: "accel_y"
+    offset: 20
+    length: 4
+    type: "float32"
+    unit: "g"
+
+  - name: "accel_z"
+    offset: 24
+    length: 4
+    type: "float32"
+    unit: "g"
+
+  - name: "gyro_x"
+    offset: 28
+    length: 4
+    type: "float32"
+    unit: "deg/s"
+
+  - name: "gyro_y"
+    offset: 32
+    length: 4
+    type: "float32"
+    unit: "deg/s"
+
+  - name: "gyro_z"
+    offset: 36
+    length: 4
+    type: "float32"
+    unit: "deg/s"
+
+  - name: "temp_imu"
+    offset: 40
+    length: 4
+    type: "float32"
+    unit: "°C"
+
+  - name: "latitude"
+    offset: 44
+    length: 4
+    type: "float32"
+    unit: "deg"
+
+  - name: "longitude"
+    offset: 48
+    length: 4
+    type: "float32"
+    unit: "deg"
+
+  - name: "altitud_gps"
+    offset: 52
+    length: 4
+    type: "float32"
+    unit: "m"
+
+  - name: "satellites"
+    offset: 56
+    length: 1
+    type: "uint8"
+
+  - name: "ground_speed"
+    offset: 57
+    length: 4
+    type: "float32"
+    unit: "m/s"
+
+  - name: "pin_frenado"
+    offset: 61
+    length: 1
+    type: "uint8"
+    values:
+      0: "DESACTIVADO"
+      1: "ACTIVADO"
+
+  - name: "pin_principal"
+    offset: 62
+    length: 1
+    type: "uint8"
+    values:
+      0: "DESACTIVADO"
+      1: "ACTIVADO"
 ```
 
 ---
 
 # 11. Related Documentation
 
-- **[System Architecture & Component Documentation](docs/architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
-- **[Frame Specification & Binary Protocol Reference](docs/protocol.md):** 30-byte frame memory map, field data types, scales, and CRC-16 specification.
-- **[API & WebSocket Interface Specification](docs/api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
-- **[Getting Started & Operations Guide](docs/getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
-- **[Dashboard Visual Specification](front.md):** Dashboard layout, telemetry instruments, and ergonomic design guidelines.
-- **[Project Entry Point & Index](README.md):** Repository overview and documentation directory.
-
+- **[System Architecture & Component Documentation](architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
+- **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte frame memory map, field data types, scales, and CRC-16 specification.
+- **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
+- **[Getting Started & Operations Guide](getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
+- **[Dashboard Visual Specification](frontend-dashboard.md):** Dashboard layout, telemetry instruments, and ergonomic design guidelines.
+- **[Project Entry Point & Index](../README.md):** Repository overview and documentation directory.

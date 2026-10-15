@@ -278,6 +278,9 @@ To prevent heap exhaustion during multi-hour rocket operations:
 ## 5. Related Documentation
 
 - **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte LoRa frame memory map, field data types, scales, RF ToA link budget, and CRC-16 specification.
+- **[Frame Schema Specification](frame-schema.md):** Declarative YAML frame definition reference and active production schema.
+- **[Dashboard Visual Specification](frontend-dashboard.md):** Telemetry dashboard UI layout, visual hierarchy, instrument wireframes, and ergonomic design guidelines.
 - **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
 - **[Getting Started & Operations Guide](getting-started.md):** Setup, Linux serial permissions, runtime operation, and verification.
+- **[Windows Executable Packaging](packaging-exe.md):** Compiling standalone Windows .exe using PyInstaller or GitHub Actions.
 - **[Extended Calculations & Future Reference](calculos-futuros.md):** Mathematical models for Kalman filtering, variometer ($V_z$), and antenna tracking.

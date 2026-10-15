@@ -28,6 +28,15 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install pyinstaller
 
+echo Running automated tests prior to packaging...
+python -m unittest discover tests
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Automated test suite failed! Compilation aborted.
+    pause
+    exit /b 1
+)
+
 echo [3/5] Compiling executable with PyInstaller...
 pyinstaller --clean ground_station.spec
 

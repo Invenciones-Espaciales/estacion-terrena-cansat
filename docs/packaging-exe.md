@@ -99,3 +99,12 @@ On Windows, serial ports use the `COMx` naming convention (e.g. `COM3`, `COM5`, 
 - **Static Assets & Config Fallbacks:** The web dashboard (`frontend/index.html`, CSS, images) and default frame YAML specifications are embedded directly inside the executable bundle and loaded via `sys._MEIPASS`.
 - **External Configuration:** [`main.py`](../main.py) automatically checks for an external `config/` folder located next to the `.exe` first. If present, it uses the external configuration so you can modify COM ports or baud rates without recompiling.
 - **Persistent Data:** SQLite databases and CSV logs are always written to the `data/` directory located adjacent to the `.exe`, ensuring mission logs are preserved permanently on disk.
+
+---
+
+## 6. Related Documentation
+
+- **[System Architecture & Component Documentation](architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
+- **[Getting Started & Operations Guide](getting-started.md):** Setup, hardware configuration, and developer testing guide.
+- **[Contributing Guide](../CONTRIBUTING.md):** Onboarding, Git workflow, testing requirements, and PR process.
+- **[Project Entry Point & Index](../README.md):** Repository overview and documentation directory.

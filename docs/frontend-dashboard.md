@@ -2,7 +2,7 @@
 
 ## 1. Objective
 
-The **Telemetry Ground Station** dashboard must display telemetry data clearly, compactly, and ergonomically for real-time monitoring during live rocket flight operations.
+The **Telemetry Ground Station** dashboard displays telemetry data clearly, compactly, and ergonomically for real-time monitoring during live rocket flight operations.
 
 The user interface utilizes a responsive 12-column grid layout: 4-column metric panels across the top row, and adaptive-width panels across the lower rows sized to match their content density.
 
@@ -202,17 +202,17 @@ Transitions are captured as **Flight Stage + Mission Elapsed Time**. Technical n
 ```text
 FLIGHT EVENTS
 
-09:42:13    PRE-LAUNCH
-09:42:48    POWERED ASCENT
+09:42:13    STANDBY
+09:42:48    POWERED
 09:43:12    APOGEE
-09:43:41    PARACHUTE DESCENT
-09:44:02    TOUCHDOWN
+09:43:41    DROGUE_CONF
+09:44:02    LANDED
 ```
 
 The header permanently highlights the active operational phase:
 ```text
 CURRENT
-POWERED ASCENT
+POWERED
 ```
 
 ---
@@ -275,10 +275,9 @@ Dedicated operational view for pre-launch launchpad qualification and flight saf
 
 # 13. Related Documentation
 
-- **[System Architecture & Component Documentation](docs/architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
-- **[Frame Specification & Binary Protocol Reference](docs/protocol.md):** 31-byte frame memory map, field data types, scales, and CRC-16 specification.
-- **[API & WebSocket Interface Specification](docs/api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
-- **[Getting Started & Operations Guide](docs/getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
-- **[Frame Schema Specification](config.md):** Declarative YAML frame definition reference.
-- **[Project Entry Point & Index](README.md):** Repository overview and documentation directory.
-
+- **[System Architecture & Component Documentation](architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
+- **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte LoRa frame memory map, field data types, scales, and CRC-16 specification.
+- **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
+- **[Getting Started & Operations Guide](getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
+- **[Frame Schema Specification](frame-schema.md):** Declarative YAML frame definition reference.
+- **[Project Entry Point & Index](../README.md):** Repository overview and documentation directory.
