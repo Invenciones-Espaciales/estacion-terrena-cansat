@@ -340,6 +340,147 @@ table.cl-table tr:last-child td { border-bottom: none; }
     border: 1.5px solid var(--border);
     background: var(--soft);
 }
+
+/* ============================================================
+   RESPONSIVE DESIGN: MOBILE VIEWPORTS (SMARTPHONES)
+   Permite scroll vertical en teléfonos manteniendo 0-overflow
+   ============================================================ */
+@media (max-width: 900px) {
+    html, body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    .app {
+        width: 100% !important;
+        max-width: 100vw !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+        padding: 6px !important;
+        gap: 8px !important;
+    }
+
+    .hero-banner {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 10px !important;
+    }
+
+    .verdict-box {
+        align-items: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .verdict-main {
+        font-size: 28px !important;
+        justify-content: center !important;
+    }
+
+    .timer-center {
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .hero-actions {
+        width: 100% !important;
+        align-items: stretch !important;
+    }
+
+    .hero-actions .btn {
+        width: 100% !important;
+        text-align: center !important;
+        padding: 8px 12px !important;
+    }
+
+    .checklist-card {
+        flex: none !important;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+    }
+
+    .checklist-head {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 2px !important;
+        padding: 6px 8px !important;
+    }
+
+    .table-wrap {
+        display: block !important;
+        overflow: visible !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    table.cl-table,
+    table.cl-table tbody,
+    table.cl-table tr,
+    table.cl-table td {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    table.cl-table thead {
+        display: none !important;
+    }
+
+    table.cl-table tr {
+        border-bottom: 2px solid var(--border) !important;
+        padding: 8px !important;
+        margin-bottom: 8px !important;
+        background: var(--card) !important;
+        border-radius: 3px !important;
+    }
+
+    table.cl-table td {
+        padding: 4px 0 !important;
+        border-bottom: 1px dashed var(--soft-border) !important;
+    }
+
+    table.cl-table td:last-child {
+        border-bottom: none !important;
+        text-align: left !important;
+        margin-top: 4px !important;
+    }
+
+    .inline-form {
+        gap: 6px !important;
+    }
+
+    .in-group {
+        flex: 1 1 calc(50% - 6px) !important;
+    }
+
+    .in-group input {
+        width: 100% !important;
+    }
+
+    .officer-toggle {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 6px 8px !important;
+    }
+
+    .actions-bar {
+        flex-direction: column !important;
+        gap: 6px !important;
+        text-align: center !important;
+        padding: 8px !important;
+    }
+}
 </style>
 </head>
 

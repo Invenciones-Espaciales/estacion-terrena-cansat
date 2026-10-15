@@ -54,7 +54,20 @@ Returns the complete `frontend/gonogo.html` operational view (or falls back to `
 
 ---
 
-### 2.3 System & Link Status
+### 2.3 Post-Flight Recovery & Search View
+Serves the search-and-rescue (SAR) tactical tracking and rocket retrieval console.
+
+- **Route:** `GET /recovery`
+- **Method:** `GET`
+- **Authentication:** None
+- **Response Type:** `text/html; charset=utf-8`
+
+#### Success Response (`200 OK`)
+Returns the complete `frontend/recovery.html` operational view (or falls back to `index.html` if missing).
+
+---
+
+### 2.4 System & Link Status
 Returns the operational health of the ground station, serial port link status, Go/No-Go flight safety thresholds, and cumulative packet transmission statistics.
 
 - **Route:** `GET /api/status`
@@ -123,7 +136,7 @@ Returns the operational health of the ground station, serial port link status, G
 
 ---
 
-### 2.3 Latest Telemetry Snapshot
+### 2.5 Latest Telemetry Snapshot
 Retrieves the most recent decoded telemetry frame, raw hex representation, CRC verification status, and link statistics.
 
 - **Route:** `GET /api/telemetry`
@@ -137,14 +150,14 @@ Retrieves the most recent decoded telemetry frame, raw hex representation, CRC v
 |---|---|---|
 | `connected` | `boolean` | `true` if serial interface is active |
 | `timestamp` | `float` \| `null` | Unix timestamp of the last decoded frame |
-| `data` | `object` \| `null` | Decoded telemetry fields and labels (see [Telemetry Data Object](#231-telemetry-data-object)) |
+| `data` | `object` \| `null` | Decoded telemetry fields and labels (see [Telemetry Data Object](#251-telemetry-data-object)) |
 | `frame_length` | `integer` | Configured frame size in bytes (e.g. `65` for definitive LoRa frame) |
 | `crc_valid` | `boolean` | `true` if the last frame passed CRC-16 verification |
 | `crc_value` | `string` \| `null` | Hexadecimal string of received CRC bytes (e.g. `"B1A4"`) |
 | `raw_hex` | `string` \| `null` | Space-separated uppercase hexadecimal dump of the 65-byte raw frame |
 | `statistics` | `object` | Cumulative packet statistics snapshot |
 
-#### 2.3.1 Telemetry Data Object (`data`)
+#### 2.5.1 Telemetry Data Object (`data`)
 
 | Key | Type | Unit | Description |
 |---|---|---|---|
@@ -232,6 +245,41 @@ Retrieves the most recent decoded telemetry frame, raw hex representation, CRC v
     "loss_percent": 0.0
   }
 }
+```
+
+---
+
+### 2.6 Historical Telemetry Query
+Retrieves recent historical frames within a sliding time window (default 60 seconds) up to a configurable sample limit.
+
+- **Route:** `GET /api/history`
+- **Method:** `GET`
+- **Authentication:** None
+- **Query Parameters:**
+  - `seconds` (`float`, optional, default: `60.0`): Historical time window duration in seconds relative to current time.
+  - `limit` (`integer`, optional, default: `1200`): Maximum number of historical records to return.
+
+#### Response Schema
+Returns a JSON array of parsed telemetry objects matching the structure in [Telemetry Data Object](#251-telemetry-data-object):
+```json
+[
+  {
+    "timestamp": 1718300041.8125,
+    "data": {
+      "frame_number": 104,
+      "altura_actual": 120.4,
+      "pressure": 998.2
+    }
+  },
+  {
+    "timestamp": 1718300042.8125,
+    "data": {
+      "frame_number": 105,
+      "altura_actual": 124.8,
+      "pressure": 997.8
+    }
+  }
+]
 ```
 
 ---

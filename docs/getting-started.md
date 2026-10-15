@@ -151,15 +151,17 @@ YYYY-MM-DD HH:MM:SS,MS | INFO | Started server process [PID]
 YYYY-MM-DD HH:MM:SS,MS | INFO | Uvicorn running on http://0.0.0.0:8000
 ```
 
-### 5.3 Accessing the Dashboard
-Open your web browser and navigate to:
-```text
-http://localhost:8000
-```
+### 5.3 Accessing the Operational Views
+Open your web browser and navigate to any of the dedicated mission views:
+- **Primary Telemetry Dashboard:** [http://localhost:8000](http://localhost:8000)
+- **Pre-Flight Go / No-Go Qualification Console:** [http://localhost:8000/gonogo](http://localhost:8000/gonogo)
+- **Post-Flight Tactical Recovery & Search View:** [http://localhost:8000/recovery](http://localhost:8000/recovery)
 
-If connecting from another laptop or tablet on the same local network:
+If connecting from another laptop, tablet, or field recovery smartphone on the same local network:
 ```text
 http://<GROUND_STATION_IP>:8000
+http://<GROUND_STATION_IP>:8000/gonogo
+http://<GROUND_STATION_IP>:8000/recovery
 ```
 
 ---

@@ -191,9 +191,14 @@ graph TD
 
 ---
 
-## 4. Frontend Dashboard Architecture (`frontend/index.html`)
+## 4. Frontend Web Architecture & Multi-View Suite
 
-The frontend is a self-contained, high-contrast, zero-dependency telemetry console optimized for outdoor field visibility and sustained high-frequency operation.
+The ground station provides a multi-view operational web suite served directly from the `frontend/` directory:
+- **Primary Mission Dashboard (`frontend/index.html` $\to$ `/`):** High-contrast telemetry console displaying the altimeter tape, real-time accelerations, GIS map, and ISA-18.2 style operational alarms.
+- **Pre-Flight Qualification Console (`frontend/gonogo.html` $\to$ `/gonogo`):** Go / No-Go safety validation with stability hold timer and launchpad sensor baseline checks.
+- **Tactical Search & Recovery View (`frontend/recovery.html` $\to$ `/recovery`):** SAR tactical view with real-time geodesic bearing, distance, mobile responsiveness, and one-click Google Maps coordinate dispatch.
+
+All three views share zero runtime external dependencies, communicate over the unified WebSocket stream, and are optimized for direct sunlight readability.
 
 ```mermaid
 graph TD

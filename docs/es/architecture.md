@@ -94,9 +94,13 @@ El servidor ejecuta un bucle de eventos único que no se bloquea ante operacione
    - **SQLite (`telemetry.db`):** Almacenamiento relacional indexado por marca de tiempo (`timestamp`), ideal para hidratar rápidamente clientes que abren el navegador a mitad de la misión (`GET /api/history`).
    - **CSV (`telemetry.csv`):** Archivo plano en formato texto append-only con vaciado inmediato a disco (`file.flush()`), asegurando que ningún dato se pierda en caso de corte intempestivo de energía en la estación terrena.
 
-4. **Renderizado Desacoplado en Navegador:**
-   - La recepción por WebSocket coloca las muestras en un búfer circular en memoria.
+4. **Renderizado Desacoplado y Suite de Vistas Operativas:**
+   - La recepción por WebSocket coloca las muestras en un búfer circular en memoria compartida.
    - El renderizado gráfico ocurre a la frecuencia nativa del monitor ($60\text{ Hz}$) mediante `requestAnimationFrame`, evitando que ráfagas de paquetes saturen el motor de pintado del navegador.
+   - La estación provee tres consolas especializadas:
+     - **Tablero de Telemetría en Tiempo Real (`/` $\to$ `frontend/index.html`):** Monitoreo en vuelo con cinta altimétrica, osciloscopios, mapa GIS y alarmas ISA-18.2.
+     - **Consola Pre-Vuelo Go / No-Go (`/gonogo` $\to$ `frontend/gonogo.html`):** Verificación de baselines y temporizador de estabilidad acumulativa.
+     - **Consola de Búsqueda y Recuperación (`/recovery` $\to$ `frontend/recovery.html`):** Navegación táctica post-impacto con brújula de rumbo, distancia geodésica, soporte para dispositivos móviles y enlace directo a Google Maps.
 
 ---
 

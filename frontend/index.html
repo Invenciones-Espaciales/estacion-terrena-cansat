@@ -144,6 +144,108 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
 .al-badge.ok { background: var(--ok); color: #fff; }
 .al-desc { font-weight: 700; flex: 1; margin: 0 8px; }
 .al-val { font-weight: 900; font-family: monospace; font-size: 13px; }
+
+/* ============================================================
+   RESPONSIVE DESIGN: MOBILE VIEWPORTS (SMARTPHONES)
+   Permite scroll vertical en teléfonos manteniendo 0-overflow
+   ============================================================ */
+@media (max-width: 900px) {
+    html, body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    .app {
+        height: auto !important;
+        min-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+        padding: 6px !important;
+        gap: 8px !important;
+    }
+
+    .dashboard {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: auto !important;
+        gap: 8px !important;
+    }
+
+    .panel {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        min-height: auto !important;
+    }
+
+    .card {
+        min-height: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .card.grow {
+        flex: none !important;
+    }
+
+    .alt-body {
+        min-height: 180px !important;
+        height: 180px !important;
+    }
+
+    .tape {
+        width: 80px !important;
+    }
+
+    .chart-card {
+        flex: none !important;
+        height: auto !important;
+    }
+
+    .chart-box {
+        position: relative !important;
+        height: 190px !important;
+        min-height: 190px !important;
+        width: 100% !important;
+    }
+
+    #gpsMap {
+        height: 250px !important;
+        min-height: 250px !important;
+        width: 100% !important;
+    }
+
+    .bottom {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        min-height: auto !important;
+    }
+
+    .scroll {
+        max-height: 220px !important;
+        overflow-y: auto !important;
+    }
+
+    .ev-row {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+
+    .al-row {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+
+    .al-desc {
+        min-width: 0 !important;
+        word-break: break-word !important;
+    }
+}
 </style>
 </head>
 

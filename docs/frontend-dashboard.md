@@ -275,7 +275,40 @@ Dedicated operational view for pre-launch launchpad qualification and flight saf
 
 ---
 
-# 13. Related Documentation
+# 13. Post-Flight Tactical Recovery & Search View (`/recovery`)
+
+Dedicated operational view designed for search-and-rescue (SAR) ground recovery teams to locate and retrieve the rocket airframe after touchdown.
+
+### Key Capabilities & Layout
+
+* **Hero Guidance Banner:**
+  - **Distance to Rocket:** Real-time geodesic distance from the launchpad base or operator position to the rocket (rendered in meters or kilometers).
+  - **Azimuth & Compass Dial:** Animated 360° compass dial displaying the exact heading angle (e.g. `124°`) and cardinal sector (`SE`, `ENE`) to guide field personnel.
+  - **Landing Status Indicator:** Evaluates descent conditions upon touchdown (`STANDBY`, `IN FLIGHT`, `SOFT LANDING`, `HARD LANDING`) along with impact vertical velocity ($V_z$ at touchdown).
+  - **Direct Field Action Buttons:**
+    - **Open in Google Maps:** Opens a new browser tab with direct GPS waypoint pin (`https://www.google.com/maps/search/?api=1&query={lat},{lon}`) for immediate turn-by-turn vehicle or pedestrian navigation.
+    - **Copy Coordinates:** Single-click copy of latitude and longitude coordinates to the system clipboard, accompanied by a toast notification.
+
+* **Tactical Trajectory & Impact Map:**
+  - Interactive Leaflet map displaying launchpad origin, full descent trajectory polyline, and the latest known GPS impact coordinate.
+  - Quick centering shortcuts:
+    - `Centrar Cohete`: Instantly pans and zooms onto the vehicle's current position.
+    - `Centrar Base`: Centers the map onto the launchpad origin.
+    - `Ver Todo`: Fits the entire bounding box containing base and rocket within the viewport.
+    - `Mi Ubicación`: Acquires browser geolocation API coordinates to display the recovery team's position relative to the rocket.
+
+* **Telemetry & Diagnostic Side Panels:**
+  - **Vehicle Coordinates:** High-precision WGS-84 decimal latitude and longitude, GPS altitude, active satellite count, last packet arrival time, and GPS 3D fix status badge.
+  - **Base / Launchpad Reference:** Recorded launchpad coordinates and angular elevation to the vehicle.
+  - **Flight Chronology & Event Milestones:** Scrollable chronological log of flight phases (`STANDBY`, `POWERED`, `BURNOUT`, `APOGEE`, `MAIN_CONF`, `LANDED`) with mission timestamps.
+  - **RF Ground Link Diagnostics:** Packets received count, avionics packet sequence number, 5-second sliding window packet loss percentage, and recorded maximum apogee altitude.
+
+* **Mobile-Responsive Ergonomics:**
+  - Fluid responsive grid that automatically reflows into a single-column, touch-friendly interface on smartphones and tablets, allowing field retrieval crews to navigate off-road without horizontal scrolling.
+
+---
+
+# 14. Related Documentation
 
 - **[System Architecture & Component Documentation](architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
 - **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte LoRa frame memory map, field data types, scales, and CRC-16 specification.

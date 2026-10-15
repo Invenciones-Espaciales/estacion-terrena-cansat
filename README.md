@@ -104,6 +104,7 @@ python main.py
 Open your browser to:
 - **`http://localhost:8000`** $\to$ Real-time mission dashboard
 - **`http://localhost:8000/gonogo`** $\to$ Pre-flight Go / No-Go qualification view
+- **`http://localhost:8000/recovery`** $\to$ Post-flight tactical recovery and GPS locator view
 
 ---
 
@@ -113,6 +114,8 @@ Open your browser to:
 |---|---|---|
 | `GET /` | HTTP | Serves the web dashboard (`frontend/index.html`) |
 | `GET /gonogo` | HTTP | Serves the Go / No-Go pre-flight qualification view (`frontend/gonogo.html`) |
+| `GET /recovery` | HTTP | Serves the post-flight tactical recovery view (`frontend/recovery.html`) |
+| `GET /api/history` | HTTP | Recent telemetry history for the last $N$ seconds (default 60s) |
 | `GET /api/status` | HTTP | System runtime health, serial link state, and packet loss metrics |
 | `GET /api/telemetry` | HTTP | Latest received frame snapshot, decoded values, and raw hex |
 | `WS /ws/telemetry` | WebSocket | Real-time bi-directional telemetry and event streaming |
