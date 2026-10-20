@@ -509,6 +509,7 @@ table.cl-table tr:last-child td { border-bottom: none; }
             <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
             <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
             <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
+            <div class="hcell"><span class="k">TEMP. IMU</span><span class="temp-pill" id="tempPill">IMU N/D</span></div>
             <div class="hcell"><span class="k">PÉRDIDA DE PAQUETES</span><span class="v num" id="lossPercent">0,0 %</span></div>
             <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
         </div>
@@ -1042,14 +1043,15 @@ function renderUI(checks) {
     const now = Date.now();
     const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
 
-    // Unified 6-cell Global Header
+    // Unified 7-cell Global Header
     updateGlobalHeader({
         missionTimeMs: state.liftoffDetected ? Math.max(0, Date.now() - state.liftoffAt) : 0,
         status: state.status,
         rssi: state.rssi,
         lossPercent: state.loss5s,
         connected: state.connected,
-        lastPacketAt: state.lastPacketAt
+        lastPacketAt: state.lastPacketAt,
+        tempImu: state.tempImu
     });
 
     // Hero Banner & Progress

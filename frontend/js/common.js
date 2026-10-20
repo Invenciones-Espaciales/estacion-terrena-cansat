@@ -24,6 +24,18 @@ window.fmt = window.fmt || function fmt(n, dec = 2) {
 };
 var fmt = window.fmt;
 
+// Strict fixed-width signed tabular numeric formatting (+00.00 / -00.00)
+window.fmtSigned = window.fmtSigned || function fmtSigned(n, dec = 2) {
+    const num = Number(n);
+    if (!Number.isFinite(num)) return " --- ";
+    const sign = num > 0 ? "+" : (num < 0 ? "−" : "+");
+    const absVal = Math.abs(num);
+    const parts = absVal.toFixed(dec).split(".");
+    const intPart = parts[0].padStart(2, "0");
+    return `${sign}${intPart}.${parts[1] || ""}`;
+};
+var fmtSigned = window.fmtSigned;
+
 // Format milliseconds into HH:MM:SS string
 window.elapsed = window.elapsed || function elapsed(ms) {
     if (!Number.isFinite(ms) || ms < 0) return "00:00:00";
@@ -154,14 +166,17 @@ window.updateGlobalHeader = window.updateGlobalHeader || function updateGlobalHe
     rssi = null,
     lossPercent = 0.0,
     connected = false,
-    lastPacketAt = null
+    lastPacketAt = null,
+    tempImu = null
 } = {}) {
-    // 1. Local Time
-    const now = new Date();
+    const now = Date.now();
+    const nowDate = new Date();
     const pad = n => String(n).padStart(2, "0");
+
+    // 1. Local Time
     const localTimeEl = window.$("localTime");
     if (localTimeEl) {
-        localTimeEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        localTimeEl.textContent = `${pad(nowDate.getHours())}:${pad(nowDate.getMinutes())}:${pad(nowDate.getSeconds())}`;
     }
 
     // 2. Mission Clock
@@ -201,15 +216,36 @@ window.updateGlobalHeader = window.updateGlobalHeader || function updateGlobalHe
         }
     }
 
-    // 6. Link Status & Dot
+    // 6. IMU Temperature Pill (Cockpit Header Badge)
+    const tempPillEl = window.$("tempPill");
+    if (tempPillEl) {
+        if (tempImu !== null && Number.isFinite(Number(tempImu))) {
+            const t = Number(tempImu);
+            tempPillEl.textContent = `IMU ${window.fmt(t, 1)} °C`;
+            if (t >= 60) {
+                tempPillEl.className = "temp-pill crit";
+            } else if (t >= 45) {
+                tempPillEl.className = "temp-pill warn";
+            } else {
+                tempPillEl.className = "temp-pill";
+            }
+        } else {
+            tempPillEl.textContent = "IMU N/D";
+            tempPillEl.className = "temp-pill";
+        }
+    }
+
+    // 7. Link Status & Dot with >300ms Freeze Degradation
     const dotEl = window.$("linkDot");
     const linkStatusEl = window.$("linkStatus");
-    const isStale = connected && lastPacketAt !== null && (Date.now() - lastPacketAt > 2000);
+    const silenceMs = lastPacketAt !== null ? (now - lastPacketAt) : 0;
+    const isFrozen = connected && lastPacketAt !== null && silenceMs > 300;
+    const isStale = connected && lastPacketAt !== null && silenceMs > 2000;
 
     if (dotEl) {
         if (!connected) {
             dotEl.className = "dot";
-        } else if (isStale) {
+        } else if (isFrozen) {
             dotEl.className = "dot warn";
         } else {
             dotEl.className = "dot online";
@@ -219,10 +255,16 @@ window.updateGlobalHeader = window.updateGlobalHeader || function updateGlobalHe
     if (linkStatusEl) {
         if (!connected) {
             linkStatusEl.textContent = "DESCONECTADO";
+            linkStatusEl.style.color = "var(--bad)";
         } else if (isStale) {
-            linkStatusEl.textContent = "DEGRADADO";
+            linkStatusEl.textContent = `DEGRADADO (+${(silenceMs / 1000).toFixed(1)}s)`;
+            linkStatusEl.style.color = "var(--bad)";
+        } else if (isFrozen) {
+            linkStatusEl.textContent = `CONGELADO +${(silenceMs / 1000).toFixed(1)}s`;
+            linkStatusEl.style.color = "var(--warn)";
         } else {
             linkStatusEl.textContent = "CONECTADO";
+            linkStatusEl.style.color = "var(--ink)";
         }
     }
 };
@@ -255,6 +297,30 @@ window.fetchHistory60s = window.fetchHistory60s || async function fetchHistory60
     }
 };
 var fetchHistory60s = window.fetchHistory60s;
+
+/**
+ * Aerospace Cockpit Binary Annunciator updater (DROGUE & MAIN)
+ * @param {string} cardId - DOM id of the annunciator card element
+ * @param {string} stateId - DOM id of the annunciator state text element
+ * @param {number|boolean} val - 0 (idle) or 1 (deployed)
+ */
+window.setAnnunciator = window.setAnnunciator || function setAnnunciator(cardId, stateId, val) {
+    const card = window.$(cardId);
+    const stateEl = window.$(stateId);
+    if (!card || !stateEl) return;
+
+    const isActive = Number(val) === 1;
+    const targetClass = isActive ? "annun-card state-active" : "annun-card state-idle";
+    if (card.className !== targetClass) {
+        card.className = targetClass;
+        if (isActive) {
+            stateEl.innerHTML = '<span class="annun-icon">[OK]</span>[1: DESPLEGADO]';
+        } else {
+            stateEl.textContent = "[0: EN ESPERA]";
+        }
+    }
+};
+var setAnnunciator = window.setAnnunciator;
  
 /**
  * Theme toggle manager (light/dark)

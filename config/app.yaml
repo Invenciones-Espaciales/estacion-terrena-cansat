@@ -22,3 +22,17 @@ gonogo:
     max_wind_speed_ms: 10.0
     max_cloud_cover_pct: 75.0
     min_visibility_km: 5.0
+
+charts:
+  scaling_mode: "ratchet" # "ratchet" (recommended: envelope with non-shrinking expansion), "auto", or "fixed"
+  altitude:
+    pad_max_m: 50.0 # Maximum visible scale on launchpad (STANDBY phase) to avoid noise amplification
+    expected_apogee_m: 1500.0 # Planned apogee ceiling for flight envelope
+    step_m: 500.0 # Incremental step when expanding above expected apogee
+  acceleration:
+    min_g: -2.0 # Nominal negative G floor (e.g. atmospheric drag / separation)
+    max_g: 12.0 # Nominal axial positive G ceiling (boost / chute opening shock)
+  velocity:
+    min_vz_ms: -40.0 # Nominal descent velocity floor
+    max_vz_ms: 160.0 # Nominal ascent velocity ceiling
+    step_ms: 50.0 # Expansion step for velocity

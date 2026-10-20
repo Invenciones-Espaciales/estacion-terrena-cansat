@@ -433,6 +433,7 @@
             <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
             <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
             <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
+            <div class="hcell"><span class="k">TEMP. IMU</span><span class="temp-pill" id="tempPill">IMU N/D</span></div>
             <div class="hcell"><span class="k">PÉRDIDA DE PAQUETES</span><span class="v num" id="lossPercent">0,0 %</span></div>
             <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
         </div>
@@ -576,6 +577,24 @@
                 <div class="data-row">
                     <span class="k">ELEVACIÓN ANGULAR</span>
                     <span class="v num" id="elevAngle">---°</span>
+                </div>
+            </div>
+
+            <!-- EVENTOS PIROTÉCNICOS DE RECUPERACIÓN -->
+            <div class="card" style="padding: 6px 8px;">
+                <div class="card-title" style="margin-bottom: 4px;">
+                    <span>EVENTOS PIROTÉCNICOS</span>
+                    <span style="font-size:10px;font-weight:800;color:var(--muted)">RECUPERACIÓN</span>
+                </div>
+                <div class="annun-grid">
+                    <div class="annun-card state-idle" id="annunDrogue">
+                        <div class="annun-label">DROGUE (FRENADO)</div>
+                        <div class="annun-state" id="annunDrogueState">[0: EN ESPERA]</div>
+                    </div>
+                    <div class="annun-card state-idle" id="annunMain">
+                        <div class="annun-label">MAIN (PRINCIPAL)</div>
+                        <div class="annun-state" id="annunMainState">[0: EN ESPERA]</div>
+                    </div>
                 </div>
             </div>
 
@@ -914,10 +933,15 @@ function renderRecoveryUI() {
         rssi: recoveryState.rssi,
         lossPercent: packetTracker.lossPercent,
         connected: recoveryState.connected,
-        lastPacketAt: recoveryState.lastPacketAt
+        lastPacketAt: recoveryState.lastPacketAt,
+        tempImu: recoveryState.tempImu
     });
 
-    // 2. Diagnóstico del Enlace en Panel Lateral
+    // 2. Eventos Pirotécnicos de Recuperación (DROGUE & MAIN)
+    if (recoveryState.pinFrenado !== null) setAnnunciator("annunDrogue", "annunDrogueState", recoveryState.pinFrenado);
+    if (recoveryState.pinPrincipal !== null) setAnnunciator("annunMain", "annunMainState", recoveryState.pinPrincipal);
+
+    // 3. Diagnóstico del Enlace en Panel Lateral
     $("diagRxCount").textContent = recoveryState.framesReceived.toLocaleString("es-AR");
     $("diagSeq").textContent = recoveryState.lastSeq !== null ? recoveryState.lastSeq.toLocaleString("es-AR") : "---";
     $("diagLoss").textContent = `${fmt(packetTracker.lossPercent, 1)} %`;

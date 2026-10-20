@@ -180,11 +180,40 @@ class GoNoGoConfig:
 
 
 @dataclass
+class AltitudeChartConfig:
+    pad_max_m: float = 50.0
+    expected_apogee_m: float = 1500.0
+    step_m: float = 500.0
+
+
+@dataclass
+class AccelChartConfig:
+    min_g: float = -2.0
+    max_g: float = 12.0
+
+
+@dataclass
+class VelocityChartConfig:
+    min_vz_ms: float = -40.0
+    max_vz_ms: float = 160.0
+    step_ms: float = 50.0
+
+
+@dataclass
+class ChartsConfig:
+    scaling_mode: str = "ratchet"
+    altitude: AltitudeChartConfig = field(default_factory=AltitudeChartConfig)
+    acceleration: AccelChartConfig = field(default_factory=AccelChartConfig)
+    velocity: VelocityChartConfig = field(default_factory=VelocityChartConfig)
+
+
+@dataclass
 class AppConfig:
     serial: SerialConfig
     websocket: WebSocketConfig
     storage: StorageConfig
     gonogo: GoNoGoConfig = field(default_factory=GoNoGoConfig)
+    charts: ChartsConfig = field(default_factory=ChartsConfig)
 
 
 # ============================================================
@@ -280,11 +309,35 @@ def load_app_config() -> AppConfig:
         weather_limits=weather_config,
     )
 
+    charts_data = data.get("charts", {})
+    alt_data = charts_data.get("altitude", {})
+    acc_data = charts_data.get("acceleration", {})
+    vel_data = charts_data.get("velocity", {})
+
+    charts_config = ChartsConfig(
+        scaling_mode=str(charts_data.get("scaling_mode", "ratchet")),
+        altitude=AltitudeChartConfig(
+            pad_max_m=float(alt_data.get("pad_max_m", 50.0)),
+            expected_apogee_m=float(alt_data.get("expected_apogee_m", 1500.0)),
+            step_m=float(alt_data.get("step_m", 500.0)),
+        ),
+        acceleration=AccelChartConfig(
+            min_g=float(acc_data.get("min_g", -2.0)),
+            max_g=float(acc_data.get("max_g", 12.0)),
+        ),
+        velocity=VelocityChartConfig(
+            min_vz_ms=float(vel_data.get("min_vz_ms", -40.0)),
+            max_vz_ms=float(vel_data.get("max_vz_ms", 160.0)),
+            step_ms=float(vel_data.get("step_ms", 50.0)),
+        ),
+    )
+
     return AppConfig(
         serial=serial_config,
         websocket=websocket_config,
         storage=storage_config,
         gonogo=gonogo_config,
+        charts=charts_config,
     )
 
 
@@ -1175,6 +1228,65 @@ async def status():
             if app_config is not None
             else {}
         ),
+        "charts": (
+            {
+                "scaling_mode": app_config.charts.scaling_mode,
+                "altitude": {
+                    "pad_max_m": app_config.charts.altitude.pad_max_m,
+                    "expected_apogee_m": app_config.charts.altitude.expected_apogee_m,
+                    "step_m": app_config.charts.altitude.step_m,
+                },
+                "acceleration": {
+                    "min_g": app_config.charts.acceleration.min_g,
+                    "max_g": app_config.charts.acceleration.max_g,
+                },
+                "velocity": {
+                    "min_vz_ms": app_config.charts.velocity.min_vz_ms,
+                    "max_vz_ms": app_config.charts.velocity.max_vz_ms,
+                    "step_ms": app_config.charts.velocity.step_ms,
+                },
+            }
+            if app_config is not None
+            else {}
+        ),
+    }
+
+
+@app.get("/api/config")
+async def get_config():
+    if app_config is None:
+        return {}
+    return {
+        "charts": {
+            "scaling_mode": app_config.charts.scaling_mode,
+            "altitude": {
+                "pad_max_m": app_config.charts.altitude.pad_max_m,
+                "expected_apogee_m": app_config.charts.altitude.expected_apogee_m,
+                "step_m": app_config.charts.altitude.step_m,
+            },
+            "acceleration": {
+                "min_g": app_config.charts.acceleration.min_g,
+                "max_g": app_config.charts.acceleration.max_g,
+            },
+            "velocity": {
+                "min_vz_ms": app_config.charts.velocity.min_vz_ms,
+                "max_vz_ms": app_config.charts.velocity.max_vz_ms,
+                "step_ms": app_config.charts.velocity.step_ms,
+            },
+        },
+        "gonogo": {
+            "required_hold_s": app_config.gonogo.required_hold_s,
+            "altitude_tol_m": app_config.gonogo.altitude_tol_m,
+            "accel_xy_tol_g": app_config.gonogo.accel_xy_tol_g,
+            "accel_z_nominal_g": app_config.gonogo.accel_z_nominal_g,
+            "accel_z_tol_g": app_config.gonogo.accel_z_tol_g,
+            "gps_radius_m": app_config.gonogo.gps_radius_m,
+            "weather_limits": {
+                "max_wind_speed_ms": app_config.gonogo.weather_limits.max_wind_speed_ms,
+                "max_cloud_cover_pct": app_config.gonogo.weather_limits.max_cloud_cover_pct,
+                "min_visibility_km": app_config.gonogo.weather_limits.min_visibility_km,
+            },
+        },
     }
 
 

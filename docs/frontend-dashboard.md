@@ -1,318 +1,108 @@
-# Telemetry Dashboard Design & Ergonomic Specification
+# NASA-STD-3001 Telemetry Dashboard & Aerospace Cockpit Specification
 
 > **Language / Idioma:** [ 🇬🇧 English ](frontend-dashboard.md) | [ 🇪🇸 Español ](es/frontend-dashboard.md)
 
-## 1. Objective
+## 1. Objective & Human-Systems Integration
 
-The **Telemetry Ground Station** dashboard displays telemetry data clearly, compactly, and ergonomically for real-time monitoring during live rocket flight operations.
+The **Telemetry Ground Station** dashboard displays real-time sounding rocket telemetry strictly optimized for human situational awareness under high cognitive load.
 
-The user interface utilizes a responsive 12-column grid layout: 4-column metric panels across the top row, and adaptive-width panels across the lower rows sized to match their content density.
-
-The core visual hierarchy is structured as follows:
-
-* **Primary Metrics:** Large, high-contrast numeric values for immediate cognitive acquisition.
-* **Link Health:** Critical communication and radio status persistently visible.
-* **GPS & Spatial Tracking:** Grouped within a unified interactive map panel.
-* **Flight Events:** High-priority stage transitions and milestone logging.
+The interface adheres to **NASA-STD-3001** (NASA Space Flight Human-System Standard) and **Mica Endsley’s Situation Awareness (SA) Model**, dividing information flow into three cognitive levels:
+1. **Level 1 — Perception (Instantaneous State):** What is the vehicle doing *right now*? (Altitude, current G-load, angular rates, parachute deploy status).
+2. **Level 2 — Comprehension (Temporal Evolution):** How are variables correlating over time? (Altitude vs GPS altitude, motor thrust vs burnout, vertical velocity vs ground speed).
+3. **Level 3 — Projection (Recovery & Trajectory):** Where is the vehicle heading and where will it land? (Coordinates, distance and bearing vector to base station, GPS fix quality).
 
 ---
 
-# 2. General Layout Architecture
+## 2. Desktop 5-Zone Cockpit Layout (100vw × 100vh — 0 Scroll)
 
-The user interface is divided into three primary functional zones:
+On desktop displays ($\ge 901\text{ px}$, calibrated for $1366 \times 768$, $1280 \times 720$, and $1920 \times 1080$), the layout is locked to the viewport with **zero vertical or horizontal scrollbars**:
 
-### Header
-Spans the full display width across the top of the viewport.
-
-Displays:
-* System Title: `Estación Terrena` / `Ground Station`
-* Mission Elapsed Time (MET): `T+ 00:03:42`
-* Connection State Indicator: `● LINK CONNECTED`
-
-Wireframe:
 ```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ HEADER — Ground Station                    T+ 00:03:42    ● LINK CONNECTED  │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Primary Grid
-A 12-column responsive layout:
-- **Top Row (4 / 4 / 4):** Barometer, Altimeter, and Tri-Axial Accelerometer.
-- **Bottom Row (6 / 3 / 3):** Interactive Map + Coordinates (6 columns), Link Health (3 columns), and Flight Milestones Log (3 columns).
-
-Wireframe:
-```text
-┌──────────┬──────────┬──────────┐
-│BAROMETER │ ALTITUDE │  ACCEL.  │
-├──────────┼──────────┼──────────┤
-│ MAP + COORDINATES   │HEALTH│LOG│
-└─────────────────────┴──────┴───┘
-```
-
-This arrangement grants maximum visual prominence to the trajectory map without sacrificing telemetry density.
-
----
-
-# 3. Barometer Instrument
-
-Displays atmospheric pressure as a primary flight safety metric.
-
-### Information Content
-* Current barometric pressure (hPa)
-* Rate of pressure change ($\Delta P$)
-* Minimum recorded pressure
-* Maximum recorded pressure
-
-### Instrument Card Layout
-```text
-BAROMETER
-
-        1008.42
-          hPa
-
-       ↓ 0.8 hPa
-
-MIN     1006.12
-MAX     1012.83
-```
-
-Current atmospheric pressure retains top visual weight, supplemented by a real-time sparkline or trend indicator.
-
----
-
-# 4. Altimeter Instrument
-
-Altitude is one of the most critical flight performance indicators.
-
-### Information Content
-* Current geometric altitude ($m$)
-* Vertical velocity ($m/s$)
-* Maximum apogee altitude reached ($m$)
-
-### Instrument Card Layout
-```text
-ALTITUDE
-
-       124.8
-         m
-
-       ↑ 2.4 m/s
-
-MAX    181.2 m
-```
-
-The current altitude readout employs the largest typographic scale on the screen (42–48 px font size) alongside the mechanical moving altitude tape.
-
----
-
-# 5. Tri-Axial Accelerometer Instrument
-
-Displays acceleration across vehicle body axes ($X, Y, Z$).
-
-### Information Content
-* Transverse X-Axis ($g$)
-* Transverse Y-Axis ($g$)
-* Longitudinal Z-Axis ($g$)
-* Total G-Load Vector Magnitude: $\sqrt{a_x^2 + a_y^2 + a_z^2}$
-
-### Instrument Card Layout
-```text
-ACCELERATION
-
- X       +0.12 g
- Y       -0.03 g
- Z       +1.01 g
- ─────────────────
- MAGNITUDE  1.01 g
-```
-
-Total magnitude retains visual prominence over individual axis channels. Each axis is plotted in real-time on continuous Canvas oscilloscopes.
-
----
-
-# 6. Radio Link Health & Diagnostics
-
-Provides instantaneous operational visibility into serial link stability and RF packet delivery.
-
-### Information Content
-* Connection link status
-* Latest received sequence number
-* Total frames received
-* Total frames lost
-* Silence elapsed time since last packet
-* Instantaneous reception rate (Hz)
-
-### Instrument Card Layout
-```text
-LINK HEALTH
-
-● CONNECTED
-
-SENT (SEQ)       18,452
-RECEIVED         18,449
-LOST                  3
-
-LAST PACKET       0.1 s
-RX RATE          10.0 Hz
-```
-
-### Visual State Indication
-
-| Status | Dot Color | Condition |
-|---|:---:|---|
-| **Connected** | Green | Active packet ingestion within nominal timing |
-| **Degraded** | Amber | Silence $> 1.5\text{ s}$ or packet loss $> 5\%$ |
-| **Disconnected** | Red | Hardware UART closed or silence $> 3.0\text{ s}$ |
-
----
-
-# 7. Interactive GIS & Trajectory Map
-
-Occupies a prominent **6/12 column** panel.
-
-### Information Content
-* Real-time vehicle coordinates
-* Historical trajectory polyline
-* Launchpad coordinate anchor (`startMarker`)
-* Georeferenced flight event markers
-
-### Map Card Layout
-```text
-GPS / MAP
-
-┌─────────────────────────────────────────────┐
-│                     MAP                     │
-│                 ●────●                      │
-│                                             │
-├─────────────────────────────────────────────┤
-│ LATITUDE                LONGITUDE           │
-└─────────────────────────────────────────────┘
-```
-
-Implemented with **Leaflet 1.9.4** and OpenStreetMap cartography. Panned and refreshed at throttled intervals (4 Hz) to prevent DOM thrashing.
-
----
-
-# 8. Flight Milestones & State Transition Log
-
-Records and displays vehicle flight state changes.
-
-Transitions are captured as **Flight Stage + Mission Elapsed Time**. Technical network errors and CRC logs are routed to diagnostic alerts rather than cluttering this operational log.
-
-### Event Log Layout
-```text
-FLIGHT EVENTS
-
-09:42:13    STANDBY
-09:42:48    POWERED
-09:43:12    APOGEE
-09:43:41    DROGUE_CONF
-09:44:02    LANDED
-```
-
-The header permanently highlights the active operational phase:
-```text
-CURRENT
-POWERED
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ ZONE 1: GLOBAL HEADER & LINK HEALTH (100% W × 42px H / ~8%)                            │
+│ Brand • MET Clock • Phase • RSSI • IMU Temp • Packet Loss % • Link Status/Timer        │
+├─────────────────────────┬───────────────────────────────┬──────────────────────────────┤
+│ ZONE 2: PERCEPTION (25%)│ ZONE 3: COMPREHENSION (45%)   │ ZONE 4: PROJECTION (30%)     │
+│ • Rolling Tape Alt      │ • 3 Stacked Time-Series Charts│ • Leaflet Satellite Map      │
+│ • Mach Dip Divergence   │   - 50% H: Alt Baro vs GPS    │ • Trajectory Path Trace      │
+│ • Pyrotechnic Blocks    │   - 25% H: Axial Accel (X)    │ • Base Guidance Vector       │
+│ • Axial G-Meter + Peaks │   - 25% H: Speed & Vz         │ • GPS Fix Quality Banner     │
+│ • Bipolar Gyro Bars     │ • Flight Phase Event Flags    │ • Signed Tabular Coordinates │
+│ • Pressure & Accel XYZ  │ • Red Dashed Dropout Bridging │                              │
+├─────────────────────────┴───────────────────────────────┴──────────────────────────────┤
+│ ZONE 5: FLIGHT DECISION STRIP & EVENT LOG (100% W × 20% H)                             │
+│ Flight Milestones Log (5fr) │ Active ISA-18.2 Alarms (5fr) │ CRC16 Link Diagnostics (2.5fr)│
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-# 9. Geolocation Coordinate Readouts
+## 3. Aerospace Instrument Specifications
 
-Coordinates are rendered in a dedicated numeric readout panel adjacent to the map:
-* **Latitude:** Signed decimal degrees ($^\circ$, 6 decimal places)
-* **Longitude:** Signed decimal degrees ($^\circ$, 6 decimal places)
+### A. Altitude & Transonic Mach Dip Divergence Comparator
+* **Rolling Tape Altimeter**: Vertical moving canvas displaying $\pm 100\text{ m}$ relative to current altitude with 10 m minor ticks and 50 m labeled major ticks.
+* **Baro vs GPS Divergence**: Dual-stage comparator active during powered ascent (`POWERED`, `BURNOUT`) when GPS fix is acquired (`sats >= 4`):
+  * **Normal ($|\Delta h| \le 30\text{ m}$)**: Neutral display.
+  * **Warning ($30\text{ m} < |\Delta h| \le 60\text{ m}$)**: Amber badge (`.warn`).
+  * **Transonic Critical Alert ($|\Delta h| > 60\text{ m}$)**: Flashing red alert (`.crit`) alerting the flight controller to the *transonic Mach dip* phenomenon, where dynamic pressure distortion momentarily compromises barometric readings.
+* **Barometric Pressure**: Rendered as a secondary sub-label underneath altitude to avoid cluttering primary gauges.
 
----
+### B. Axial G-Meter & Dual Peak Hold Tracking
+* **Range**: $-2\text{ g}$ to $+12\text{ g}$ (14 g total dynamic span), centered with $0\text{ g}$ baseline at $14.3\%$ track height.
+* **Dual Peak Hold**:
+  * **Boost Peak (Amber, 2px horizontal line)**: Locks the maximum axial acceleration during motor thrust (`POWERED`, `BURNOUT`).
+  * **Parachute Shock Peak (Cyan/Red, 2px horizontal line)**: Locks the peak opening shock upon drogue or main parachute deployment.
+* **Tabular Linear Acceleration**: Mono-spaced signed table showing $A_x$, $A_y$, $A_z$ with explicit `+` and `−` signs (`+00.00 g`).
 
-# 10. Visual Hierarchy & Ergonomic Principles
+### C. Zero-Centered Bipolar Gyroscope Bars
+* **Scale**: Linear horizontal bars spanning $-360^\circ/\text{s}$ to $+360^\circ/\text{s}$ with center at $0^\circ/\text{s}$ (positive fills right, negative fills left).
+* **Thresholds & Visual Alerts**:
+  * **Roll ($G_x$ Axial Spin)**: Amber warning at $> 180^\circ/\text{s}$.
+  * **Pitch & Yaw ($G_y$, $G_z$ Tumbling)**: Amber warning at $> 180^\circ/\text{s}$, flashing red alert at $> 250^\circ/\text{s}$ to instantly identify vehicle dynamic instability.
 
-The console prioritizes telemetry metrics according to operational criticality:
+### D. Cabin Pyrotechnic Annunciators (DROGUE & MAIN)
+* **Design**: High-contrast binary flight blocks modeled on spacecraft annunciator panels.
+* **State Behavior**:
+  * `0` (Idle): Dark background (`#141414`), dotted gray border, muted text `[0: EN ESPERA]`.
+  * `1` (Active/Fired): Solid high-contrast aerospace green (`#087a3b`), white text with `[OK] [1: DESPLEGADO]`.
+* **Deployment Parity**: Present in both Telemetry Cockpit (`/`) and Recovery view (`/recovery`).
 
-1. **Link Health & Radio Connection**
-2. **Current Altitude & Apogee**
-3. **Vehicle Position & Track**
-4. **Tri-Axial Acceleration & Peak G-Load**
-5. **Barometric Pressure**
-6. **Flight Phase Transitions**
-7. **GPS Coordinate Readouts**
+### E. Stacked Synchronized Time-Series with Dropout Visualization
+* **Proportions**:
+  * Top Chart (50% height): Barometric altitude (solid line) and GPS altitude (dotted line).
+  * Middle Chart (25% height): Axial acceleration ($A_x$) to monitor motor burn and burnout.
+  * Bottom Chart (25% height): Vertical velocity ($V_z$) and GPS ground speed.
+* **Synchronization**: All 3 charts share an identical, synchronized 60-second horizontal time axis.
+* **Event Flags**: Flight phase transitions automatically draw vertical dashed flag lines spanning across all 3 charts.
+* **RF Dropout Visualization**: Packet silence $> 300\text{ ms}$ breaks continuous spline interpolation and bridges the gap with a thin red dashed line (`#ef4444`, `[3, 3]`), preventing synthetic data fabrication.
 
-Primary values utilize bold, high-contrast typography, while secondary metrics use subdued scales to avoid visual fatigue under sunlight conditions.
+### F. Data Freezing Degradation (>300ms Silence)
+* If packet reception pauses for $> 300\text{ ms}$ (3 lost packets at 10 Hz):
+  * Dashboard data panels dim to $50\%$ opacity (`.stale-dim`).
+  * Card headers display pulsing amber badges: `[CONGELADO]`.
+  * Global header link status displays a live counter: `CONGELADO +X.Xs`.
+* Returns immediately to normal brightness and live status upon arrival of the next valid packet.
 
----
-
-# 11. Core Design Guidelines
-
-### High Information Density
-Presents high-dimensional telemetry without degrading into an unreadable tabular spreadsheet.
-
-### Predictable Layout Stability
-Dynamic updates must never induce layout shifting, jitter, or scroll jumps.
-
-### Sunlight Readability (Field Conditions)
-High-contrast color palette, minimum 14 pt font sizes for critical readouts, and prominent canvas stroke widths designed for outdoor operation under direct solar illumination.
-
-### Extensible Modular Architecture
-Structured to accommodate future telemetry cards (variometer, antenna radar, battery voltage, temperature) without disrupting core dashboard stability.
-
----
-
-# 12. Pre-Flight Go / No-Go Checklist View (`/gonogo`)
-
-Dedicated operational view for pre-launch launchpad qualification and flight safety checklist verification.
-
-### Key Capabilities & Layout
-* **Global Verdict Banner:** Persistent, ultra-high-contrast `GO` (Green) vs `NO-GO` (Red) display with active blocker badges.
-* **Cumulative Stability Hold Timer:** High-precision timer accumulating stability duration when all subsystems remain within prescribed safety thresholds. Automatically resets to zero and logs failure diagnostics upon any out-of-bounds telemetry sample.
-* **Launchpad Sensor Validation:**
-  - **Altitude Baseline:** Enforces $|h| \le \text{tolerance}$ (nominal $0.0\text{ m} \pm 5.0\text{ m}$).
-  - **Accelerometer Calibration:** Enforces transverse axes $|a_x|, |a_y| \le 0.10\text{ g}$ and longitudinal resting gravity $|a_z - 1.0\text{ g}| \le 0.15\text{ g}$.
-  - **GPS Fix & Position Lock:** Enforces valid navigation lock (`FIX_3D`) and verifies geographical coordinate drift does not exceed launchpad radius ($\le 5.0\text{ m}$).
-* **Surface Meteorology:** Real-time input evaluation for surface wind speed ($\le 10\text{ m/s}$), cloud cover ($\le 75\%$), flight visibility ($\ge 5\text{ km}$), and official weather officer authorization checkbox.
-* **System Audit Table:** Monospace tabular matrix displaying real-time metrics, criteria, and status for each subsystem.
+### G. Recovery Navigation & Base Guidance Vector
+* **Leaflet Map**: Renders vehicle GPS coordinates and color-graded trajectory polyline.
+* **Base Guidance Vector**: Computes great-circle distance (meters / km) and true azimuth bearing ($000^\circ$ to $360^\circ$) from launch base to rocket.
+* **GPS Fix Quality**: Border turns amber with `SIN FIX GPS` warning if satellites drop below 4.
 
 ---
 
-# 13. Post-Flight Tactical Recovery & Search View (`/recovery`)
+## 4. Multi-View Header & Responsive Parity
 
-Dedicated operational view designed for search-and-rescue (SAR) ground recovery teams to locate and retrieve the rocket airframe after touchdown.
+All three views (`GO / NO-GO`, `TELEMETRÍA`, `RECUPERACIÓN`) share an identical **7-cell Global Header**:
+1. `HORA LOCAL` (HH:MM:SS)
+2. `TIEMPO DE MISIÓN` (T+ HH:MM:SS)
+3. `FASE DE VUELO` (Spanish flight phase badge)
+4. `SEÑAL RF (RSSI)` (dBm)
+5. `TEMP. IMU` (Cockpit badge: normal $<45^\circ\text{C}$, warn $45\text{--}60^\circ\text{C}$, crit $>60^\circ\text{C}$)
+6. `PÉRDIDA DE PAQUETES` (% over 5s sliding window)
+7. `ENLACE` (Live status indicator with `CONGELADO +X.Xs` degradation timer)
 
-### Key Capabilities & Layout
-
-* **Hero Guidance Banner:**
-  - **Distance to Rocket:** Real-time geodesic distance from the launchpad base or operator position to the rocket (rendered in meters or kilometers).
-  - **Azimuth & Compass Dial:** Animated 360° compass dial displaying the exact heading angle (e.g. `124°`) and cardinal sector (`SE`, `ENE`) to guide field personnel.
-  - **Landing Status Indicator:** Evaluates descent conditions upon touchdown (`STANDBY`, `IN FLIGHT`, `SOFT LANDING`, `HARD LANDING`) along with impact vertical velocity ($V_z$ at touchdown).
-  - **Direct Field Action Buttons:**
-    - **Open in Google Maps:** Opens a new browser tab with direct GPS waypoint pin (`https://www.google.com/maps/search/?api=1&query={lat},{lon}`) for immediate turn-by-turn vehicle or pedestrian navigation.
-    - **Copy Coordinates:** Single-click copy of latitude and longitude coordinates to the system clipboard, accompanied by a toast notification.
-
-* **Tactical Trajectory & Impact Map:**
-  - Interactive Leaflet map displaying launchpad origin, full descent trajectory polyline, and the latest known GPS impact coordinate.
-  - Quick centering shortcuts:
-    - `Centrar Cohete`: Instantly pans and zooms onto the vehicle's current position.
-    - `Centrar Base`: Centers the map onto the launchpad origin.
-    - `Ver Todo`: Fits the entire bounding box containing base and rocket within the viewport.
-    - `Mi Ubicación`: Acquires browser geolocation API coordinates to display the recovery team's position relative to the rocket.
-
-* **Telemetry & Diagnostic Side Panels:**
-  - **Vehicle Coordinates:** High-precision WGS-84 decimal latitude and longitude, GPS altitude, active satellite count, last packet arrival time, and GPS 3D fix status badge.
-  - **Base / Launchpad Reference:** Recorded launchpad coordinates and angular elevation to the vehicle.
-  - **Flight Chronology & Event Milestones:** Scrollable chronological log of flight phases (`STANDBY`, `POWERED`, `BURNOUT`, `APOGEE`, `MAIN_CONF`, `LANDED`) with mission timestamps.
-  - **RF Ground Link Diagnostics:** Packets received count, avionics packet sequence number, 5-second sliding window packet loss percentage, and recorded maximum apogee altitude.
-
-* **Mobile-Responsive Ergonomics:**
-  - Fluid responsive grid that automatically reflows into a single-column, touch-friendly interface on smartphones and tablets, allowing field retrieval crews to navigate off-road without horizontal scrolling.
-
----
-
-# 14. Related Documentation
-
-- **[System Architecture & Component Documentation](architecture.md):** Complete data flow pipeline, `asyncio` concurrency, and decoupled frontend architecture.
-- **[Frame Specification & Binary Protocol Reference](protocol.md):** 65-byte LoRa frame memory map, field data types, scales, and CRC-16 specification.
-- **[API & WebSocket Interface Specification](api.md):** REST endpoints, WebSocket schemas, connection lifecycle, and payload examples.
-- **[Getting Started & Operations Guide](getting-started.md):** System configuration, Linux serial permissions, runtime operation, and verification testing.
-- **[Frame Schema Specification](frame-schema.md):** Declarative YAML frame definition reference.
-- **[Project Entry Point & Index](../README.md):** Repository overview and documentation directory.
+### Mobile Adaptation ($\le 900\text{ px}$)
+* Single-column responsive layout.
+* Vertical scrolling cleanly enabled.
+* **Zero horizontal overflow** (`scrollWidth == innerWidth`).
+* Header wraps into clean 3-column / 2-column tabular grid.

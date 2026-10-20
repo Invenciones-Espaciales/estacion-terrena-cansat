@@ -213,30 +213,30 @@ header.global-header {
     flex-direction: column;
     justify-content: center;
     align-items: flex-end;
-    padding: 0 6px;
+    padding: 0 4.5px;
     border-left: 1.5px solid var(--border);
     flex: none;
     white-space: nowrap;
 }
 
 .hcell .k {
-    font-size: 8.5px;
+    font-size: 8px;
     font-weight: 800;
     color: var(--muted);
-    letter-spacing: .06em;
+    letter-spacing: .05em;
     text-transform: uppercase;
     line-height: 1.1;
 }
 
 .hcell .v {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1.1;
 }
 
 .hcell .v.clock {
-    font-size: 17px;
-    min-width: 5.2em;
+    font-size: 15px;
+    min-width: 4.8em;
     text-align: right;
     white-space: nowrap;
 }
@@ -312,6 +312,285 @@ header.global-header {
     color: var(--bad);
     border-color: var(--bad);
 }
+
+/* ============================================================
+   NASA-STD-3001 COCKPIT INSTRUMENTATION & STATUS STYLES
+   ============================================================ */
+
+/* Temperature Pill in Header */
+.temp-pill {
+    font-size: 11px;
+    font-weight: 900;
+    padding: 2px 7px;
+    border: 1.5px solid var(--border);
+    background: var(--soft);
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    letter-spacing: 0.04em;
+    border-radius: 2px;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.temp-pill.warn {
+    background: var(--warn-bg);
+    color: var(--warn);
+    border-color: var(--warn);
+}
+.temp-pill.crit {
+    background: var(--bad-bg);
+    color: var(--bad);
+    border-color: var(--bad);
+}
+
+/* Data Freezing (>300ms) Visual Degradation */
+.stale-dim {
+    opacity: 0.5 !important;
+    filter: grayscale(0.5);
+    transition: opacity 0.15s ease;
+}
+
+.card-frozen-badge {
+    display: none;
+    font-size: 8.5px;
+    font-weight: 950;
+    padding: 1px 5px;
+    background: var(--warn);
+    color: #000;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.card-frozen-badge.active {
+    display: inline-block;
+}
+
+/* Barometric vs GPS Altitude Divergence Comparator */
+.divergence-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 3px 6px;
+    border: 1.5px solid var(--border);
+    background: var(--soft);
+    border-radius: 2px;
+    margin-top: 4px;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.divergence-wrap.warn {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+    color: var(--warn);
+}
+.divergence-wrap.crit {
+    background: var(--bad-bg);
+    border-color: var(--bad);
+    color: var(--bad);
+    animation: pulse-border 1s infinite alternate;
+}
+@keyframes pulse-border {
+    from { border-color: var(--bad); }
+    to { border-color: transparent; }
+}
+.divergence-title {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.divergence-delta {
+    font-size: 11px;
+    font-weight: 950;
+    font-family: "JetBrains Mono", Consolas, monospace;
+}
+
+/* Vertical Axial G-Meter with Dual Peak Hold */
+.gmeter-container {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    height: 100%;
+}
+.gmeter-track {
+    width: 22px;
+    background: var(--soft);
+    border: 1.5px solid var(--border);
+    position: relative;
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.gmeter-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--accent);
+    transition: height 0.05s linear;
+}
+.gmeter-zero {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: var(--ink);
+    opacity: 0.5;
+    z-index: 2;
+}
+.gmeter-peak-boost {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #f59e0b;
+    z-index: 3;
+    box-shadow: 0 0 4px #f59e0b;
+}
+.gmeter-peak-shock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #ef4444;
+    z-index: 3;
+    box-shadow: 0 0 4px #ef4444;
+}
+
+/* Gyroscope Zero-Centered Bipolar Bars */
+.gyro-bipolar-row {
+    display: grid;
+    grid-template-columns: 14px 1fr 58px;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+}
+.gyro-bipolar-row:last-child {
+    margin-bottom: 0;
+}
+.gyro-axis-lbl {
+    font-size: 11px;
+    font-weight: 900;
+    color: var(--gray);
+}
+.gyro-track {
+    position: relative;
+    height: 13px;
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.gyro-center-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: var(--border);
+    transform: translateX(-50%);
+    z-index: 2;
+}
+.gyro-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: #64748b;
+    transition: left 0.05s linear, width 0.05s linear, background-color 0.15s ease;
+}
+.gyro-fill.warn {
+    background: var(--warn);
+}
+.gyro-fill.crit {
+    background: var(--bad);
+}
+.gyro-val-text {
+    font-size: 11px;
+    font-weight: 900;
+    text-align: right;
+    font-family: "JetBrains Mono", Consolas, monospace;
+}
+
+/* Map GPS Quality Warning Banner */
+.map-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 80px;
+    border: 2px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+.map-wrap.no-fix {
+    border-color: var(--warn) !important;
+}
+.map-gps-banner {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    z-index: 1000;
+    background: rgba(245, 158, 11, 0.95);
+    color: #000;
+    font-size: 9.5px;
+    font-weight: 950;
+    padding: 3px 8px;
+    text-align: center;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    display: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.map-wrap.no-fix .map-gps-banner {
+    display: block;
+}
+
+/* ============================================================
+   CHART SCALE SELECTOR (TRINQUETE / AUTO / FIJA)
+   ============================================================ */
+
+.scale-mode-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--soft);
+    border: 1px solid var(--border);
+    padding: 1px 3px;
+    border-radius: 2px;
+    margin-left: 6px;
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.scale-mode-lbl {
+    color: var(--muted);
+    letter-spacing: .04em;
+    font-size: 7.5px;
+    margin-right: 2px;
+}
+
+.btn-scale-opt {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 900;
+    padding: 1px 4px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.1s ease, color 0.1s ease;
+    line-height: 1.1;
+}
+
+.btn-scale-opt:hover {
+    color: var(--ink);
+    background: var(--soft-border);
+}
+
+.btn-scale-opt.active {
+    background: var(--ink);
+    color: var(--bg);
+}
+
 
 /* ============================================================
    AEROSPACE COCKPIT BINARY ANNUNCIATORS (EVENTOS PIROTÉCNICOS)
