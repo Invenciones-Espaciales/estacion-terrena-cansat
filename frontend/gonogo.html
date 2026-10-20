@@ -11,7 +11,10 @@
 <script src="/frontend/js/common.js"></script>
 
 <style>
-/* ===== APP: FULL SCREEN VIEWPORT ===== */
+/* ============================================================
+   GO / NO-GO COCKPIT DASHBOARD (NASA-STD-3001)
+   ============================================================ */
+
 .app {
     width: 100vw;
     height: 100vh;
@@ -23,18 +26,23 @@
     overflow: hidden;
 }
 
-/* ===== UNIFIED HERO BANNER (VERDICT + TIMER) ===== */
+/* ===== HERO VERDICT BANNER ===== */
 .hero-banner {
     flex: none;
+    height: 60px;
+    min-height: 60px;
+    max-height: 60px;
     border: 2px solid var(--border);
-    padding: 6px 14px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    padding: 4px 12px;
+    display: flex;
     align-items: center;
-    gap: 16px;
+    justify-content: space-between;
+    gap: 12px;
     background: var(--card);
     transition: background 0.2s ease, border-color 0.2s ease;
+    box-sizing: border-box;
 }
+
 .hero-banner.state-nogo {
     background: var(--bad-bg);
     border-color: var(--bad);
@@ -44,459 +52,598 @@
     border-color: var(--ok);
 }
 
-.verdict-box {
+.hero-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.hero-icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 900;
+    flex-shrink: 0;
+    border: 2px solid currentColor;
+}
+.hero-banner.state-nogo .hero-icon-circle {
+    background: var(--bad);
+    color: #fff;
+    border-color: var(--bad);
+}
+.hero-banner.state-go .hero-icon-circle {
+    background: var(--ok);
+    color: #fff;
+    border-color: var(--ok);
+}
+
+.hero-titles {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    min-width: 220px;
+    min-width: 0;
 }
-.verdict-tag {
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: .12em;
+.hero-title {
+    font-size: 17px;
+    font-weight: 950;
+    letter-spacing: .03em;
+    line-height: 1.1;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hero-sub {
+    font-size: 11px;
+    font-weight: 800;
     color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.verdict-main {
-    font-size: 32px;
+
+.hero-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.hero-verdict-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 14px;
+    border-radius: 4px;
+    border: 1.5px solid currentColor;
+    min-width: 110px;
+    line-height: 1;
+}
+.hero-verdict-tag {
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .1em;
+    margin-bottom: 2px;
+}
+.hero-verdict-text {
+    font-size: 24px;
+    font-weight: 950;
+    letter-spacing: .05em;
+}
+
+.hero-banner.state-nogo .hero-verdict-pill {
+    background: var(--bad);
+    color: #fff;
+    border-color: var(--bad);
+}
+.hero-banner.state-go .hero-verdict-pill {
+    background: var(--ok);
+    color: #fff;
+    border-color: var(--ok);
+}
+
+.btn-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 900;
+    border: 1.5px solid var(--border);
+    background: var(--soft);
+    color: var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.btn-hero:hover {
+    background: var(--border-light);
+    border-color: var(--ink);
+}
+.btn-hero.btn-lock.locked {
+    background: var(--warn);
+    color: #fff;
+    border-color: var(--warn);
+}
+
+/* ===== MIDDLE 4-CARDS GRID ===== */
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    flex: 1.6 1 0;
+    min-height: 0;
+}
+
+.dash-card {
+    border: 2px solid var(--border);
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
+.dash-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    border-bottom: 1.5px solid var(--border-light);
+    flex-shrink: 0;
+}
+
+.dash-card-title {
+    font-size: 11.5px;
     font-weight: 950;
     letter-spacing: .04em;
-    line-height: 1;
     display: flex;
     align-items: center;
     gap: 6px;
-}
-.hero-banner.state-nogo .verdict-main { color: var(--bad); }
-.hero-banner.state-go .verdict-main { color: var(--ok); }
-
-.verdict-msg {
-    font-size: 11px;
-    font-weight: 900;
-    margin-top: 2px;
-}
-
-/* TIMER MIDDLE */
-.timer-center {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 0 6px;
-}
-.timer-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-}
-.timer-label {
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: .08em;
-    color: var(--muted);
-}
-.timer-nums {
-    font-size: 20px;
-    font-weight: 950;
-}
-.timer-nums .target {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 800;
-}
-
-.progress-track {
-    height: 12px;
-    background: var(--card);
-    border: 2px solid var(--border);
-    position: relative;
-    overflow: hidden;
-}
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: var(--accent);
-    transition: width 0.1s linear, background-color 0.2s ease;
-}
-.progress-bar.complete { background: var(--ok); }
-
-.timer-sub-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    font-weight: 900;
-    color: var(--gray);
-}
-.timer-sub-row span { font-weight: 950; color: var(--ink); }
-
-.hero-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    align-items: flex-end;
-}
-
-/* ===== UNIFIED CHECKLIST MATRIX (FLEX GROW TO 100% HEIGHT) ===== */
-.checklist-card {
-    flex: 1 1 0;
-    min-height: 0;
-    border: 2px solid var(--border);
-    background: var(--card);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.checklist-head {
-    flex: none;
-    background: var(--soft);
     color: var(--ink);
-    border-bottom: 2px solid var(--border);
-    padding: 4px 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
-.checklist-head-title {
-    font-size: 11px;
+
+.dash-card-pill {
+    font-size: 9px;
     font-weight: 900;
-    letter-spacing: .1em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
-.checklist-head-hint {
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--muted);
+.dash-card-pill.ok {
+    color: var(--ok);
+    background: var(--ok-bg);
 }
-
-.table-wrap {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
+.dash-card-pill.warn {
+    color: var(--warn);
+    background: var(--warn-bg);
 }
-
-table.cl-table {
-    width: 100%;
-    height: 100%;
-    border-collapse: collapse;
-}
-
-table.cl-table th {
-    text-align: left;
-    font-size: 9.5px;
-    font-weight: 900;
-    letter-spacing: .08em;
-    color: var(--muted);
-    background: var(--soft);
-    border-bottom: 1.5px solid var(--border);
-    padding: 3px 10px;
-}
-
-table.cl-table td {
-    padding: 3px 10px;
-    border-bottom: 1px solid var(--soft-border);
-    vertical-align: middle;
-}
-table.cl-table tr:last-child td { border-bottom: none; }
-
-.cl-row-fail {
+.dash-card-pill.bad {
+    color: var(--bad);
     background: var(--bad-bg);
 }
 
-.subsys-title {
-    font-size: 13px;
-    font-weight: 950;
+.card-body-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.subsys-desc {
-    font-size: 9.5px;
-    color: var(--muted);
-    font-weight: 800;
-    margin-top: 1px;
+    flex-direction: column;
+    gap: 3px;
 }
 
-.live-val {
-    font-size: 15px;
-    font-weight: 950;
-    line-height: 1.1;
-}
-.live-sub {
-    font-size: 9.5px;
-    color: var(--gray);
-    font-weight: 800;
-    margin-top: 1px;
-}
-
-.rule-box {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    align-items: center;
-}
-.rule-tag {
-    display: inline-block;
-    background: var(--soft);
-    border: 1.5px solid var(--soft-border);
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: 800;
-    border-radius: 2px;
-}
-
-/* BADGES */
-.badge {
-    font-size: 12px;
-    font-weight: 950;
-    padding: 3px 8px;
-    border-radius: 2px;
-    letter-spacing: .04em;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-}
-.badge.ok { background: var(--ok); color: #fff; }
-.badge.bad { background: var(--bad); color: #fff; }
-.badge.warn { background: var(--warn); color: #fff; }
-
-/* INLINE CONTROLS (WEATHER & GPS) */
-.inline-form {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-}
-.in-group {
-    display: inline-flex;
-    align-items: center;
-    border: 1.5px solid var(--border);
-    background: var(--card);
-    padding: 2px 6px;
-    gap: 4px;
-}
-.in-group input {
-    width: 48px;
-    border: none;
-    outline: none;
-    font-size: 13px;
-    font-weight: 950;
-    font-family: inherit;
-    text-align: right;
-    background: transparent;
-    color: var(--ink);
-}
-.in-label {
-    font-size: 10px;
-    font-weight: 900;
-    color: var(--muted);
-}
-.in-unit {
-    font-size: 10px;
-    font-weight: 900;
-    color: var(--muted);
-}
-
-.officer-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--card);
-    border: 1.5px solid var(--border);
-    color: var(--ink);
-    padding: 3px 8px;
-    font-size: 11px;
-    font-weight: 950;
-    cursor: pointer;
-}
-.officer-toggle input {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: var(--ok);
-}
-
-/* BUTTONS */
-.btn {
-    padding: 5px 12px;
-    font-size: 11px;
-    font-weight: 950;
-    letter-spacing: .06em;
-    border: 1.5px solid var(--border);
-    background: var(--card);
-    color: var(--ink);
-    cursor: pointer;
-    transition: background 0.1s ease, color 0.1s ease;
-}
-.btn:hover { background: var(--ink); color: var(--bg); }
-.btn.btn-sm { padding: 3px 8px; font-size: 10px; font-weight: 900; }
-.btn.btn-reset { background: var(--bad); color: #fff; border: 2px solid var(--border); }
-.btn.btn-reset:hover { background: #850017; }
-
-/* BOTTOM CONTROLS BAR */
-.actions-bar {
-    flex: none;
+/* Micro key-value rows */
+.m-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 10px;
-    border: 1.5px solid var(--border);
-    background: var(--soft);
+    padding: 2px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 10.5px;
+}
+.m-row:last-child {
+    border-bottom: none;
+}
+.m-k {
+    font-weight: 800;
+    color: var(--muted);
+}
+.m-v {
+    font-weight: 950;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
-/* ============================================================
-   RESPONSIVE DESIGN: MOBILE VIEWPORTS (SMARTPHONES)
-   Permite scroll vertical en teléfonos manteniendo 0-overflow
-   ============================================================ */
+/* Status dots */
+.s-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+.s-dot.ok { background: var(--ok); box-shadow: 0 0 4px var(--ok); }
+.s-dot.warn { background: var(--warn); box-shadow: 0 0 4px var(--warn); }
+.s-dot.bad { background: var(--bad); box-shadow: 0 0 4px var(--bad); }
+
+/* Stability box with micro-sparkline */
+.stab-box {
+    margin: 3px 0;
+    padding: 4px 6px;
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.stab-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 9.5px;
+}
+.stab-title {
+    font-weight: 900;
+    color: var(--muted);
+}
+.stab-timer {
+    font-weight: 950;
+    color: var(--accent);
+}
+.stab-canvas-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.stab-canvas {
+    height: 18px;
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border-light);
+    border-radius: 2px;
+}
+.stab-sub {
+    font-size: 8.5px;
+    font-weight: 800;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+}
+.stab-reset-hint {
+    color: var(--bad);
+    font-weight: 900;
+}
+
+/* Manual checklist table in Card 4 */
+.cl-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+.cl-tbl th {
+    text-align: left;
+    padding: 3px 4px;
+    font-size: 8.5px;
+    font-weight: 900;
+    color: var(--muted);
+    border-bottom: 1.5px solid var(--border-light);
+    background: var(--soft);
+}
+.cl-tbl td {
+    padding: 3px 4px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+}
+.cl-tbl tr.verified {
+    background: rgba(16, 185, 129, 0.05);
+}
+.cl-tbl tr:hover {
+    background: var(--soft);
+    cursor: pointer;
+}
+.cl-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-weight: 900;
+    font-size: 8.5px;
+    white-space: nowrap;
+}
+.cl-badge.ok {
+    background: var(--ok);
+    color: #fff;
+}
+.cl-badge.pending {
+    background: var(--warn);
+    color: #fff;
+}
+.cl-role {
+    font-size: 8.5px;
+    font-weight: 800;
+    color: var(--muted);
+}
+
+/* Verification toggle footer in cards */
+.card-verify-btn {
+    margin-top: 4px;
+    padding: 4px 6px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--soft);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 900;
+    user-select: none;
+}
+.card-verify-btn:hover {
+    background: var(--border-light);
+}
+.card-verify-btn input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+/* ===== BOTTOM 3-PANELS ROW ===== */
+.grid-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    flex: 1.1 1 0;
+    min-height: 0;
+}
+
+.bottom-card {
+    border: 2px solid var(--border);
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
+.bottom-card-title {
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: .04em;
+    padding-bottom: 3px;
+    margin-bottom: 4px;
+    border-bottom: 1.5px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ink);
+    flex-shrink: 0;
+}
+
+/* Panel 1: Detalle de verificaciones */
+.detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+}
+.detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 3px 6px;
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 3px;
+}
+.detail-item-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.detail-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.detail-texts {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.detail-name {
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.detail-desc {
+    font-size: 8.5px;
+    font-weight: 800;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.detail-status {
+    font-size: 9px;
+    font-weight: 950;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+.detail-status.ok {
+    background: var(--ok);
+    color: #fff;
+}
+.detail-status.pending {
+    background: var(--warn);
+    color: #fff;
+}
+
+/* Panel 2: Verificaciones pendientes */
+.pending-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.pending-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 9.5px;
+    padding: 2.5px 5px;
+    border-bottom: 1px solid var(--border-light);
+}
+.pending-item-left {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 850;
+    color: var(--ink);
+    min-width: 0;
+}
+.pending-item-left span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pending-role {
+    font-size: 8.5px;
+    font-weight: 900;
+    color: var(--muted);
+    flex-shrink: 0;
+}
+
+/* Panel 3: Resumen general */
+.summary-box {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 4px;
+    padding: 4px;
+}
+.summary-ring {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 950;
+    border: 3px solid currentColor;
+    flex-shrink: 0;
+}
+.summary-ring.ok {
+    background: var(--ok-bg);
+    color: var(--ok);
+    border-color: var(--ok);
+}
+.summary-ring.bad {
+    background: var(--bad-bg);
+    color: var(--bad);
+    border-color: var(--bad);
+}
+.summary-label {
+    font-size: 20px;
+    font-weight: 950;
+    letter-spacing: .06em;
+    line-height: 1;
+}
+.summary-label.ok { color: var(--ok); }
+.summary-label.bad { color: var(--bad); }
+
+.summary-msg {
+    font-size: 10px;
+    font-weight: 850;
+    color: var(--muted);
+    max-width: 260px;
+    line-height: 1.25;
+}
+
+/* Mobile responsive adjustments */
 @media (max-width: 900px) {
-    html, body {
-        height: auto !important;
-        min-height: 100% !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-    }
-
     .app {
-        width: 100% !important;
-        max-width: 100vw !important;
-        height: auto !important;
-        min-height: 100vh !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow-x: hidden !important;
-        overflow-y: visible !important;
-        padding: 6px !important;
-        gap: 8px !important;
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
     }
-
     .hero-banner {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-        padding: 10px !important;
+        height: auto;
+        min-height: auto;
+        max-height: none;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 8px 10px;
     }
-
-    .verdict-box {
-        align-items: center !important;
-        text-align: center !important;
-        width: 100% !important;
-        min-width: 0 !important;
+    .hero-right {
+        justify-content: space-between;
     }
-
-    .verdict-main {
-        font-size: 28px !important;
-        justify-content: center !important;
+    .grid-cards {
+        grid-template-columns: 1fr;
+        flex: none;
     }
-
-    .timer-center {
-        width: 100% !important;
-        padding: 0 !important;
+    .grid-bottom {
+        grid-template-columns: 1fr;
+        flex: none;
     }
-
-    .hero-actions {
-        width: 100% !important;
-        align-items: stretch !important;
-    }
-
-    .hero-actions .btn {
-        width: 100% !important;
-        text-align: center !important;
-        padding: 8px 12px !important;
-    }
-
-    .checklist-card {
-        flex: none !important;
-        height: auto !important;
-        min-height: auto !important;
-        overflow: visible !important;
-    }
-
-    .checklist-head {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 2px !important;
-        padding: 6px 8px !important;
-    }
-
-    .table-wrap {
-        display: block !important;
-        overflow: visible !important;
-        width: 100% !important;
-        height: auto !important;
-    }
-
-    table.cl-table,
-    table.cl-table tbody,
-    table.cl-table tr,
-    table.cl-table td {
-        display: block !important;
-        width: 100% !important;
-        height: auto !important;
-        box-sizing: border-box !important;
-    }
-
-    table.cl-table thead {
-        display: none !important;
-    }
-
-    table.cl-table tr {
-        border-bottom: 2px solid var(--border) !important;
-        padding: 8px !important;
-        margin-bottom: 8px !important;
-        background: var(--card) !important;
-        border-radius: 3px !important;
-    }
-
-    table.cl-table td {
-        padding: 4px 0 !important;
-        border-bottom: 1px dashed var(--soft-border) !important;
-    }
-
-    table.cl-table td:last-child {
-        border-bottom: none !important;
-        text-align: left !important;
-        margin-top: 4px !important;
-    }
-
-    .inline-form {
-        gap: 6px !important;
-    }
-
-    .in-group {
-        flex: 1 1 calc(50% - 6px) !important;
-    }
-
-    .in-group input {
-        width: 100% !important;
-    }
-
-    .officer-toggle {
-        width: 100% !important;
-        box-sizing: border-box !important;
-        padding: 6px 8px !important;
-    }
-
-    .actions-bar {
-        flex-direction: column !important;
-        gap: 6px !important;
-        text-align: center !important;
-        padding: 8px !important;
+    .card-body-scroll {
+        overflow-y: visible;
     }
 }
 </style>
 </head>
 
 <body>
-
 <div class="app">
 
-    <!-- ==================== CABECERA GLOBAL (10%) ==================== -->
+    <!-- ==================== CABECERA GLOBAL (IDENTICAL ACROSS ALL 3 VIEWS) ==================== -->
     <header class="global-header">
         <div class="brand">
-            <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
-            <h1>ESTACIÓN<br>TERRENA</h1>
-            <nav class="view-nav">
-                <a href="/gonogo" class="nav-tab active">GO / NO-GO</a>
-                <a href="/" class="nav-tab">TELEMETRÍA</a>
-                <a href="/recovery" class="nav-tab">RECUPERACIÓN</a>
+            <span class="logo">🚀</span>
+            <div class="brand-text">
+                <span class="title">INVENCIONES ESPACIALES</span>
+                <span class="subtitle">ESTACIÓN TERRENA | PRE-LANZAMIENTO</span>
+            </div>
+            <nav class="views-nav">
+                <a href="/" class="nav-link">TELEMETRÍA</a>
+                <a href="/gonogo" class="nav-link active">GO / NO-GO</a>
+                <a href="/recovery" class="nav-link">RECUPERACIÓN</a>
             </nav>
             <button type="button" class="theme-toggle" id="btnThemeToggle" title="Alternar modo oscuro / claro" aria-label="Alternar modo oscuro / claro">
                 <span class="theme-icon" id="themeIcon">🌙</span>
@@ -515,204 +662,289 @@ table.cl-table tr:last-child td { border-bottom: none; }
         </div>
     </header>
 
-    <!-- ==================== UNIFIED HERO BANNER (VERDICT + TIMER) ==================== -->
+    <!-- ==================== HERO VERDICT BANNER ==================== -->
     <section class="hero-banner state-nogo" id="heroBanner">
-
-        <!-- 1. VERDICT -->
-        <div class="verdict-box">
-            <span class="verdict-tag">ESTADO OPERACIONAL</span>
-            <div class="verdict-main" id="verdictBadge">
-                <span id="verdictIcon">✖</span>
-                <span id="verdictText">NO-GO</span>
-            </div>
-            <div class="verdict-msg" id="verdictSubtitle">
-                ESPERANDO ESTABILIZACIÓN EN RAMPA
+        <div class="hero-left">
+            <div class="hero-icon-circle" id="heroIcon">✖</div>
+            <div class="hero-titles">
+                <div class="hero-title" id="heroTitle">SISTEMA EN VERIFICACIÓN</div>
+                <div class="hero-sub" id="heroSubtitle">Verificaciones pendientes de autorización previa al lanzamiento.</div>
             </div>
         </div>
 
-        <!-- 2. STABILITY TIMER & PROGRESS -->
-        <div class="timer-center">
-            <div class="timer-header-row">
-                <span class="timer-label">VENTANA DE ESTABILIDAD CONTINUA</span>
-                <span class="timer-nums num">
-                    <span id="timerCurrent">00:00.0</span>
-                    <span class="target">/ <span id="timerTarget">00:30.0</span></span>
-                </span>
+        <div class="hero-right">
+            <div class="hero-verdict-pill" id="heroVerdictPill">
+                <span class="hero-verdict-tag">ESTADO OPERACIONAL</span>
+                <span class="hero-verdict-text num" id="heroVerdictText">NO-GO</span>
             </div>
+            <button type="button" class="btn-hero btn-lock" id="btnLockGo" title="Confirmar y bloquear lista de verificación para autorización final">
+                <span id="btnLockIcon">🔒</span> <span id="btnLockText">CONFIRMAR GO</span>
+            </button>
+            <button type="button" class="btn-hero" id="btnExportCsv" title="Exportar registro completo de auditoría y eventos en CSV">
+                📄 EXPORTAR CSV
+            </button>
+            <button type="button" class="btn-hero" id="btnResetChecks" title="Reiniciar marcas del checklist manual">
+                🔄 REINICIAR
+            </button>
+        </div>
+    </section>
 
-            <div class="progress-track">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
+    <!-- ==================== MIDDLE ROW: 4 DASHBOARD CARDS ==================== -->
+    <section class="grid-cards">
 
-            <div class="timer-sub-row">
-                <div>ESTADO: <span id="timerStateLabel">EN ESPERA</span></div>
-                <div>REINICIOS: <span class="num" id="resetCount">0</span></div>
-                <div>ÚLTIMO FALLO: <span id="lastFailureReason">Ninguno</span></div>
+        <!-- CARD 1: COMUNICACIONES -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <div class="dash-card-title"><span>📡</span> 1. COMUNICACIONES</div>
+                <span class="dash-card-pill bad" id="pillLink">SIN ENLACE</span>
             </div>
+            <div class="card-body-scroll">
+                <!-- Stability live monitor -->
+                <div class="stab-box">
+                    <div class="stab-top">
+                        <span class="stab-title">ESTABILIDAD ENLACE</span>
+                        <span class="stab-timer num" id="linkStabTimer">00:00.0</span>
+                    </div>
+                    <div class="stab-canvas-row">
+                        <canvas class="stab-canvas" id="linkSpark" width="160" height="20"></canvas>
+                    </div>
+                    <div class="stab-sub">
+                        <span>Pérdida 5s: <b class="num" id="linkStabLoss">0.0%</b></span>
+                        <span id="linkStabReason" class="stab-reset-hint"></span>
+                    </div>
+                </div>
+
+                <!-- Telemetry link fields -->
+                <div class="m-row"><span class="m-k">Estado del enlace</span><span class="m-v" id="mLinkState">Desconectado <i class="s-dot bad" id="dotLinkState"></i></span></div>
+                <div class="m-row"><span class="m-k">Último paquete</span><span class="m-v num" id="mLinkAge">-- <i class="s-dot bad" id="dotLinkAge"></i></span></div>
+                <div class="m-row"><span class="m-k">Recepción continua (5 min)</span><span class="m-v num" id="mLinkPct">100% <i class="s-dot ok" id="dotLinkPct"></i></span></div>
+                <div class="m-row"><span class="m-k">Paquetes recibidos / perdidos</span><span class="m-v num" id="mLinkPackets">0 / 0 <i class="s-dot ok" id="dotLinkPackets"></i></span></div>
+                <div class="m-row"><span class="m-k">Tasa efectiva</span><span class="m-v num" id="mLinkRate">0.0 Hz <i class="s-dot bad" id="dotLinkRate"></i></span></div>
+                <div class="m-row"><span class="m-k">RSSI</span><span class="m-v num" id="mLinkRssi">N/D <i class="s-dot ok" id="dotLinkRssi"></i></span></div>
+                <div class="m-row"><span class="m-k">SNR</span><span class="m-v num">N/D <i class="s-dot ok"></i></span></div>
+                <div class="m-row"><span class="m-k">Integridad CRC16</span><span class="m-v num" id="mLinkCrc">100% <i class="s-dot ok" id="dotLinkCrc"></i></span></div>
+                <div class="m-row"><span class="m-k">Campos de datos</span><span class="m-v" id="mLinkFields">Completos <i class="s-dot ok" id="dotLinkFields"></i></span></div>
+            </div>
+            <label class="card-verify-btn" for="chkVerifyLink">
+                <span>Verificar Comunicaciones</span>
+                <input type="checkbox" id="chkVerifyLink">
+            </label>
         </div>
 
-        <!-- 3. ACTIONS -->
-        <div class="hero-actions">
-            <button class="btn btn-reset" id="btnResetTimer">REINICIAR CONTADOR</button>
+        <!-- CARD 2: AVIÓNICA Y SENSORES -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <div class="dash-card-title"><span>⚡</span> 2. AVIÓNICA Y SENSORES</div>
+                <span class="dash-card-pill bad" id="pillSensors">PENDIENTE</span>
+            </div>
+            <div class="card-body-scroll">
+                <!-- 1. Altitud stability & sparkline -->
+                <div class="stab-box">
+                    <div class="stab-top">
+                        <span class="stab-title">BARÓMETRO (ALTITUD)</span>
+                        <span class="stab-timer num" id="altStabTimer">00:00.0</span>
+                    </div>
+                    <div class="stab-canvas-row">
+                        <canvas class="stab-canvas" id="altSpark" width="160" height="20"></canvas>
+                    </div>
+                    <div class="stab-sub">
+                        <span>Lectura: <b class="num" id="mAltVal">---</b></span>
+                        <span>Δ máx: <b class="num" id="mAltDelta">---</b></span>
+                    </div>
+                </div>
+
+                <!-- 2. Acelerómetro stability & sparkline -->
+                <div class="stab-box">
+                    <div class="stab-top">
+                        <span class="stab-title">ACELERÓMETRO (|Z-1g| ≤ 0.15g)</span>
+                        <span class="stab-timer num" id="accStabTimer">00:00.0</span>
+                    </div>
+                    <div class="stab-canvas-row">
+                        <canvas class="stab-canvas" id="accSpark" width="160" height="20"></canvas>
+                    </div>
+                    <div class="stab-sub">
+                        <span>Mag: <b class="num" id="mAccMag">--- g</b></span>
+                        <span>Δ máx: <b class="num" id="mAccDelta">--- g</b></span>
+                    </div>
+                </div>
+
+                <!-- 3. GPS stability & sparkline -->
+                <div class="stab-box">
+                    <div class="stab-top">
+                        <span class="stab-title">GPS FIX & DERIVA (≤ 5m)</span>
+                        <span class="stab-timer num" id="gpsStabTimer">00:00.0</span>
+                    </div>
+                    <div class="stab-canvas-row">
+                        <canvas class="stab-canvas" id="gpsSpark" width="160" height="20"></canvas>
+                    </div>
+                    <div class="stab-sub">
+                        <span>Deriva: <b class="num" id="mGpsDrift">--- m</b></span>
+                        <button type="button" class="btn btn-sm" id="btnSetGpsAnchor" style="font-size:8px; padding:0 4px; height:15px;">Fijar Origen</button>
+                    </div>
+                </div>
+
+                <!-- Sensor table values -->
+                <div class="m-row"><span class="m-k">Acelerómetro (X/Y/Z)</span><span class="m-v num" id="mAccAxes">--- <i class="s-dot bad" id="dotAcc"></i></span></div>
+                <div class="m-row"><span class="m-k">GPS Fix (Satélites)</span><span class="m-v num" id="mGpsFix">NO_FIX <i class="s-dot bad" id="dotGps"></i></span></div>
+                <div class="m-row"><span class="m-k">Voltaje batería cohete</span><span class="m-v num">N/D <i class="s-dot ok"></i></span></div>
+                <div class="m-row"><span class="m-k">Temp. IMU</span><span class="m-v num" id="mTempImu">N/D <i class="s-dot ok" id="dotTempImu"></i></span></div>
+                <div class="m-row"><span class="m-k">Integridad de datos</span><span class="m-v" id="mDataIntegrity">Sin errores <i class="s-dot ok" id="dotDataIntegrity"></i></span></div>
+            </div>
+            <label class="card-verify-btn" for="chkVerifySensors">
+                <span>Verificar Aviónica y Sensores</span>
+                <input type="checkbox" id="chkVerifySensors">
+            </label>
+        </div>
+
+        <!-- CARD 3: ESTACIÓN TERRENA -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <div class="dash-card-title"><span>🗄</span> 3. ESTACIÓN TERRENA</div>
+                <span class="dash-card-pill ok" id="pillStation">REGISTRO ACTIVO</span>
+            </div>
+            <div class="card-body-scroll">
+                <div class="m-row"><span class="m-k">Receptor serial / LoRa</span><span class="m-v" id="mStLoRa">Conectado <i class="s-dot ok" id="dotStLoRa"></i></span></div>
+                <div class="m-row"><span class="m-k">Puerto serie / Interfaz</span><span class="m-v num" id="mStPort">/dev/ttyACM0 <i class="s-dot ok" id="dotStPort"></i></span></div>
+                <div class="m-row"><span class="m-k">Aplicación conectada</span><span class="m-v" id="mStApp">OK (FastAPI) <i class="s-dot ok" id="dotStApp"></i></span></div>
+                <div class="m-row"><span class="m-k">Registro de datos (SQLite)</span><span class="m-v" id="mStDb">Activo <i class="s-dot ok" id="dotStDb"></i></span></div>
+                <div class="m-row"><span class="m-k">Registro CSV continuo</span><span class="m-v" id="mStCsv">Activo <i class="s-dot ok" id="dotStCsv"></i></span></div>
+                <div class="m-row"><span class="m-k">Espacio de almacenamiento</span><span class="m-v num" id="mStDisk">--% disponible <i class="s-dot ok" id="dotStDisk"></i></span></div>
+                <div class="m-row"><span class="m-k">Reloj de la estación</span><span class="m-v" id="mStClock">Sincronizado (Local) <i class="s-dot ok" id="dotStClock"></i></span></div>
+                <div class="m-row"><span class="m-k">Antena / Alimentación</span><span class="m-v">OK <i class="s-dot ok"></i></span></div>
+
+                <div class="stab-box" style="margin-top:6px;">
+                    <div class="stab-top">
+                        <span class="stab-title">ORIGEN GPS RAMPA</span>
+                    </div>
+                    <div style="font-size:9.5px; font-weight:850; color:var(--ink);" id="mGpsAnchorCoords">
+                        Coords: Esperando fijación...
+                    </div>
+                </div>
+            </div>
+            <label class="card-verify-btn" for="chkVerifyStation">
+                <span>Verificar Estación Terrena</span>
+                <input type="checkbox" id="chkVerifyStation">
+            </label>
+        </div>
+
+        <!-- CARD 4: CHECKLIST MANUAL -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <div class="dash-card-title"><span>📋</span> 4. CHECKLIST MANUAL</div>
+                <span class="dash-card-pill warn" id="pillManual">0 DE 7</span>
+            </div>
+            <div class="card-body-scroll">
+                <table class="cl-tbl">
+                    <thead>
+                        <tr>
+                            <th style="width: 44%;">Ítem</th>
+                            <th style="width: 28%;">Resp.</th>
+                            <th style="width: 16%;">Estado</th>
+                            <th style="width: 12%; text-align:right;">Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manualTableBody">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
+
+                <!-- Weather inputs container inside manual checklist -->
+                <div class="stab-box" style="margin-top:6px;">
+                    <div class="stab-top">
+                        <span class="stab-title">METEOROLOGÍA DE RAMPA</span>
+                        <span class="stab-title num" id="weatherStatusText">AUTORIZADO</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
+                        <div>
+                            <span style="font-size:8px; font-weight:800; color:var(--muted)">VIENTO (m/s)</span>
+                            <input type="number" id="wWind" class="num" value="4.0" step="0.5" min="0" style="width:100%; font-size:10px; padding:2px; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <span style="font-size:8px; font-weight:800; color:var(--muted)">NUBES (%)</span>
+                            <input type="number" id="wClouds" class="num" value="20" step="5" min="0" max="100" style="width:100%; font-size:10px; padding:2px; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <span style="font-size:8px; font-weight:800; color:var(--muted)">VISIB. (km)</span>
+                            <input type="number" id="wVis" class="num" value="10.0" step="0.5" min="0" style="width:100%; font-size:10px; padding:2px; box-sizing:border-box;">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </section>
 
-    <!-- ==================== UNIFIED CHECKLIST MATRIX ==================== -->
-    <section class="checklist-card">
-        <div class="checklist-head">
-            <span class="checklist-head-title">LISTA DE COMPROBACIÓN DE SISTEMAS</span>
-            <span class="checklist-head-hint">TODOS LOS SUBSISTEMAS DEBEN ESTAR EN OK PARA COMPLETAR ESTABILIDAD</span>
+    <!-- ==================== BOTTOM ROW: 3 SUMMARY PANELS ==================== -->
+    <section class="grid-bottom">
+
+        <!-- PANEL 1: DETALLE DE VERIFICACIONES -->
+        <div class="bottom-card">
+            <div class="bottom-card-title"><span>📑</span> DETALLE DE VERIFICACIONES</div>
+            <div class="detail-list">
+                <div class="detail-item">
+                    <div class="detail-item-left">
+                        <span class="detail-icon">📡</span>
+                        <div class="detail-texts">
+                            <span class="detail-name">Comunicaciones</span>
+                            <span class="detail-desc">Enlace estable y recepción continua</span>
+                        </div>
+                    </div>
+                    <span class="detail-status bad" id="detStatusLink">✖ NO VERIF.</span>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-item-left">
+                        <span class="detail-icon">⚡</span>
+                        <div class="detail-texts">
+                            <span class="detail-name">Aviónica y sensores</span>
+                            <span class="detail-desc">Lecturas en rango nominal en rampa</span>
+                        </div>
+                    </div>
+                    <span class="detail-status bad" id="detStatusSensors">✖ NO VERIF.</span>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-item-left">
+                        <span class="detail-icon">🗄</span>
+                        <div class="detail-texts">
+                            <span class="detail-name">Estación terrena</span>
+                            <span class="detail-desc">Registro activo y almacenamiento disponible</span>
+                        </div>
+                    </div>
+                    <span class="detail-status bad" id="detStatusStation">✖ NO VERIF.</span>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-item-left">
+                        <span class="detail-icon">📋</span>
+                        <div class="detail-texts">
+                            <span class="detail-name">Checklist manual</span>
+                            <span class="detail-desc" id="detManualDesc">0 de 7 ítems verificados</span>
+                        </div>
+                    </div>
+                    <span class="detail-status pending" id="detStatusManual">! PENDIENTE</span>
+                </div>
+            </div>
         </div>
 
-        <div class="table-wrap">
-            <table class="cl-table">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">SUBSISTEMA</th>
-                        <th style="width: 35%;">VALOR EN TIEMPO REAL</th>
-                        <th style="width: 25%;">CRITERIO / LÍMITE SEGURO</th>
-                        <th style="width: 15%; text-align: right;">EVALUACIÓN</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    <!-- 1. ENLACE TELEMETRÍA -->
-                    <tr id="rowLink">
-                        <td>
-                            <div class="subsys-title">1. Enlace & Telemetría</div>
-                            <div class="subsys-desc">Flujo UART / RF y salud de paquetes</div>
-                        </td>
-                        <td>
-                            <div class="live-val num" id="valLinkRate">0.0 Hz</div>
-                            <div class="live-sub" id="valLinkSub">Pérdida 5s: <span class="num" id="valLinkLoss">0.0%</span> | Silencio: <span class="num" id="valLinkSilence">0.0s</span></div>
-                        </td>
-                        <td>
-                            <div class="rule-box">
-                                <span class="rule-tag">Tasa ≥ 5 Hz</span>
-                                <span class="rule-tag">Pérdida ≤ 5%</span>
-                                <span class="rule-tag">Silencio ≤ 3s</span>
-                            </div>
-                        </td>
-                        <td style="text-align: right;">
-                            <span class="badge bad" id="badgeLink">✖ DESCONECTADO</span>
-                        </td>
-                    </tr>
-
-                    <!-- 2. ALTITUD -->
-                    <tr id="rowAlt">
-                        <td>
-                            <div class="subsys-title">2. Altitud en Rampa</div>
-                            <div class="subsys-desc">Línea base altimétrica en reposo</div>
-                        </td>
-                        <td>
-                            <div class="live-val num" id="valAlt">---</div>
-                            <div class="live-sub" id="valAltSub">Desvío de cero: <span class="num" id="valAltDelta">---</span></div>
-                        </td>
-                        <td>
-                            <div class="rule-box">
-                                <span class="rule-tag" id="lblRuleAlt">Rango: 0.0 ± 5.0 m</span>
-                            </div>
-                        </td>
-                        <td style="text-align: right;">
-                            <span class="badge bad" id="badgeAlt">✖ FUERA</span>
-                        </td>
-                    </tr>
-
-                    <!-- 3. ACELERÓMETRO -->
-                    <tr id="rowAcc">
-                        <td>
-                            <div class="subsys-title">3. Aceleración Triaxial</div>
-                            <div class="subsys-desc">Inmovilidad y vector de gravedad en reposo</div>
-                        </td>
-                        <td>
-                            <div class="live-val num" id="valAccAxes">X: ---  Y: ---  Z: ---</div>
-                            <div class="live-sub" id="valAccMag">Magnitud total: <span class="num" id="valAccMagVal">--- g</span></div>
-                        </td>
-                        <td>
-                            <div class="rule-box">
-                                <span class="rule-tag" id="lblRuleAccXy">|X, Y| ≤ 0.10 g</span>
-                                <span class="rule-tag" id="lblRuleAccZ">|Z - 1.0g| ≤ 0.15 g</span>
-                            </div>
-                        </td>
-                        <td style="text-align: right;">
-                            <span class="badge bad" id="badgeAcc">✖ FUERA</span>
-                        </td>
-                    </tr>
-
-                    <!-- 4. GPS LOCK & DERIVA -->
-                    <tr id="rowGps">
-                        <td>
-                            <div class="subsys-title">4. GPS Lock & Posición</div>
-                            <div class="subsys-desc">Fijación satelital y deriva en rampa</div>
-                        </td>
-                        <td>
-                            <div style="display:flex; align-items:baseline; gap:12px;">
-                                <div class="live-val num" id="valGpsFix">NO_FIX</div>
-                                <div class="live-sub num" id="valGpsDrift" style="font-size:16px;">Deriva: --- m</div>
-                            </div>
-                            <div class="live-sub num" id="valGpsCoords">Coords: ---, ---</div>
-                        </td>
-                        <td>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span class="rule-tag" id="lblRuleGps">Deriva ≤ 5.0 m</span>
-                                <button class="btn btn-sm" id="btnSetGpsAnchor">Fijar Origen</button>
-                            </div>
-                        </td>
-                        <td style="text-align: right;">
-                            <span class="badge bad" id="badgeGps">✖ SIN LOCK</span>
-                        </td>
-                    </tr>
-
-                    <!-- 5. METEOROLOGÍA DE SUPERFICIE -->
-                    <tr id="rowWeather">
-                        <td>
-                            <div class="subsys-title">5. Meteorología de Rampa</div>
-                            <div class="subsys-desc">Condiciones atmosféricas y autorización</div>
-                        </td>
-                        <td>
-                            <div class="inline-form">
-                                <div class="in-group">
-                                    <span class="in-label">Viento:</span>
-                                    <input type="number" id="wWind" class="num" value="4.0" step="0.5" min="0">
-                                    <span class="in-unit">m/s</span>
-                                </div>
-                                <div class="in-group">
-                                    <span class="in-label">Nubes:</span>
-                                    <input type="number" id="wClouds" class="num" value="20" step="5" min="0" max="100">
-                                    <span class="in-unit">%</span>
-                                </div>
-                                <div class="in-group">
-                                    <span class="in-label">Vis:</span>
-                                    <input type="number" id="wVis" class="num" value="10.0" step="0.5" min="0">
-                                    <span class="in-unit">km</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <label class="officer-toggle" for="wOfficerCheck">
-                                <input type="checkbox" id="wOfficerCheck">
-                                <span>Oficial autoriza rampa</span>
-                            </label>
-                        </td>
-                        <td style="text-align: right;">
-                            <span class="badge bad" id="badgeWeather">✖ PENDIENTE</span>
-                        </td>
-                    </tr>
-
-                </tbody>
-            </table>
+        <!-- PANEL 2: VERIFICACIONES PENDIENTES -->
+        <div class="bottom-card">
+            <div class="bottom-card-title"><span>⚠️</span> VERIFICACIONES PENDIENTES</div>
+            <div class="pending-list" id="pendingListContainer">
+                <!-- Dynamically populated via JS -->
+            </div>
         </div>
-    </section>
 
-    <!-- ==================== ACTIONS BAR ==================== -->
-    <section class="actions-bar">
-        <div class="num" style="font-size:12px; font-weight:900; color:var(--muted)" id="anchorInfo">
-            Origen GPS de rampa: No fijado
+        <!-- PANEL 3: RESUMEN GENERAL -->
+        <div class="bottom-card">
+            <div class="bottom-card-title"><span>🎯</span> RESUMEN GENERAL</div>
+            <div class="summary-box">
+                <div class="summary-ring bad" id="sumRing">✖</div>
+                <div class="summary-label bad num" id="sumLabel">NO-GO</div>
+                <div class="summary-msg" id="sumMsg">Faltan verificaciones antes de autorizar lanzamiento.</div>
+            </div>
         </div>
-        <div style="font-size:12px; font-weight:900; color:var(--muted)">
-            SISTEMA DE VERIFICACIÓN PRE-LANZAMIENTO • ESTACIÓN TERRENA
-        </div>
+
     </section>
 
 </div>
@@ -720,9 +952,11 @@ table.cl-table tr:last-child td { border-bottom: none; }
 <script>
 "use strict";
 
-// Configuración de umbrales gobernada por app.yaml vía /api/status
-let CFG = {
-    required_hold_s: 30.0,
+/* ============================================================
+   CONFIG & STATE ENGINE
+   ============================================================ */
+
+const CFG = {
     altitude_tol_m: 5.0,
     accel_xy_tol_g: 0.10,
     accel_z_nominal_g: 1.0,
@@ -732,10 +966,18 @@ let CFG = {
         max_wind_speed_ms: 10.0,
         max_cloud_cover_pct: 75.0,
         min_visibility_km: 5.0
-    }
+    },
+    manual_checklist: [
+        { id: "ant_gs", item: "Antena de GS instalada", responsible: "Comunicaciones" },
+        { id: "ant_rocket", item: "Antena del cohete", responsible: "Mecánica" },
+        { id: "rocket_secured", item: "Cohete asegurado en rampa", responsible: "Mecánica" },
+        { id: "area_clear", item: "Área de lanzamiento despejada", responsible: "Operaciones" },
+        { id: "rec_ready", item: "Recuperación lista (drogue/main)", responsible: "Recuperación" },
+        { id: "weather_check", item: "Meteorología (<15 km/h)", responsible: "Control de vuelo" },
+        { id: "wiring_check", item: "Cableado e ignitores", responsible: "Mecánica" }
+    ]
 };
 
-// Estado del sistema
 const state = {
     connected: false,
     lastPacketAt: null,
@@ -744,126 +986,553 @@ const state = {
     loss5s: 0,
     seqWindow: [],
     lastSeq: null,
+    totalReceived: 0,
+    totalLost: 0,
 
     rssi: null,
-    liftoffDetected: false,
-    liftoffAt: null,
-
-    altitude: null,
-    ax: null, ay: null, az: null, accMag: null,
-    lat: null, lon: null,
-    gpsFix: 0,
     status: "STANDBY",
     timestampMs: 0,
     pressure: null,
     tempImu: null,
     satellites: null,
 
+    altitude: null,
+    ax: null, ay: null, az: null, accMag: null,
+    lat: null, lon: null,
+    gpsFix: 0,
     gpsAnchor: null,
     gpsDriftM: null,
 
-    stableMs: 0,
-    resetCount: 0,
-    lastFailureReason: "Ninguno",
-    allOk: false,
-    verdict: "NO-GO"
+    // Stability counters (Feature #1, #2, #3)
+    linkStabMs: 0,
+    linkHistory: [],
+    linkLastReset: null,
+    linkMaxLoss: 0,
+
+    altStabMs: 0,
+    altHistory: [],
+    altLastReset: null,
+    altMaxDelta: 0,
+
+    accStabMs: 0,
+    accHistory: [],
+    accLastReset: null,
+    accMaxDelta: 0,
+
+    gpsStabMs: 0,
+    gpsHistory: [],
+    gpsLastReset: null,
+    gpsMaxDrift: 0,
+
+    // Manual verifications & confirmation lock (Feature #7)
+    verifiedLink: false,
+    verifiedSensors: false,
+    verifiedStation: false,
+    manualChecks: {}, // id -> { verified: bool, time: string }
+    isLocked: false,
+
+    // Audit log (Feature #5)
+    auditLog: []
 };
+window.state = state;
 
-const GPS_FIX_NAMES = {
-    0: "NO_FIX",
-    1: "FIX_2D",
-    2: "FIX_3D",
-    3: "DGPS"
-};
+// ============================================================
+// AUDIT LOG & STORAGE ENGINE
+// ============================================================
 
-const STATUS_NAMES = {
-    0: "STANDBY", 1: "POWERED", 2: "BURNOUT", 3: "BURNOUT",
-    4: "APOGEE", 7: "APOGEE", 8: "DROGUE_ORD", 15: "DROGUE_ORD",
-    16: "DROGUE_CONF", 31: "DROGUE_CONF", 32: "MAIN_ORD", 63: "MAIN_ORD",
-    64: "MAIN_CONF", 127: "MAIN_CONF", 128: "LANDED", 255: "LANDED"
-};
-
-function getDistanceMeters(lat1, lon1, lat2, lon2) {
-    const R = 6371000;
-    const rad = Math.PI / 180;
-    const phi1 = lat1 * rad;
-    const phi2 = lat2 * rad;
-    const dPhi = (lat2 - lat1) * rad;
-    const dLambda = (lon2 - lon1) * rad;
-    const meanPhi = (phi1 + phi2) / 2;
-
-    const x = dLambda * Math.cos(meanPhi);
-    const y = dPhi;
-    return Math.sqrt(x * x + y * y) * R;
+function addAudit(action, item, responsible, details = "") {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const entry = {
+        timestamp: Date.now(),
+        timeStr,
+        action,
+        item,
+        responsible,
+        details
+    };
+    state.auditLog.push(entry);
+    if (state.auditLog.length > 500) state.auditLog.shift();
+    try {
+        localStorage.setItem("gonogo_audit_log", JSON.stringify(state.auditLog));
+    } catch (_) {}
 }
 
-// ============================================================
-// CONEXIÓN WEBSOCKET
-// ============================================================
-let socket = null;
-let reconnectTimer = null;
-
-function connectWs() {
-    if (socket) {
-        try { socket.close(); } catch (_) {}
-        socket = null;
-    }
-
-    const loc = window.location;
-    const wsProto = loc.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${wsProto}//${loc.host}/ws`;
-
-    socket = new WebSocket(wsUrl);
-
-    socket.onopen = () => {
-        state.connected = true;
-        updateLinkStatus();
-    };
-
-    socket.onmessage = (event) => {
-        try {
-            const msg = JSON.parse(event.data);
-            handleMessage(msg);
-        } catch (err) {
-            console.error("Error al procesar mensaje WS:", err);
+function loadPersistedState() {
+    try {
+        const savedChecks = localStorage.getItem("gonogo_manual_checks");
+        if (savedChecks) {
+            state.manualChecks = JSON.parse(savedChecks);
         }
-    };
-
-    socket.onclose = () => {
-        state.connected = false;
-        updateLinkStatus();
-        scheduleReconnect();
-    };
-
-    socket.onerror = () => {
-        state.connected = false;
-        updateLinkStatus();
-    };
+        const savedLock = localStorage.getItem("gonogo_is_locked");
+        if (savedLock) {
+            state.isLocked = JSON.parse(savedLock);
+        }
+        const savedAudit = localStorage.getItem("gonogo_audit_log");
+        if (savedAudit) {
+            state.auditLog = JSON.parse(savedAudit);
+        }
+        state.verifiedLink = localStorage.getItem("gonogo_verif_link") === "true";
+        state.verifiedSensors = localStorage.getItem("gonogo_verif_sensors") === "true";
+        state.verifiedStation = localStorage.getItem("gonogo_verif_station") === "true";
+    } catch (_) {}
 }
 
-function scheduleReconnect() {
-    if (reconnectTimer) return;
-    reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        connectWs();
-    }, 1500);
+function savePersistedState() {
+    try {
+        localStorage.setItem("gonogo_manual_checks", JSON.stringify(state.manualChecks));
+        localStorage.setItem("gonogo_is_locked", JSON.stringify(state.isLocked));
+        localStorage.setItem("gonogo_verif_link", String(state.verifiedLink));
+        localStorage.setItem("gonogo_verif_sensors", String(state.verifiedSensors));
+        localStorage.setItem("gonogo_verif_station", String(state.verifiedStation));
+    } catch (_) {}
 }
 
-function handleMessage(msg, isHistory = false) {
-    if (msg.type === "connection") {
-        state.connected = !!msg.connected;
-        updateLinkStatus();
+function exportAuditCsv() {
+    if (!state.auditLog.length) {
+        alert("El registro de auditoría se encuentra vacío.");
         return;
     }
+    const headers = ["Timestamp_Epoch", "Hora_Local", "Accion", "Item", "Responsable", "Detalle"];
+    const rows = state.auditLog.map(e => [
+        e.timestamp,
+        `"${e.timeStr}"`,
+        `"${e.action}"`,
+        `"${e.item.replace(/"/g, '""')}"`,
+        `"${e.responsible.replace(/"/g, '""')}"`,
+        `"${e.details.replace(/"/g, '""')}"`
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `auditoria_gonogo_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
 
-    const d = msg.data || msg.telemetry || {};
-    if (!d || typeof d !== "object") return;
+// ============================================================
+// SPARKLINE RENDERING (Feature #1)
+// ============================================================
 
+function drawSparkline(canvasId, buffer, minLim, maxLim, nominalVal = null) {
+    const canvas = $(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (buffer.length < 2) return;
+
+    let minV = minLim !== null ? minLim : Math.min(...buffer);
+    let maxV = maxLim !== null ? maxLim : Math.max(...buffer);
+    if (minV === maxV) { minV -= 1; maxV += 1; }
+    const span = maxV - minV;
+
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const lineCol = isDark ? "#38bdf8" : "#0056b3";
+    const guideCol = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
+    const bandCol = isDark ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.15)";
+
+    // Nominal band fill
+    if (minLim !== null && maxLim !== null) {
+        const yTop = Math.max(0, Math.min(h, h - ((maxLim - minV) / span) * h));
+        const yBot = Math.max(0, Math.min(h, h - ((minLim - minV) / span) * h));
+        ctx.fillStyle = bandCol;
+        ctx.fillRect(0, yTop, w, yBot - yTop);
+    }
+
+    // Nominal guide line
+    if (nominalVal !== null) {
+        const yNom = h - ((nominalVal - minV) / span) * h;
+        ctx.strokeStyle = guideCol;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(0, yNom);
+        ctx.lineTo(w, yNom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // Data trace
+    ctx.strokeStyle = lineCol;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const step = w / Math.max(1, buffer.length - 1);
+    for (let i = 0; i < buffer.length; i++) {
+        const x = i * step;
+        const y = Math.max(1, Math.min(h - 1, h - ((buffer[i] - minV) / span) * h));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+}
+
+function formatTimerMinSec(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    const tenth = Math.floor((ms % 1000) / 100);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${tenth}`;
+}
+
+// ============================================================
+// STABILITY ACCUMULATOR (Feature #1, #2, #3)
+// ============================================================
+
+function updateStabilityEngines(dtMs) {
+    const now = Date.now();
+    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
+    const nowTimeStr = new Date().toLocaleTimeString();
+
+    // 1. Link Stability
+    const linkInTol = state.connected && silence <= 0.35 && state.loss5s <= 5.0 && state.rxRate >= 3.0;
+    if (linkInTol) {
+        state.linkStabMs += dtMs;
+        state.linkMaxLoss = Math.max(state.linkMaxLoss, state.loss5s);
+    } else {
+        if (state.linkStabMs > 1000) {
+            const reason = !state.connected ? "Desconectado" : (silence > 0.35 ? `Silencio ${silence.toFixed(1)}s` : `Pérdida ${state.loss5s.toFixed(1)}%`);
+            state.linkLastReset = { time: nowTimeStr, reason };
+            addAudit("RESET_ESTABILIDAD", "Comunicaciones", "Sensor", reason);
+        }
+        state.linkStabMs = 0;
+        state.linkMaxLoss = state.loss5s;
+    }
+
+    // 2. Altitude Stability
+    const altInTol = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m && silence <= 0.35;
+    if (altInTol) {
+        state.altStabMs += dtMs;
+        state.altMaxDelta = Math.max(state.altMaxDelta, Math.abs(state.altitude));
+    } else {
+        if (state.altStabMs > 1000) {
+            const reason = state.altitude === null ? "Sin datos" : `Desvío ${state.altitude.toFixed(1)}m`;
+            state.altLastReset = { time: nowTimeStr, reason };
+            addAudit("RESET_ESTABILIDAD", "Altitud Barométrica", "Sensor", reason);
+        }
+        state.altStabMs = 0;
+        state.altMaxDelta = state.altitude !== null ? Math.abs(state.altitude) : 0;
+    }
+
+    // 3. Accel Stability
+    const axTol = CFG.accel_xy_tol_g;
+    const azNom = CFG.accel_z_nominal_g;
+    const azTol = CFG.accel_z_tol_g;
+    const accInTol = state.ax !== null &&
+                     Math.abs(state.ax) <= axTol &&
+                     Math.abs(state.ay) <= axTol &&
+                     Math.abs(state.az - azNom) <= azTol &&
+                     silence <= 0.35;
+    if (accInTol) {
+        state.accStabMs += dtMs;
+        const currentDev = Math.max(Math.abs(state.ax), Math.abs(state.ay), Math.abs(state.az - azNom));
+        state.accMaxDelta = Math.max(state.accMaxDelta, currentDev);
+    } else {
+        if (state.accStabMs > 1000) {
+            const reason = state.ax === null ? "Sin datos" : `Acel fuera (X:${state.ax.toFixed(2)} Z:${state.az.toFixed(2)})`;
+            state.accLastReset = { time: nowTimeStr, reason };
+            addAudit("RESET_ESTABILIDAD", "Acelerómetro Triaxial", "Sensor", reason);
+        }
+        state.accStabMs = 0;
+        state.accMaxDelta = 0;
+    }
+
+    // 4. GPS Stability
+    const hasFix = state.gpsFix >= 1;
+    const driftInTol = hasFix && state.gpsDriftM !== null && state.gpsDriftM <= CFG.gps_radius_m && silence <= 0.35;
+    if (driftInTol) {
+        state.gpsStabMs += dtMs;
+        state.gpsMaxDrift = Math.max(state.gpsMaxDrift, state.gpsDriftM);
+    } else {
+        if (state.gpsStabMs > 1000) {
+            const reason = !hasFix ? "Sin bloqueo GPS" : `Deriva ${state.gpsDriftM.toFixed(1)}m`;
+            state.gpsLastReset = { time: nowTimeStr, reason };
+            addAudit("RESET_ESTABILIDAD", "GPS Lock & Deriva", "Sensor", reason);
+        }
+        state.gpsStabMs = 0;
+        state.gpsMaxDrift = state.gpsDriftM || 0;
+    }
+}
+
+// ============================================================
+// CHECKLIST EVALUATION & VERDICT (Operator Decides)
+// ============================================================
+
+function evaluateOverallStatus() {
+    const totalManual = CFG.manual_checklist.length;
+    let verifiedManualCount = 0;
+    const pendingItems = [];
+
+    // Check manual items
+    CFG.manual_checklist.forEach(item => {
+        const isVerif = state.manualChecks[item.id]?.verified;
+        if (isVerif) {
+            verifiedManualCount++;
+        } else {
+            pendingItems.push({ name: item.item, role: item.responsible, type: "manual" });
+        }
+    });
+
+    // Check subsystems
+    if (!state.verifiedLink) {
+        pendingItems.push({ name: "Verificación de Comunicaciones", role: "Comunicaciones", type: "system" });
+    }
+    if (!state.verifiedSensors) {
+        pendingItems.push({ name: "Verificación de Aviónica y Sensores", role: "Aviónica", type: "system" });
+    }
+    if (!state.verifiedStation) {
+        pendingItems.push({ name: "Verificación de Estación Terrena", role: "Operaciones", type: "system" });
+    }
+
+    // Sensor warnings (informational)
+    if (state.altitude !== null && Math.abs(state.altitude) > CFG.altitude_tol_m) {
+        pendingItems.unshift({ name: `Alerta: Altitud fuera (${state.altitude.toFixed(1)}m)`, role: "Aviónica", type: "alert" });
+    }
+    if (state.gpsDriftM !== null && state.gpsDriftM > CFG.gps_radius_m) {
+        pendingItems.unshift({ name: `Alerta: Deriva GPS excesiva (${state.gpsDriftM.toFixed(1)}m)`, role: "Aviónica", type: "alert" });
+    }
+
+    // Verdict: GO = all 3 system cards verified AND all manual checklist items verified!
+    const allVerified = state.verifiedLink && state.verifiedSensors && state.verifiedStation && (verifiedManualCount === totalManual);
+    const verdict = allVerified ? "GO" : "NO-GO";
+
+    return {
+        verdict,
+        allVerified,
+        verifiedManualCount,
+        totalManual,
+        pendingItems
+    };
+}
+
+// ============================================================
+// UI RENDERING
+// ============================================================
+
+function renderDashboard() {
+    const now = Date.now();
+    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
+    const evalResult = evaluateOverallStatus();
+
+    // 1. Unified 7-cell Global Header Parity
+    updateGlobalHeader({
+        missionTimeMs: state.liftoffDetected ? Math.max(0, Date.now() - state.liftoffAt) : 0,
+        status: state.status,
+        rssi: state.rssi,
+        lossPercent: state.loss5s,
+        connected: state.connected,
+        lastPacketAt: state.lastPacketAt,
+        tempImu: state.tempImu
+    });
+
+    // 2. Hero Banner
+    const isGo = evalResult.verdict === "GO";
+    const heroBanner = $("heroBanner");
+    heroBanner.className = isGo ? "hero-banner state-go" : "hero-banner state-nogo";
+    $("heroIcon").textContent = isGo ? "✔" : "✖";
+    $("heroTitle").textContent = isGo ? (state.isLocked ? "SISTEMA LISTO Y CONFIRMADO (GO)" : "SISTEMA LISTO PARA LANZAMIENTO (GO)") : "SISTEMA EN VERIFICACIÓN (NO-GO)";
+    $("heroSubtitle").textContent = isGo ? "Todos los parámetros y casillas de verificación han sido aprobados por los operadores." : "Verificaciones pendientes de autorización previa al lanzamiento.";
+    $("heroVerdictText").textContent = isGo ? "GO" : "NO-GO";
+
+    const btnLock = $("btnLockGo");
+    if (btnLock) {
+        btnLock.disabled = !evalResult.allVerified && !state.isLocked;
+        btnLock.className = state.isLocked ? "btn-hero btn-lock locked" : "btn-hero btn-lock";
+        $("btnLockIcon").textContent = state.isLocked ? "🔓" : "🔒";
+        $("btnLockText").textContent = state.isLocked ? "DESBLOQUEAR" : "CONFIRMAR GO";
+    }
+
+    // 3. Card 1: Comunicaciones
+    $("linkStabTimer").textContent = formatTimerMinSec(state.linkStabMs);
+    $("linkStabLoss").textContent = `${state.loss5s.toFixed(1)}%`;
+    $("linkStabReason").textContent = state.linkLastReset ? `Reinicio: ${state.linkLastReset.time}` : "";
+
+    const linkOk = state.connected && silence <= 0.35 && state.loss5s <= 5.0;
+    $("pillLink").textContent = linkOk ? "ENLACE ESTABLE" : (state.connected ? "DEGRADADO" : "SIN ENLACE");
+    $("pillLink").className = `dash-card-pill ${linkOk ? "ok" : (state.connected ? "warn" : "bad")}`;
+
+    $("mLinkState").innerHTML = `${state.connected ? "Conectado" : "Desconectado"} <i class="s-dot ${state.connected ? "ok" : "bad"}"></i>`;
+    $("mLinkAge").innerHTML = `${silence > 90 ? "--" : `${silence.toFixed(1)} s`} <i class="s-dot ${silence <= 0.35 ? "ok" : (silence <= 1.5 ? "warn" : "bad")}"></i>`;
+    $("mLinkPct").innerHTML = `${(100 - state.loss5s).toFixed(1)}% <i class="s-dot ${state.loss5s <= 5 ? "ok" : "bad"}"></i>`;
+    $("mLinkPackets").innerHTML = `${state.totalReceived.toLocaleString("es-AR")} / ${state.totalLost.toLocaleString("es-AR")} <i class="s-dot ${state.totalLost === 0 ? "ok" : "warn"}"></i>`;
+    $("mLinkRate").innerHTML = `${state.rxRate.toFixed(1)} Hz <i class="s-dot ${state.rxRate >= 8 ? "ok" : (state.rxRate >= 3 ? "warn" : "bad")}"></i>`;
+    $("mLinkRssi").innerHTML = state.rssi !== null ? `${state.rssi} dBm <i class="s-dot ok"></i>` : `N/D <i class="s-dot ok"></i>`;
+    $("mLinkCrc").innerHTML = `100% <i class="s-dot ok"></i>`;
+
+    const chkLink = $("chkVerifyLink");
+    if (chkLink) {
+        chkLink.checked = state.verifiedLink;
+        chkLink.disabled = state.isLocked;
+    }
+
+    // 4. Card 2: Aviónica y Sensores
+    $("altStabTimer").textContent = formatTimerMinSec(state.altStabMs);
+    $("accStabTimer").textContent = formatTimerMinSec(state.accStabMs);
+    $("gpsStabTimer").textContent = formatTimerMinSec(state.gpsStabMs);
+
+    const altOk = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m;
+    const accOk = state.ax !== null && Math.abs(state.ax) <= CFG.accel_xy_tol_g && Math.abs(state.ay) <= CFG.accel_xy_tol_g && Math.abs(state.az - CFG.accel_z_nominal_g) <= CFG.accel_z_tol_g;
+    const gpsOk = state.gpsFix >= 1 && (state.gpsDriftM === null || state.gpsDriftM <= CFG.gps_radius_m);
+    const sensorsOk = altOk && accOk && gpsOk;
+
+    $("pillSensors").textContent = sensorsOk ? "SENSORES OK" : "FUERA DE RANGO";
+    $("pillSensors").className = `dash-card-pill ${sensorsOk ? "ok" : "warn"}`;
+
+    $("mAltVal").textContent = state.altitude !== null ? `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(1)} m` : "---";
+    $("mAltDelta").textContent = `±${state.altMaxDelta.toFixed(1)} m`;
+
+    $("mAccMag").textContent = state.accMag !== null ? `${state.accMag.toFixed(2)} g` : "--- g";
+    $("mAccDelta").textContent = `Δ ${state.accMaxDelta.toFixed(2)} g`;
+    if (state.ax !== null) {
+        $("mAccAxes").innerHTML = `X:${state.ax >= 0 ? "+" : ""}${state.ax.toFixed(2)} Y:${state.ay >= 0 ? "+" : ""}${state.ay.toFixed(2)} Z:${state.az >= 0 ? "+" : ""}${state.az.toFixed(2)}g <i class="s-dot ${accOk ? "ok" : "bad"}"></i>`;
+    } else {
+        $("mAccAxes").innerHTML = `--- <i class="s-dot bad"></i>`;
+    }
+
+    $("mGpsDrift").textContent = state.gpsDriftM !== null ? `${state.gpsDriftM.toFixed(1)} m` : "--- m";
+    const fixNames = { 0: "NO_FIX", 1: "FIX_2D", 2: "FIX_3D", 3: "DGPS" };
+    $("mGpsFix").innerHTML = `${fixNames[state.gpsFix] || "FIX"} (${state.satellites ?? 0} sats) <i class="s-dot ${gpsOk ? "ok" : "bad"}"></i>`;
+
+    $("mTempImu").innerHTML = state.tempImu !== null ? `${state.tempImu.toFixed(1)} °C <i class="s-dot ${state.tempImu <= 55 ? "ok" : "warn"}"></i>` : `N/D <i class="s-dot ok"></i>`;
+
+    const chkSensors = $("chkVerifySensors");
+    if (chkSensors) {
+        chkSensors.checked = state.verifiedSensors;
+        chkSensors.disabled = state.isLocked;
+    }
+
+    // 5. Card 3: Estación Terrena
+    if (state.gpsAnchor) {
+        $("mGpsAnchorCoords").textContent = `${state.gpsAnchor.lat.toFixed(6)}, ${state.gpsAnchor.lon.toFixed(6)}`;
+    }
+    const chkStation = $("chkVerifyStation");
+    if (chkStation) {
+        chkStation.checked = state.verifiedStation;
+        chkStation.disabled = state.isLocked;
+    }
+
+    // 6. Card 4: Checklist Manual
+    $("pillManual").textContent = `${evalResult.verifiedManualCount} DE ${evalResult.totalManual}`;
+    $("pillManual").className = `dash-card-pill ${evalResult.verifiedManualCount === evalResult.totalManual ? "ok" : "warn"}`;
+
+    // 7. Bottom Panel 1: Detalle de verificaciones
+    $("detStatusLink").textContent = state.verifiedLink ? "✔ OK" : "✖ NO VERIF.";
+    $("detStatusLink").className = `detail-status ${state.verifiedLink ? "ok" : "bad"}`;
+
+    $("detStatusSensors").textContent = state.verifiedSensors ? "✔ OK" : "✖ NO VERIF.";
+    $("detStatusSensors").className = `detail-status ${state.verifiedSensors ? "ok" : "bad"}`;
+
+    $("detStatusStation").textContent = state.verifiedStation ? "✔ OK" : "✖ NO VERIF.";
+    $("detStatusStation").className = `detail-status ${state.verifiedStation ? "ok" : "bad"}`;
+
+    $("detManualDesc").textContent = `${evalResult.verifiedManualCount} de ${evalResult.totalManual} ítems verificados`;
+    const manualAllOk = evalResult.verifiedManualCount === evalResult.totalManual;
+    $("detStatusManual").textContent = manualAllOk ? "✔ OK" : "! PENDIENTE";
+    $("detStatusManual").className = `detail-status ${manualAllOk ? "ok" : "pending"}`;
+
+    // 8. Bottom Panel 2: Verificaciones pendientes
+    const pendingCont = $("pendingListContainer");
+    if (pendingCont) {
+        if (evalResult.pendingItems.length === 0) {
+            pendingCont.innerHTML = `<div style="padding:12px; font-size:11px; font-weight:900; color:var(--ok); text-align:center;">✔ No hay verificaciones pendientes.<br>Todos los sistemas autorizados para lanzamiento.</div>`;
+        } else {
+            pendingCont.innerHTML = evalResult.pendingItems.map(p => `
+                <div class="pending-item">
+                    <div class="pending-item-left">
+                        <span style="color:${p.type === "alert" ? "var(--bad)" : "var(--warn)"};">${p.type === "alert" ? "⚠" : "○"}</span>
+                        <span>${p.name}</span>
+                    </div>
+                    <span class="pending-role">${p.role}</span>
+                </div>
+            `).join("");
+        }
+    }
+
+    // 9. Bottom Panel 3: Resumen general
+    $("sumRing").className = `summary-ring ${isGo ? "ok" : "bad"}`;
+    $("sumRing").textContent = isGo ? "✔" : "✖";
+    $("sumLabel").className = `summary-label num ${isGo ? "ok" : "bad"}`;
+    $("sumLabel").textContent = isGo ? "GO" : "NO-GO";
+    $("sumMsg").textContent = isGo ? "El sistema se encuentra listo para continuar con la secuencia de lanzamiento." : "Faltan verificaciones antes de autorizar lanzamiento.";
+
+    // Weather status
+    const wind = parseFloat($("wWind")?.value) || 0;
+    const clouds = parseFloat($("wClouds")?.value) || 0;
+    const vis = parseFloat($("wVis")?.value) || 0;
+    const weatherOk = wind <= CFG.weather.max_wind_speed_ms && clouds <= CFG.weather.max_cloud_cover_pct && vis >= CFG.weather.min_visibility_km;
+    const wTxt = $("weatherStatusText");
+    if (wTxt) {
+        wTxt.textContent = weatherOk ? "AUTORIZADO" : "LÍMITE EXCEDIDO";
+        wTxt.style.color = weatherOk ? "var(--ok)" : "var(--bad)";
+    }
+}
+
+// ============================================================
+// MANUAL CHECKLIST TABLE BUILDER
+// ============================================================
+
+function renderManualChecklistTable() {
+    const tbody = $("manualTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    CFG.manual_checklist.forEach(item => {
+        const checkData = state.manualChecks[item.id] || { verified: false, time: "--:--" };
+        const tr = document.createElement("tr");
+        if (checkData.verified) tr.className = "verified";
+
+        tr.innerHTML = `
+            <td>
+                <span style="font-weight:900;">${item.item}</span>
+            </td>
+            <td><span class="cl-role">${item.responsible}</span></td>
+            <td>
+                <span class="cl-badge ${checkData.verified ? "ok" : "pending"}">
+                    ${checkData.verified ? "✔ Verificado" : "! Pendiente"}
+                </span>
+            </td>
+            <td style="text-align:right;"><span class="num" style="font-size:9.5px; font-weight:800; color:var(--muted)">${checkData.time || "--:--"}</span></td>
+        `;
+
+        tr.addEventListener("click", () => {
+            if (state.isLocked) {
+                alert("La lista se encuentra bloqueada por confirmación GO. Desbloquee para modificar.");
+                return;
+            }
+            const nextVal = !checkData.verified;
+            const now = new Date();
+            const pad = n => String(n).padStart(2, "0");
+            const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+            state.manualChecks[item.id] = {
+                verified: nextVal,
+                time: nextVal ? timeStr : "--:--"
+            };
+
+            addAudit(nextVal ? "TICK" : "UNTICK", item.item, item.responsible, nextVal ? `Verificado a las ${timeStr}` : "Marcado como pendiente");
+            savePersistedState();
+            renderManualChecklistTable();
+            renderDashboard();
+        });
+
+        tbody.appendChild(tr);
+    });
+}
+
+// ============================================================
+// DATA INGESTION & WEBSOCKET
+// ============================================================
+
+function handleTelemetry(d) {
     const now = Date.now();
     state.lastPacketAt = now;
-    if (!isHistory) {
-        state.packetTimes.push(now);
-    }
+    state.packetTimes.push(now);
 
     const seq = Number(d.frame_number);
     let lostInStep = 0;
@@ -877,435 +1546,220 @@ function handleMessage(msg, isHistory = false) {
         }
         state.lastSeq = seq;
     }
+    state.totalReceived++;
+    state.totalLost += lostInStep;
     state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
 
-    if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) {
-        state.rssi = Number(d.rssi);
-    }
-    if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) {
-        state.pressure = Number(d.pressure);
-    }
-    if (d.temp_imu !== undefined && Number.isFinite(Number(d.temp_imu))) {
-        state.tempImu = Number(d.temp_imu);
-    }
-    if (d.satellites !== undefined && Number.isFinite(Number(d.satellites))) {
-        state.satellites = Number(d.satellites);
-    }
-
-    if (Number.isFinite(Number(d.timestamp))) {
-        state.timestampMs = Number(d.timestamp);
-    }
+    if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
+    if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) state.pressure = Number(d.pressure);
+    if (d.temp_imu !== undefined && Number.isFinite(Number(d.temp_imu))) state.tempImu = Number(d.temp_imu);
+    if (d.satellites !== undefined && Number.isFinite(Number(d.satellites))) state.satellites = Number(d.satellites);
+    if (Number.isFinite(Number(d.timestamp))) state.timestampMs = Number(d.timestamp);
 
     const rawAlt = d.altura_actual !== undefined ? d.altura_actual : d.altitude;
     if (Number.isFinite(Number(rawAlt))) {
         state.altitude = Number(rawAlt);
+        state.altHistory.push(state.altitude);
+        if (state.altHistory.length > 60) state.altHistory.shift();
     }
 
     const ax = Number(d.accel_x), ay = Number(d.accel_y), az = Number(d.accel_z);
     if ([ax, ay, az].every(Number.isFinite)) {
-        state.ax = ax;
-        state.ay = ay;
-        state.az = az;
+        state.ax = ax; state.ay = ay; state.az = az;
         state.accMag = Math.sqrt(ax * ax + ay * ay + az * az);
+        state.accHistory.push(state.accMag);
+        if (state.accHistory.length > 60) state.accHistory.shift();
     }
 
     const lat = Number(d.latitude), lon = Number(d.longitude);
     if (Number.isFinite(lat) && Number.isFinite(lon) && (lat !== 0 || lon !== 0)) {
-        state.lat = lat;
-        state.lon = lon;
-
+        state.lat = lat; state.lon = lon;
         if (!state.gpsAnchor) {
             state.gpsAnchor = { lat, lon };
-            $("anchorInfo").textContent = `Origen GPS fijado: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
         }
-
-        state.gpsDriftM = getDistanceMeters(state.gpsAnchor.lat, state.gpsAnchor.lon, lat, lon);
+        const R = 6371000;
+        const rad = Math.PI / 180;
+        const dLat = (lat - state.gpsAnchor.lat) * rad;
+        const dLon = (lon - state.gpsAnchor.lon) * rad;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(state.gpsAnchor.lat * rad) * Math.cos(lat * rad) * Math.sin(dLon / 2) ** 2;
+        state.gpsDriftM = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * R;
+        state.gpsHistory.push(state.gpsDriftM);
+        if (state.gpsHistory.length > 60) state.gpsHistory.shift();
     }
 
     if (d.gps_fix !== undefined && Number.isFinite(Number(d.gps_fix))) {
         state.gpsFix = Number(d.gps_fix);
     } else if (state.satellites !== null) {
         state.gpsFix = state.satellites >= 4 ? 2 : (state.satellites > 0 ? 1 : 0);
-    } else if (state.lat !== null && (state.lat !== 0 || state.lon !== 0)) {
-        state.gpsFix = 2; // 3D Fix heurístico si hay coordenadas válidas
     }
 
     if (d.status !== undefined) {
-        state.status = typeof d.status === "string" ? d.status : (STATUS_NAMES[d.status] || "STANDBY");
-        if (!state.liftoffDetected && (state.status === "POWERED" || (state.altitude !== null && state.altitude > 30))) {
-            state.liftoffDetected = true;
-            state.liftoffAt = now;
-        }
+        state.status = typeof d.status === "string" ? d.status : "STANDBY";
     }
 }
 
-// ============================================================
-// EVALUACIÓN DE REGLAS DE VUELO
-// ============================================================
+let socket = null;
+function connect() {
+    if (socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(socket.readyState)) return;
+    const scheme = location.protocol === "https:" ? "wss:" : "ws:";
+    socket = new WebSocket(`${scheme}//${location.host}/ws/telemetry`);
 
-function evaluateSubsystems() {
-    const now = Date.now();
-    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
-
-    // 1. Enlace
-    const linkOk = state.connected && silence <= 3.0 && state.loss5s <= 5.0 && state.rxRate > 0.0;
-    let linkReason = "";
-    if (!state.connected) linkReason = "Enlace desconectado";
-    else if (silence > 3.0) linkReason = `Silencio de RF (${silence.toFixed(1)}s)`;
-    else if (state.loss5s > 5.0) linkReason = `Pérdida excesiva (${state.loss5s.toFixed(1)}%)`;
-    else if (state.rxRate <= 0.0) linkReason = "Sin recepción";
-
-    // 2. Altitud en rampa
-    const altTol = CFG.altitude_tol_m;
-    const altValid = state.altitude !== null && Math.abs(state.altitude) <= altTol;
-    let altReason = "";
-    if (state.altitude === null) altReason = "Altitud sin datos";
-    else if (!altValid) altReason = `Altitud fuera de rango (${state.altitude > 0 ? "+" : ""}${state.altitude.toFixed(1)}m)`;
-
-    // 3. Acelerómetro
-    const axTol = CFG.accel_xy_tol_g;
-    const ayTol = CFG.accel_xy_tol_g;
-    const azNom = CFG.accel_z_nominal_g;
-    const azTol = CFG.accel_z_tol_g;
-    const accValid = state.ax !== null &&
-                     Math.abs(state.ax) <= axTol &&
-                     Math.abs(state.ay) <= ayTol &&
-                     Math.abs(state.az - azNom) <= azTol;
-    let accReason = "";
-    if (state.ax === null) accReason = "Acelerómetro sin datos";
-    else if (Math.abs(state.ax) > axTol) accReason = `Acel X fuera (${state.ax.toFixed(2)}g)`;
-    else if (Math.abs(state.ay) > ayTol) accReason = `Acel Y fuera (${state.ay.toFixed(2)}g)`;
-    else if (Math.abs(state.az - azNom) > azTol) accReason = `Acel Z fuera (${state.az.toFixed(2)}g)`;
-
-    // 4. GPS Lock & Posición
-    const gpsRadius = CFG.gps_radius_m;
-    const hasFix = state.gpsFix >= 1;
-    const driftOk = state.gpsDriftM !== null && state.gpsDriftM <= gpsRadius;
-    const gpsValid = hasFix && driftOk;
-    let gpsReason = "";
-    if (!hasFix) gpsReason = "GPS sin bloqueo (NO_FIX)";
-    else if (state.gpsDriftM === null) gpsReason = "Coordenadas no adquiridas";
-    else if (!driftOk) gpsReason = `Deriva excesiva (${state.gpsDriftM.toFixed(1)}m)`;
-
-    // 5. Meteorología
-    const windVal = parseFloat($("wWind").value) || 0;
-    const cloudsVal = parseFloat($("wClouds").value) || 0;
-    const visVal = parseFloat($("wVis").value) || 0;
-    const officerOk = $("wOfficerCheck").checked;
-
-    const windOk = windVal <= CFG.weather.max_wind_speed_ms;
-    const cloudsOk = cloudsVal <= CFG.weather.max_cloud_cover_pct;
-    const visOk = visVal >= CFG.weather.min_visibility_km;
-    const weatherValid = windOk && cloudsOk && visOk && officerOk;
-
-    let weatherReason = "";
-    if (!windOk) weatherReason = `Viento excesivo (${windVal} m/s)`;
-    else if (!cloudsOk) weatherReason = `Nubosidad excesiva (${cloudsVal}%)`;
-    else if (!visOk) weatherReason = `Visibilidad baja (${visVal} km)`;
-    else if (!officerOk) weatherReason = "Falta firma de Oficial";
-
-    return {
-        link: { ok: linkOk, reason: linkReason, name: "Enlace Telemetría" },
-        alt: { ok: altValid, reason: altReason, name: "Altitud" },
-        acc: { ok: accValid, reason: accReason, name: "Aceleración" },
-        gps: { ok: gpsValid, reason: gpsReason, name: "GPS Lock" },
-        weather: { ok: weatherValid, reason: weatherReason, name: "Meteorología" }
+    socket.onopen = () => { state.connected = true; };
+    socket.onmessage = e => {
+        try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === "connection") state.connected = Boolean(msg.connected);
+            else if (msg.type === "telemetry" && msg.data) handleTelemetry(msg.data);
+            else if (msg.telemetry) handleTelemetry(msg.telemetry);
+        } catch (_) {}
     };
+    socket.onclose = () => {
+        state.connected = false;
+        setTimeout(connect, 1500);
+    };
+    socket.onerror = () => { state.connected = false; };
 }
 
-function updateStabilityClock(dtMs, checks) {
-    const allOk = Object.values(checks).every(c => c.ok);
-    const targetHoldMs = CFG.required_hold_s * 1000;
-
-    if (allOk) {
-        state.stableMs = Math.min(targetHoldMs, state.stableMs + dtMs);
-        state.verdict = state.stableMs >= targetHoldMs ? "GO" : "NO-GO";
-    } else {
-        if (state.stableMs > 0) {
-            state.resetCount++;
-            const failing = Object.values(checks).find(c => !c.ok);
-            if (failing) {
-                state.lastFailureReason = `${failing.name}: ${failing.reason}`;
+async function loadStatus() {
+    try {
+        const res = await fetch("/api/status", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        state.connected = Boolean(data.connected);
+        if (data.gonogo) {
+            if (data.gonogo.altitude_tol_m) CFG.altitude_tol_m = data.gonogo.altitude_tol_m;
+            if (data.gonogo.accel_xy_tol_g) CFG.accel_xy_tol_g = data.gonogo.accel_xy_tol_g;
+            if (data.gonogo.accel_z_nominal_g) CFG.accel_z_nominal_g = data.gonogo.accel_z_nominal_g;
+            if (data.gonogo.accel_z_tol_g) CFG.accel_z_tol_g = data.gonogo.accel_z_tol_g;
+            if (data.gonogo.gps_radius_m) CFG.gps_radius_m = data.gonogo.gps_radius_m;
+            if (data.gonogo.weather_limits) CFG.weather = data.gonogo.weather_limits;
+            if (Array.isArray(data.gonogo.manual_checklist) && data.gonogo.manual_checklist.length) {
+                CFG.manual_checklist = data.gonogo.manual_checklist;
             }
-            state.stableMs = 0;
         }
-        state.verdict = "NO-GO";
-    }
-
-    state.allOk = allOk;
+        if (data.station) {
+            if (data.station.disk_free_pct !== undefined) {
+                $("mStDisk").innerHTML = `${data.station.disk_free_pct}% disponible <i class="s-dot ok"></i>`;
+            }
+            if (data.station.serial_port) {
+                $("mStPort").innerHTML = `${data.station.serial_port} <i class="s-dot ok"></i>`;
+            }
+        }
+    } catch (_) {}
 }
 
 // ============================================================
-// RENDERIZADO VISUAL
+// MAIN LOOP & EVENT HANDLERS
 // ============================================================
 
-function renderUI(checks) {
-    const now = Date.now();
-    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
-
-    // Unified 7-cell Global Header
-    updateGlobalHeader({
-        missionTimeMs: state.liftoffDetected ? Math.max(0, Date.now() - state.liftoffAt) : 0,
-        status: state.status,
-        rssi: state.rssi,
-        lossPercent: state.loss5s,
-        connected: state.connected,
-        lastPacketAt: state.lastPacketAt,
-        tempImu: state.tempImu
-    });
-
-    // Hero Banner & Progress
-    const targetHoldMs = CFG.required_hold_s * 1000;
-    const curSec = (state.stableMs / 1000).toFixed(1);
-    const tarSec = CFG.required_hold_s.toFixed(1);
-
-    $("timerCurrent").textContent = formatTimerDigital(state.stableMs);
-    $("timerTarget").textContent = formatTimerDigital(targetHoldMs);
-    $("resetCount").textContent = state.resetCount;
-    $("lastFailureReason").textContent = state.lastFailureReason;
-
-    const progressPct = Math.min(100, (state.stableMs / targetHoldMs) * 100);
-    const pBar = $("progressBar");
-    pBar.style.width = `${progressPct}%`;
-
-    const hBanner = $("heroBanner");
-    const vIcon = $("verdictIcon");
-    const vText = $("verdictText");
-    const vSub = $("verdictSubtitle");
-
-    if (state.verdict === "GO") {
-        hBanner.className = "hero-banner state-go";
-        vIcon.textContent = "✔";
-        vText.textContent = "GO";
-        vSub.textContent = "TODOS LOS PARÁMETROS EN RANGO — VENTANA AUTORIZADA";
-        pBar.className = "progress-bar complete";
-        $("timerStateLabel").textContent = "ESTABILIDAD LOGRADA";
-    } else {
-        hBanner.className = "hero-banner state-nogo";
-        vIcon.textContent = "✖";
-        vText.textContent = "NO-GO";
-
-        const failing = Object.values(checks).filter(c => !c.ok);
-        if (failing.length === 0) {
-            vSub.textContent = `ACUMULANDO ESTABILIDAD: ${curSec}s / ${tarSec}s (${progressPct.toFixed(0)}%)`;
-            pBar.className = "progress-bar";
-            $("timerStateLabel").textContent = "ACUMULANDO";
-        } else {
-            vSub.textContent = `CONDICIONES NO CUMPLIDAS: ${failing.length} SUBSISTEMA(S) EN FALLO`;
-            pBar.className = "progress-bar";
-            $("timerStateLabel").textContent = "REINICIADO / FUERA";
-        }
-    }
-
-    // Row 1: Enlace
-    $("valLinkRate").textContent = `${state.rxRate.toFixed(1)} Hz`;
-    $("valLinkLoss").textContent = `${state.loss5s.toFixed(1)}%`;
-    $("valLinkSilence").textContent = silence > 90 ? "--" : `${silence.toFixed(1)}s`;
-    setRowState("rowLink", "badgeLink", checks.link.ok, checks.link.ok ? "OK" : (silence > 3.0 ? "SILENCIO" : "DEGRADADO"));
-
-    // Row 2: Altitud
-    if (state.altitude !== null) {
-        $("valAlt").textContent = `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(1)} m`;
-        $("valAltDelta").textContent = `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(2)} m`;
-    } else {
-        $("valAlt").textContent = "---";
-        $("valAltDelta").textContent = "---";
-    }
-    setRowState("rowAlt", "badgeAlt", checks.alt.ok, checks.alt.ok ? "OK" : "FUERA DE RANGO");
-
-    // Row 3: Acelerómetro
-    if (state.ax !== null) {
-        $("valAccAxes").textContent = `X: ${state.ax >= 0 ? "+" : ""}${state.ax.toFixed(2)}g   Y: ${state.ay >= 0 ? "+" : ""}${state.ay.toFixed(2)}g   Z: ${state.az >= 0 ? "+" : ""}${state.az.toFixed(2)}g`;
-        $("valAccMagVal").textContent = `${state.accMag.toFixed(2)} g`;
-    } else {
-        $("valAccAxes").textContent = "X: ---  Y: ---  Z: ---";
-        $("valAccMagVal").textContent = "--- g";
-    }
-    setRowState("rowAcc", "badgeAcc", checks.acc.ok, checks.acc.ok ? "OK" : "FUERA DE RANGO");
-
-    // Row 4: GPS
-    $("valGpsFix").textContent = GPS_FIX_NAMES[state.gpsFix] || `FIX_${state.gpsFix}`;
-    if (state.gpsDriftM !== null) {
-        $("valGpsDrift").textContent = `Deriva: ${state.gpsDriftM.toFixed(1)} m`;
-        $("valGpsCoords").textContent = `Coords: ${state.lat.toFixed(6)}, ${state.lon.toFixed(6)}`;
-    } else {
-        $("valGpsDrift").textContent = "Deriva: --- m";
-        $("valGpsCoords").textContent = "Coords: ---, ---";
-    }
-    setRowState("rowGps", "badgeGps", checks.gps.ok, checks.gps.ok ? "OK" : (state.gpsFix === 0 ? "SIN LOCK" : "DERIVA"));
-
-    // Row 5: Weather
-    setRowState("rowWeather", "badgeWeather", checks.weather.ok, checks.weather.ok ? "APROBADO" : "NO APROBADO");
-}
-
-function setRowState(rowId, badgeId, isOk, label) {
-    const row = $(rowId);
-    const badge = $(badgeId);
-    if (!row || !badge) return;
-
-    if (isOk) {
-        row.classList.remove("cl-row-fail");
-        badge.className = "badge ok";
-        badge.textContent = `✔ ${label}`;
-    } else {
-        row.classList.add("cl-row-fail");
-        badge.className = "badge bad";
-        badge.textContent = `✖ ${label}`;
-    }
-}
-
-function formatTimerDigital(ms) {
-    const totalSec = ms / 1000;
-    const m = Math.floor(totalSec / 60);
-    const s = Math.floor(totalSec % 60);
-    const frac = Math.floor((totalSec % 1) * 10);
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${frac}`;
-}
-
-function updateLinkStatus() {
-    const dot = $("linkDot");
-    const label = $("linkStatus");
-    if (!dot || !label) return;
-
-    if (state.connected) {
-        dot.className = "dot online";
-        label.textContent = "CONECTADO";
-    } else {
-        dot.className = "dot";
-        label.textContent = "DESCONECTADO";
-    }
-}
-
-// Bucle de diagnóstico de red a 2 Hz
-setInterval(() => {
-    const now = Date.now();
-    const cutoffRate = now - 1000;
-    while (state.packetTimes.length && state.packetTimes[0] < cutoffRate) {
-        state.packetTimes.shift();
-    }
-    state.rxRate = state.packetTimes.length;
-
-    const cutoffSeq = now - 5000;
-    while (state.seqWindow.length && state.seqWindow[0].t < cutoffSeq) {
-        state.seqWindow.shift();
-    }
-    let recCount = 0, lostCount = 0;
-    for (const w of state.seqWindow) {
-        recCount += w.rec;
-        lostCount += w.lost;
-    }
-    const tot = recCount + lostCount;
-    state.loss5s = tot > 0 ? (lostCount / tot) * 100 : 0;
-}, 500);
-
-// Bucle de evaluación a 60 Hz
 let lastFrameTime = performance.now();
-
 function frameLoop(time) {
     const dt = time - lastFrameTime;
     lastFrameTime = time;
 
-    const checks = evaluateSubsystems();
-    updateStabilityClock(dt, checks);
-    renderUI(checks);
+    updateStabilityEngines(dt);
+    renderDashboard();
+
+    // Sparklines update
+    drawSparkline("linkSpark", state.linkHistory, 0, 15, 10);
+    drawSparkline("altSpark", state.altHistory, -CFG.altitude_tol_m, CFG.altitude_tol_m, 0);
+    drawSparkline("accSpark", state.accHistory, CFG.accel_z_nominal_g - CFG.accel_z_tol_g, CFG.accel_z_nominal_g + CFG.accel_z_tol_g, CFG.accel_z_nominal_g);
+    drawSparkline("gpsSpark", state.gpsHistory, 0, CFG.gps_radius_m, 0);
 
     requestAnimationFrame(frameLoop);
 }
 
-// ============================================================
-// EVENT LISTENERS
-// ============================================================
+// Network rate calculation (2 Hz)
+setInterval(() => {
+    const now = Date.now();
+    const cutoff = now - 1000;
+    while (state.packetTimes.length && state.packetTimes[0] < cutoff) state.packetTimes.shift();
+    state.rxRate = state.packetTimes.length;
+    state.linkHistory.push(state.rxRate);
+    if (state.linkHistory.length > 60) state.linkHistory.shift();
 
-$("btnResetTimer").addEventListener("click", () => {
-    state.stableMs = 0;
-    state.resetCount++;
-    state.lastFailureReason = "Reinicio manual";
-});
+    const cutoffSeq = now - 5000;
+    while (state.seqWindow.length && state.seqWindow[0].t < cutoffSeq) state.seqWindow.shift();
+    let rec = 0, lost = 0;
+    for (const w of state.seqWindow) { rec += w.rec; lost += w.lost; }
+    const tot = rec + lost;
+    state.loss5s = tot > 0 ? (lost / tot) * 100 : 0;
+}, 500);
 
-$("btnSetGpsAnchor").addEventListener("click", () => {
-    if (state.lat !== null && state.lon !== null) {
-        state.gpsAnchor = { lat: state.lat, lon: state.lon };
-        state.gpsDriftM = 0;
-        $("anchorInfo").textContent = `Origen GPS fijado: ${state.lat.toFixed(6)}, ${state.lon.toFixed(6)}`;
-    } else {
-        alert("Sin coordenadas GPS válidas para fijar el origen.");
-    }
-});
-
-function applyConfigUI() {
-    $("lblRuleAlt").textContent = `Rango: 0.0 ± ${CFG.altitude_tol_m.toFixed(1)} m`;
-    $("lblRuleAccXy").textContent = `|X, Y| ≤ ${CFG.accel_xy_tol_g.toFixed(2)} g`;
-    $("lblRuleAccZ").textContent = `|Z - 1.0g| ≤ ${CFG.accel_z_tol_g.toFixed(2)} g`;
-    $("lblRuleGps").textContent = `Deriva ≤ ${CFG.gps_radius_m.toFixed(1)} m`;
-}
-
-async function fetchBackendConfig() {
-    try {
-        const res = await fetch("/api/status");
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.gonogo) {
-            const g = data.gonogo;
-            if (g.required_hold_s) CFG.required_hold_s = g.required_hold_s;
-            if (g.altitude_tol_m) CFG.altitude_tol_m = g.altitude_tol_m;
-            if (g.accel_xy_tol_g) CFG.accel_xy_tol_g = g.accel_xy_tol_g;
-            if (g.accel_z_nominal_g) CFG.accel_z_nominal_g = g.accel_z_nominal_g;
-            if (g.accel_z_tol_g) CFG.accel_z_tol_g = g.accel_z_tol_g;
-            if (g.gps_radius_m) CFG.gps_radius_m = g.gps_radius_m;
-            if (g.weather_limits && g.weather_limits.max_wind_speed_ms) {
-                CFG.weather.max_wind_speed_ms = g.weather_limits.max_wind_speed_ms;
-            }
-            applyConfigUI();
-        }
-    } catch (err) {
-        console.warn("No se pudo obtener /api/status:", err);
-    }
-}
-
-// Inicialización con precarga de 60 segundos
-async function initGoNoGo() {
-    applyConfigUI();
-    await fetchBackendConfig();
-
-    let prevRocketTs = null;
-    await fetchHistory60s(
-        (item) => {
-            const d = item.data || item.telemetry || item;
-            handleMessage(item, true);
-
-            // Compute delta time between consecutive historical frames
-            const curRocketTs = Number(d.timestamp);
-            let dtMs = 100;
-            if (prevRocketTs !== null && Number.isFinite(curRocketTs) && curRocketTs > prevRocketTs) {
-                const diff = curRocketTs - prevRocketTs;
-                if (diff > 0 && diff < 1000) dtMs = diff;
-            }
-            prevRocketTs = curRocketTs;
-
-            const checks = evaluateSubsystems();
-            updateStabilityClock(dtMs, checks);
-        },
-        (res) => {
-            if (res && res.connected !== undefined) state.connected = Boolean(res.connected);
-            if (res && res.frames && res.frames.length > 0) {
-                const now = Date.now();
-                state.packetTimes = [];
-                for (let i = 0; i < 10; i++) {
-                    state.packetTimes.push(now - (9 - i) * 100);
-                }
-                state.rxRate = 10.0;
-            }
-            const checks = evaluateSubsystems();
-            renderUI(checks);
-        }
-    );
-
-    connectWs();
+document.addEventListener("DOMContentLoaded", async () => {
+    loadPersistedState();
+    await loadStatus();
+    renderManualChecklistTable();
+    connect();
     requestAnimationFrame(frameLoop);
-}
+    setInterval(loadStatus, 5000);
 
-initGoNoGo();
+    // Event listeners for check toggles
+    $("chkVerifyLink")?.addEventListener("change", e => {
+        state.verifiedLink = e.target.checked;
+        addAudit(state.verifiedLink ? "TICK" : "UNTICK", "Comunicaciones", "Operador", state.verifiedLink ? "Enlace verificado" : "Verificación removida");
+        savePersistedState();
+        renderDashboard();
+    });
 
+    $("chkVerifySensors")?.addEventListener("change", e => {
+        state.verifiedSensors = e.target.checked;
+        addAudit(state.verifiedSensors ? "TICK" : "UNTICK", "Aviónica y Sensores", "Operador", state.verifiedSensors ? "Sensores verificados" : "Verificación removida");
+        savePersistedState();
+        renderDashboard();
+    });
+
+    $("chkVerifyStation")?.addEventListener("change", e => {
+        state.verifiedStation = e.target.checked;
+        addAudit(state.verifiedStation ? "TICK" : "UNTICK", "Estación Terrena", "Operador", state.verifiedStation ? "Estación terrena verificada" : "Verificación removida");
+        savePersistedState();
+        renderDashboard();
+    });
+
+    $("btnSetGpsAnchor")?.addEventListener("click", () => {
+        if (state.lat !== null && state.lon !== null) {
+            state.gpsAnchor = { lat: state.lat, lon: state.lon };
+            state.gpsDriftM = 0;
+            state.gpsHistory = [0];
+            addAudit("FIJAR_ORIGEN", "GPS Rampa", "Operador", `Origen: ${state.lat.toFixed(6)}, ${state.lon.toFixed(6)}`);
+            renderDashboard();
+        } else {
+            alert("Sin coordenadas GPS válidas para fijar el origen.");
+        }
+    });
+
+    $("btnLockGo")?.addEventListener("click", () => {
+        const evalRes = evaluateOverallStatus();
+        if (!state.isLocked && !evalRes.allVerified) {
+            alert("No se puede confirmar GO final: aún quedan verificaciones pendientes.");
+            return;
+        }
+        state.isLocked = !state.isLocked;
+        addAudit(state.isLocked ? "LOCK" : "UNLOCK", "Autorización Final GO", "Director de Vuelo", state.isLocked ? "Lista congelada y confirmada" : "Lista desbloqueada");
+        savePersistedState();
+        renderManualChecklistTable();
+        renderDashboard();
+    });
+
+    $("btnExportCsv")?.addEventListener("click", exportAuditCsv);
+
+    $("btnResetChecks")?.addEventListener("click", () => {
+        if (state.isLocked) {
+            alert("La lista se encuentra bloqueada. Desbloquee antes de reiniciar.");
+            return;
+        }
+        if (confirm("¿Desea reiniciar todas las marcas del checklist y la auditoría?")) {
+            state.verifiedLink = false;
+            state.verifiedSensors = false;
+            state.verifiedStation = false;
+            state.manualChecks = {};
+            addAudit("RESET", "Checklist Completo", "Operador", "Reinicio manual de marcas");
+            savePersistedState();
+            renderManualChecklistTable();
+            renderDashboard();
+        }
+    });
+});
 </script>
 
 </body>

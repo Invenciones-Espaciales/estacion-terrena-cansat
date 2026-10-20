@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import datetime
 import json
 import logging
+import shutil
 import sqlite3
 import struct
 import sys
@@ -177,6 +179,7 @@ class GoNoGoConfig:
     accel_z_tol_g: float = 0.15
     gps_radius_m: float = 5.0
     weather_limits: GoNoGoWeatherConfig = field(default_factory=GoNoGoWeatherConfig)
+    manual_checklist: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -299,6 +302,16 @@ def load_app_config() -> AppConfig:
         min_visibility_km=float(weather_data.get("min_visibility_km", 5.0)),
     )
 
+    manual_checklist = list(gonogo_data.get("manual_checklist", [
+        {"id": "ant_gs", "item": "Antena de GS instalada", "responsible": "Comunicaciones"},
+        {"id": "ant_rocket", "item": "Antena del cohete", "responsible": "Mecánica"},
+        {"id": "rocket_secured", "item": "Cohete asegurado", "responsible": "Mecánica"},
+        {"id": "area_clear", "item": "Área despejada", "responsible": "Operaciones"},
+        {"id": "rec_ready", "item": "Recuperación lista", "responsible": "Recuperación"},
+        {"id": "weather_check", "item": "Meteorología (<15 km/h)", "responsible": "Control de vuelo"},
+        {"id": "wiring_check", "item": "Cableado e ignitores", "responsible": "Mecánica"},
+    ]))
+
     gonogo_config = GoNoGoConfig(
         required_hold_s=float(gonogo_data.get("required_hold_s", 30.0)),
         altitude_tol_m=float(gonogo_data.get("altitude_tol_m", 5.0)),
@@ -307,6 +320,7 @@ def load_app_config() -> AppConfig:
         accel_z_tol_g=float(gonogo_data.get("accel_z_tol_g", 0.15)),
         gps_radius_m=float(gonogo_data.get("gps_radius_m", 5.0)),
         weather_limits=weather_config,
+        manual_checklist=manual_checklist,
     )
 
     charts_data = data.get("charts", {})
@@ -1211,6 +1225,17 @@ async def status():
         "serial_port": app_config.serial.port if app_config is not None else None,
         "baudrate": app_config.serial.baudrate if app_config is not None else None,
         "statistics": statistics.snapshot() if statistics else {},
+        "station": {
+            "serial_port": app_config.serial.port if app_config is not None else None,
+            "baudrate": app_config.serial.baudrate if app_config is not None else None,
+            "connected": runtime.connected,
+            "database_active": database is not None,
+            "csv_active": csv_logger is not None,
+            "disk_free_pct": round(shutil.disk_usage(".").free / shutil.disk_usage(".").total * 100, 1),
+            "storage_db": app_config.storage.database if app_config is not None else None,
+            "storage_csv": app_config.storage.csv if app_config is not None else None,
+            "server_time": datetime.datetime.now().strftime("%H:%M:%S"),
+        },
         "gonogo": (
             {
                 "required_hold_s": app_config.gonogo.required_hold_s,
@@ -1224,6 +1249,7 @@ async def status():
                     "max_cloud_cover_pct": app_config.gonogo.weather_limits.max_cloud_cover_pct,
                     "min_visibility_km": app_config.gonogo.weather_limits.min_visibility_km,
                 },
+                "manual_checklist": app_config.gonogo.manual_checklist,
             }
             if app_config is not None
             else {}
@@ -1286,6 +1312,7 @@ async def get_config():
                 "max_cloud_cover_pct": app_config.gonogo.weather_limits.max_cloud_cover_pct,
                 "min_visibility_km": app_config.gonogo.weather_limits.min_visibility_km,
             },
+            "manual_checklist": app_config.gonogo.manual_checklist,
         },
     }
 

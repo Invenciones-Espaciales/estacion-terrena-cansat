@@ -106,3 +106,27 @@ All three views (`GO / NO-GO`, `TELEMETRÍA`, `RECUPERACIÓN`) share an identica
 * Vertical scrolling cleanly enabled.
 * **Zero horizontal overflow** (`scrollWidth == innerWidth`).
 * Header wraps into clean 3-column / 2-column tabular grid.
+
+---
+
+## 5. Go / No-Go Cockpit Dashboard
+
+The Go / No-Go view (`/gonogo`) implements a mission-readiness verification dashboard divided into:
+
+1. **Hero Verdict Banner**:
+   - High-contrast visual status (`GO` in emerald green `#10b981` or `NO-GO` in crimson `#ef4444`).
+   - Quick action controls: `[🔒 Confirmar GO]` final authorization lock, `[📄 Exportar CSV]` audit log exporter, and `[🔄 Reiniciar]` checklist reset.
+2. **4-Card Operational Matrix**:
+   - **1. Comunicaciones**: Enlace salud, tasa efectiva Hz, pérdida en 5s, paquetes recibidos/perdidos, RSSI, CRC16, sensor stability timer, and micro-sparkline.
+   - **2. Aviónica y Sensores**: Altitud en rampa, acelerómetro triaxial, GPS 3D fix & deriva en rampa, temp IMU, live stability timers with $\Delta\text{ máx}$, and micro-sparklines.
+   - **3. Estación Terrena**: Puerto serie (`/dev/ttyACM0`), FastAPI/WebSocket service, SQLite DB logging, CSV logging, disk free percentage, and GPS rampa anchor coordinates.
+   - **4. Checklist Manual**: Interactive tabular matrix of physical pre-launch checks (`Ítem`, `Responsable`, `Estado`, `Hora`) plus launchpad weather parameter verification.
+3. **Bottom Diagnostic & Summary Panels**:
+   - **Detalle de Verificaciones**: 4 aggregated readiness indicators (Comunicaciones, Aviónica, Estación, Checklist).
+   - **Verificaciones Pendientes**: Real-time list of remaining unverified checklist tasks and out-of-tolerance sensor alerts.
+   - **Resumen General**: Large status emblem with launch authorization advisory.
+4. **Stability & Operator Authorization Model**:
+   - Instead of a rigid global countdown, each sensor tracks continuous in-tolerance stability time in seconds with micro-sparklines and reset reasons.
+   - The launch operator reviews stability and ticks off each system.
+   - Verdict reaches `GO` when all system cards and all manual items are verified.
+   - Every tick, untick, reset, and lock action is recorded in `state.auditLog` and downloadable as a CSV report.
