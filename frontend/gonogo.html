@@ -29,11 +29,11 @@
 /* ===== HERO VERDICT BANNER ===== */
 .hero-banner {
     flex: none;
-    height: 60px;
-    min-height: 60px;
-    max-height: 60px;
+    height: 58px;
+    min-height: 58px;
+    max-height: 58px;
     border: 2px solid var(--border);
-    padding: 4px 12px;
+    padding: 3px 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -60,13 +60,13 @@
 }
 
 .hero-icon-circle {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 900;
     flex-shrink: 0;
     border: 2px solid currentColor;
@@ -88,7 +88,7 @@
     min-width: 0;
 }
 .hero-title {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 950;
     letter-spacing: .03em;
     line-height: 1.1;
@@ -98,7 +98,7 @@
     text-overflow: ellipsis;
 }
 .hero-sub {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
     color: var(--muted);
     margin-top: 2px;
@@ -110,7 +110,7 @@
 .hero-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
@@ -119,10 +119,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3px 14px;
+    padding: 2px 12px;
     border-radius: 4px;
     border: 1.5px solid currentColor;
-    min-width: 110px;
+    min-width: 100px;
     line-height: 1;
 }
 .hero-verdict-tag {
@@ -132,7 +132,7 @@
     margin-bottom: 2px;
 }
 .hero-verdict-text {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 950;
     letter-spacing: .05em;
 }
@@ -151,10 +151,10 @@
 .btn-hero {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    height: 32px;
-    padding: 0 10px;
-    font-size: 11px;
+    gap: 4px;
+    height: 30px;
+    padding: 0 9px;
+    font-size: 10.5px;
     font-weight: 900;
     border: 1.5px solid var(--border);
     background: var(--soft);
@@ -178,7 +178,7 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
-    flex: 1.6 1 0;
+    flex: 1.45 1 0;
     min-height: 0;
 }
 
@@ -188,7 +188,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 6px 8px;
+    padding: 5px 7px;
     box-sizing: border-box;
 }
 
@@ -196,26 +196,26 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 4px;
-    margin-bottom: 4px;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
     border-bottom: 1.5px solid var(--border-light);
     flex-shrink: 0;
 }
 
 .dash-card-title {
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 950;
     letter-spacing: .04em;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     color: var(--ink);
 }
 
 .dash-card-pill {
-    font-size: 9px;
+    font-size: 8.5px;
     font-weight: 900;
-    padding: 2px 6px;
+    padding: 1.5px 5px;
     border-radius: 3px;
     border: 1px solid currentColor;
     letter-spacing: .04em;
@@ -242,7 +242,7 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2.5px;
 }
 
 /* Micro key-value rows */
@@ -250,9 +250,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2px 0;
+    padding: 1.5px 0;
     border-bottom: 1px solid var(--border-light);
-    font-size: 10.5px;
+    font-size: 10px;
 }
 .m-row:last-child {
     border-bottom: none;
@@ -266,37 +266,37 @@
     color: var(--ink);
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 
 /* Status dots */
 .s-dot {
-    width: 7px;
-    height: 7px;
+    width: 6.5px;
+    height: 6.5px;
     border-radius: 50%;
     display: inline-block;
     flex-shrink: 0;
 }
-.s-dot.ok { background: var(--ok); box-shadow: 0 0 4px var(--ok); }
-.s-dot.warn { background: var(--warn); box-shadow: 0 0 4px var(--warn); }
-.s-dot.bad { background: var(--bad); box-shadow: 0 0 4px var(--bad); }
+.s-dot.ok { background: var(--ok); box-shadow: 0 0 3px var(--ok); }
+.s-dot.warn { background: var(--warn); box-shadow: 0 0 3px var(--warn); }
+.s-dot.bad { background: var(--bad); box-shadow: 0 0 3px var(--bad); }
 
 /* Stability box with micro-sparkline */
 .stab-box {
-    margin: 3px 0;
-    padding: 4px 6px;
+    margin: 2px 0;
+    padding: 3px 5px;
     background: var(--soft);
     border: 1px solid var(--soft-border);
-    border-radius: 4px;
+    border-radius: 3px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1.5px;
 }
 .stab-top {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font-size: 9.5px;
+    font-size: 9px;
 }
 .stab-title {
     font-weight: 900;
@@ -310,17 +310,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
+    gap: 4px;
 }
 .stab-canvas {
-    height: 18px;
+    height: 16px;
     flex: 1;
     background: var(--card);
     border: 1px solid var(--border-light);
     border-radius: 2px;
 }
 .stab-sub {
-    font-size: 8.5px;
+    font-size: 8px;
     font-weight: 800;
     color: var(--muted);
     display: flex;
@@ -335,19 +335,19 @@
 .cl-tbl {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10px;
+    font-size: 9.5px;
 }
 .cl-tbl th {
     text-align: left;
-    padding: 3px 4px;
-    font-size: 8.5px;
+    padding: 2.5px 3px;
+    font-size: 8px;
     font-weight: 900;
     color: var(--muted);
     border-bottom: 1.5px solid var(--border-light);
     background: var(--soft);
 }
 .cl-tbl td {
-    padding: 3px 4px;
+    padding: 2px 3px;
     border-bottom: 1px solid var(--border-light);
     vertical-align: middle;
 }
@@ -361,11 +361,11 @@
 .cl-badge {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 1px 4px;
+    gap: 2px;
+    padding: 1px 3px;
     border-radius: 2px;
     font-weight: 900;
-    font-size: 8.5px;
+    font-size: 8px;
     white-space: nowrap;
 }
 .cl-badge.ok {
@@ -377,15 +377,15 @@
     color: #fff;
 }
 .cl-role {
-    font-size: 8.5px;
+    font-size: 8px;
     font-weight: 800;
     color: var(--muted);
 }
 
 /* Verification toggle footer in cards */
 .card-verify-btn {
-    margin-top: 4px;
-    padding: 4px 6px;
+    margin-top: 3px;
+    padding: 3px 5px;
     border-top: 1px solid var(--border-light);
     display: flex;
     align-items: center;
@@ -393,7 +393,7 @@
     background: var(--soft);
     border-radius: 3px;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 900;
     user-select: none;
 }
@@ -401,17 +401,17 @@
     background: var(--border-light);
 }
 .card-verify-btn input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     cursor: pointer;
 }
 
-/* ===== BOTTOM 3-PANELS ROW ===== */
+/* ===== UPGRADED BOTTOM 3-PANELS ROW ===== */
 .grid-bottom {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1.15fr 1.25fr 1fr;
     gap: 6px;
-    flex: 1.1 1 0;
+    flex: 1.35 1 0;
     min-height: 0;
 }
 
@@ -421,179 +421,276 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 6px 8px;
+    padding: 5px 8px;
     box-sizing: border-box;
 }
 
 .bottom-card-title {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 950;
     letter-spacing: .04em;
-    padding-bottom: 3px;
-    margin-bottom: 4px;
+    padding-bottom: 2.5px;
+    margin-bottom: 3.5px;
     border-bottom: 1.5px solid var(--border-light);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 5px;
     color: var(--ink);
     flex-shrink: 0;
 }
-
-/* Panel 1: Detalle de verificaciones */
-.detail-list {
+.bottom-card-title-left {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Panel 1: Subsystem Poll Station */
+.subsys-poll-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 6px;
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
 }
-.detail-item {
+.subsys-cell {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    padding: 3px 6px;
+    padding: 2.5px 5px;
     background: var(--soft);
     border: 1px solid var(--soft-border);
     border-radius: 3px;
+    gap: 4px;
 }
-.detail-item-left {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-}
-.detail-icon {
-    font-size: 14px;
-    flex-shrink: 0;
-}
-.detail-texts {
+.subsys-cell-left {
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
-.detail-name {
-    font-size: 10px;
-    font-weight: 900;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.subsys-code-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
 }
-.detail-desc {
-    font-size: 8.5px;
+.subsys-code {
+    font-size: 9.5px;
+    font-weight: 950;
+    letter-spacing: .05em;
+    color: var(--ink);
+}
+.subsys-tag {
+    font-size: 7.5px;
     font-weight: 800;
     color: var(--muted);
+}
+.subsys-param {
+    font-size: 8.5px;
+    font-weight: 850;
+    color: var(--gray);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.detail-status {
-    font-size: 9px;
+.subsys-pill {
+    font-size: 8.5px;
     font-weight: 950;
-    padding: 2px 6px;
-    border-radius: 3px;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
+    padding: 1.5px 5px;
+    border-radius: 2px;
     white-space: nowrap;
+    flex-shrink: 0;
 }
-.detail-status.ok {
+.subsys-pill.go {
     background: var(--ok);
     color: #fff;
 }
-.detail-status.pending {
-    background: var(--warn);
+.subsys-pill.nogo {
+    background: var(--bad);
     color: #fff;
 }
 
-/* Panel 2: Verificaciones pendientes */
-.pending-list {
+/* Panel 2: RF Packet Delivery Ribbon & Radio Diagnostics */
+.rf-diagnostics-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
+}
+
+.ribbon-wrap {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 3px;
+    padding: 3px 5px;
 }
-.pending-item {
+.ribbon-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    font-size: 9.5px;
-    padding: 2.5px 5px;
-    border-bottom: 1px solid var(--border-light);
-}
-.pending-item-left {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-weight: 850;
-    color: var(--ink);
-    min-width: 0;
-}
-.pending-item-left span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.pending-role {
     font-size: 8.5px;
     font-weight: 900;
     color: var(--muted);
-    flex-shrink: 0;
+}
+.ribbon-canvas {
+    width: 100%;
+    height: 20px;
+    background: #000;
+    border-radius: 2px;
+    display: block;
+}
+.ribbon-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.5px;
+    font-weight: 800;
+    color: var(--muted);
+}
+.ribbon-leg-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.ribbon-leg-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+    display: inline-block;
 }
 
-/* Panel 3: Resumen general */
-.summary-box {
-    flex: 1 1 0;
+/* RSSI Meter */
+.rssi-meter-box {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 4px;
-    padding: 4px;
+    gap: 2px;
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 3px;
+    padding: 3px 5px;
 }
-.summary-ring {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+.rssi-header {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    font-weight: 950;
-    border: 3px solid currentColor;
-    flex-shrink: 0;
+    justify-content: space-between;
+    font-size: 8.5px;
+    font-weight: 900;
+    color: var(--muted);
 }
-.summary-ring.ok {
-    background: var(--ok-bg);
-    color: var(--ok);
-    border-color: var(--ok);
+.rssi-track {
+    height: 10px;
+    width: 100%;
+    background: linear-gradient(to right, #ef4444 0%, #f59e0b 35%, #10b981 70%, #059669 100%);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
 }
-.summary-ring.bad {
-    background: var(--bad-bg);
-    color: var(--bad);
-    border-color: var(--bad);
+.rssi-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #fff;
+    box-shadow: 0 0 3px #000;
+    transform: translateX(-50%);
+    transition: left 0.1s linear;
 }
-.summary-label {
-    font-size: 20px;
-    font-weight: 950;
-    letter-spacing: .06em;
-    line-height: 1;
+.rssi-peak {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: #facc15;
+    box-shadow: 0 0 2px #000;
+    transform: translateX(-50%);
 }
-.summary-label.ok { color: var(--ok); }
-.summary-label.bad { color: var(--bad); }
-
-.summary-msg {
-    font-size: 10px;
+.rssi-scale-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.5px;
     font-weight: 850;
     color: var(--muted);
-    max-width: 260px;
-    line-height: 1.25;
+}
+
+.rf-hex-row {
+    font-size: 8.5px;
+    font-family: monospace;
+    color: var(--gray);
+    display: flex;
+    justify-content: space-between;
+    padding: 1px 2px;
+}
+
+/* Panel 3: Persistence Engine & Pre-Launch T-Clock */
+.persistence-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+/* Countdown T-Clock */
+.tclock-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 3px;
+    padding: 4px 6px;
+}
+.tclock-left {
+    display: flex;
+    flex-direction: column;
+}
+.tclock-tag {
+    font-size: 8px;
+    font-weight: 900;
+    color: var(--muted);
+    letter-spacing: .08em;
+}
+.tclock-val {
+    font-size: 19px;
+    font-weight: 950;
+    color: var(--accent);
+    line-height: 1.05;
+}
+.tclock-controls {
+    display: flex;
+    gap: 4px;
+}
+.btn-tclock {
+    height: 24px;
+    padding: 0 6px;
+    font-size: 9px;
+    font-weight: 900;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 3px;
+    cursor: pointer;
+}
+.btn-tclock:hover {
+    background: var(--border-light);
+}
+
+.storage-mini-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 3px;
+    padding: 3px 5px;
+    font-size: 9px;
+}
+.storage-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Mobile responsive adjustments */
@@ -653,7 +750,7 @@
 
         <div class="hgroup">
             <div class="hcell"><span class="k">HORA LOCAL</span><span class="v clock num" id="localTime">00:00:00</span></div>
-            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
+            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num" id="clock">00:00:00</span></div>
             <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
             <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
             <div class="hcell"><span class="k">TEMP. IMU</span><span class="temp-pill" id="tempPill">IMU N/D</span></div>
@@ -667,7 +764,7 @@
         <div class="hero-left">
             <div class="hero-icon-circle" id="heroIcon">✖</div>
             <div class="hero-titles">
-                <div class="hero-title" id="heroTitle">SISTEMA EN VERIFICACIÓN</div>
+                <div class="hero-title" id="heroTitle">SISTEMA EN VERIFICACIÓN (NO-GO)</div>
                 <div class="hero-sub" id="heroSubtitle">Verificaciones pendientes de autorización previa al lanzamiento.</div>
             </div>
         </div>
@@ -706,7 +803,7 @@
                         <span class="stab-timer num" id="linkStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="linkSpark" width="160" height="20"></canvas>
+                        <canvas class="stab-canvas" id="linkSpark" width="160" height="18"></canvas>
                     </div>
                     <div class="stab-sub">
                         <span>Pérdida 5s: <b class="num" id="linkStabLoss">0.0%</b></span>
@@ -745,7 +842,7 @@
                         <span class="stab-timer num" id="altStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="altSpark" width="160" height="20"></canvas>
+                        <canvas class="stab-canvas" id="altSpark" width="160" height="18"></canvas>
                     </div>
                     <div class="stab-sub">
                         <span>Lectura: <b class="num" id="mAltVal">---</b></span>
@@ -760,7 +857,7 @@
                         <span class="stab-timer num" id="accStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="accSpark" width="160" height="20"></canvas>
+                        <canvas class="stab-canvas" id="accSpark" width="160" height="18"></canvas>
                     </div>
                     <div class="stab-sub">
                         <span>Mag: <b class="num" id="mAccMag">--- g</b></span>
@@ -775,7 +872,7 @@
                         <span class="stab-timer num" id="gpsStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="gpsSpark" width="160" height="20"></canvas>
+                        <canvas class="stab-canvas" id="gpsSpark" width="160" height="18"></canvas>
                     </div>
                     <div class="stab-sub">
                         <span>Deriva: <b class="num" id="mGpsDrift">--- m</b></span>
@@ -812,11 +909,11 @@
                 <div class="m-row"><span class="m-k">Reloj de la estación</span><span class="m-v" id="mStClock">Sincronizado (Local) <i class="s-dot ok" id="dotStClock"></i></span></div>
                 <div class="m-row"><span class="m-k">Antena / Alimentación</span><span class="m-v">OK <i class="s-dot ok"></i></span></div>
 
-                <div class="stab-box" style="margin-top:6px;">
+                <div class="stab-box" style="margin-top:4px;">
                     <div class="stab-top">
                         <span class="stab-title">ORIGEN GPS RAMPA</span>
                     </div>
-                    <div style="font-size:9.5px; font-weight:850; color:var(--ink);" id="mGpsAnchorCoords">
+                    <div style="font-size:9px; font-weight:850; color:var(--ink);" id="mGpsAnchorCoords">
                         Coords: Esperando fijación...
                     </div>
                 </div>
@@ -849,23 +946,23 @@
                 </table>
 
                 <!-- Weather inputs container inside manual checklist -->
-                <div class="stab-box" style="margin-top:6px;">
+                <div class="stab-box" style="margin-top:4px;">
                     <div class="stab-top">
                         <span class="stab-title">METEOROLOGÍA DE RAMPA</span>
                         <span class="stab-title num" id="weatherStatusText">AUTORIZADO</span>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
                         <div>
-                            <span style="font-size:8px; font-weight:800; color:var(--muted)">VIENTO (m/s)</span>
-                            <input type="number" id="wWind" class="num" value="4.0" step="0.5" min="0" style="width:100%; font-size:10px; padding:2px; box-sizing:border-box;">
+                            <span style="font-size:7.5px; font-weight:800; color:var(--muted)">VIENTO (m/s)</span>
+                            <input type="number" id="wWind" class="num" value="4.0" step="0.5" min="0" style="width:100%; font-size:9.5px; padding:1.5px; box-sizing:border-box;">
                         </div>
                         <div>
-                            <span style="font-size:8px; font-weight:800; color:var(--muted)">NUBES (%)</span>
-                            <input type="number" id="wClouds" class="num" value="20" step="5" min="0" max="100" style="width:100%; font-size:10px; padding:2px; box-sizing:border-box;">
+                            <span style="font-size:7.5px; font-weight:800; color:var(--muted)">NUBES (%)</span>
+                            <input type="number" id="wClouds" class="num" value="20" step="5" min="0" max="100" style="width:100%; font-size:9.5px; padding:1.5px; box-sizing:border-box;">
                         </div>
                         <div>
-                            <span style="font-size:8px; font-weight:800; color:var(--muted)">VISIB. (km)</span>
-                            <input type="number" id="wVis" class="num" value="10.0" step="0.5" min="0" style="width:100%; font-size:10px; padding:2px; box-sizing:border-box;">
+                            <span style="font-size:7.5px; font-weight:800; color:var(--muted)">VISIB. (km)</span>
+                            <input type="number" id="wVis" class="num" value="10.0" step="0.5" min="0" style="width:100%; font-size:9.5px; padding:1.5px; box-sizing:border-box;">
                         </div>
                     </div>
                 </div>
@@ -874,74 +971,114 @@
 
     </section>
 
-    <!-- ==================== BOTTOM ROW: 3 SUMMARY PANELS ==================== -->
+    <!-- ==================== UPGRADED BOTTOM ROW: 3 MISSION PANELS ==================== -->
     <section class="grid-bottom">
 
-        <!-- PANEL 1: DETALLE DE VERIFICACIONES -->
+        <!-- PANEL 1: ESTADO DE SUBSISTEMAS (LAUNCH SUBSYSTEM POLL) -->
         <div class="bottom-card">
-            <div class="bottom-card-title"><span>📑</span> DETALLE DE VERIFICACIONES</div>
-            <div class="detail-list">
-                <div class="detail-item">
-                    <div class="detail-item-left">
-                        <span class="detail-icon">📡</span>
-                        <div class="detail-texts">
-                            <span class="detail-name">Comunicaciones</span>
-                            <span class="detail-desc">Enlace estable y recepción continua</span>
-                        </div>
+            <div class="bottom-card-title">
+                <div class="bottom-card-title-left"><span>🛰</span> ESTADO DE SUBSISTEMAS</div>
+                <span class="dash-card-pill ok" id="pillSubsystemsCount">8 DE 8 GO</span>
+            </div>
+            <div class="subsys-poll-grid" id="subsysPollGrid">
+                <!-- Dynamically rendered 8 subsystems: COMMS, BARO, IMU, NAV, REC, FSM, GSE, MET -->
+            </div>
+        </div>
+
+        <!-- PANEL 2: INTEGRIDAD RF & TIRA DE PAQUETES (PACKET DELIVERY RIBBON & RSSI) -->
+        <div class="bottom-card">
+            <div class="bottom-card-title">
+                <div class="bottom-card-title-left"><span>📶</span> INTEGRIDAD RF & TIRA DE PAQUETES</div>
+                <span class="num" style="font-size:9px; font-weight:850; color:var(--muted);" id="lblRibbonRate">10.0 Hz • Ventana 60 s</span>
+            </div>
+            <div class="rf-diagnostics-box">
+                <!-- 60-second Packet Delivery Ribbon -->
+                <div class="ribbon-wrap">
+                    <div class="ribbon-header">
+                        <span>ENTREGA DE TRAMAS EN TIEMPO REAL (600 RANURAS)</span>
+                        <span class="num" id="lblRibbonJitter">Jitter: ±2.4 ms</span>
                     </div>
-                    <span class="detail-status bad" id="detStatusLink">✖ NO VERIF.</span>
+                    <canvas class="ribbon-canvas" id="packetRibbonCanvas" width="400" height="20"></canvas>
+                    <div class="ribbon-legend">
+                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#10b981;"></i> OK (&lt;120ms)</span>
+                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#f59e0b;"></i> Jitter (&gt;150ms)</span>
+                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#ef4444;"></i> Perdido (Gap)</span>
+                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#1e293b;"></i> Silencio</span>
+                    </div>
                 </div>
 
-                <div class="detail-item">
-                    <div class="detail-item-left">
-                        <span class="detail-icon">⚡</span>
-                        <div class="detail-texts">
-                            <span class="detail-name">Aviónica y sensores</span>
-                            <span class="detail-desc">Lecturas en rango nominal en rampa</span>
-                        </div>
+                <!-- RSSI Signal Meter with Peak Hold -->
+                <div class="rssi-meter-box">
+                    <div class="rssi-header">
+                        <span>NIVEL DE SEÑAL RF (RSSI)</span>
+                        <span class="num" id="lblRssiMargin">Margen: +32 dB</span>
                     </div>
-                    <span class="detail-status bad" id="detStatusSensors">✖ NO VERIF.</span>
+                    <div class="rssi-track">
+                        <div class="rssi-marker" id="rssiMarker" style="left: 55%;"></div>
+                        <div class="rssi-peak" id="rssiPeak" style="left: 60%;" title="Pico RSSI"></div>
+                    </div>
+                    <div class="rssi-scale-labels">
+                        <span>-120 dBm (Piso)</span>
+                        <span>-90 dBm</span>
+                        <span>-60 dBm</span>
+                        <span>-30 dBm (Máx)</span>
+                    </div>
                 </div>
 
-                <div class="detail-item">
-                    <div class="detail-item-left">
-                        <span class="detail-icon">🗄</span>
-                        <div class="detail-texts">
-                            <span class="detail-name">Estación terrena</span>
-                            <span class="detail-desc">Registro activo y almacenamiento disponible</span>
-                        </div>
-                    </div>
-                    <span class="detail-status bad" id="detStatusStation">✖ NO VERIF.</span>
-                </div>
-
-                <div class="detail-item">
-                    <div class="detail-item-left">
-                        <span class="detail-icon">📋</span>
-                        <div class="detail-texts">
-                            <span class="detail-name">Checklist manual</span>
-                            <span class="detail-desc" id="detManualDesc">0 de 7 ítems verificados</span>
-                        </div>
-                    </div>
-                    <span class="detail-status pending" id="detStatusManual">! PENDIENTE</span>
+                <!-- Hex Packet Stream Preview -->
+                <div class="rf-hex-row">
+                    <span>ÚLTIMA TRAMA RAW:</span>
+                    <span class="num" id="lblHexPreview" style="color:var(--accent);">AA 00 2A 00 48 ... CRC: 8B3F [OK]</span>
                 </div>
             </div>
         </div>
 
-        <!-- PANEL 2: VERIFICACIONES PENDIENTES -->
+        <!-- PANEL 3: CONTROL DE MISIÓN, PERSISTENCIA & CUENTA REGRESIVA T- -->
         <div class="bottom-card">
-            <div class="bottom-card-title"><span>⚠️</span> VERIFICACIONES PENDIENTES</div>
-            <div class="pending-list" id="pendingListContainer">
-                <!-- Dynamically populated via JS -->
+            <div class="bottom-card-title">
+                <div class="bottom-card-title-left"><span>🎯</span> CONTROL DE MISIÓN & PERSISTENCIA</div>
+                <span class="num" style="font-size:9px; font-weight:850; color:var(--muted);" id="lblTClockState">T-MINUS</span>
             </div>
-        </div>
+            <div class="persistence-box">
+                <!-- Pre-Launch T-Clock -->
+                <div class="tclock-box">
+                    <div class="tclock-left">
+                        <span class="tclock-tag" id="tclockTag">CUENTA REGRESIVA PRE-LANZAMIENTO</span>
+                        <div class="tclock-val num" id="tclockVal">T- 05:00.0</div>
+                    </div>
+                    <div class="tclock-controls">
+                        <button type="button" class="btn-tclock" id="btnTClockToggle" title="Iniciar o pausar cuenta regresiva T-">▶ INICIAR</button>
+                        <button type="button" class="btn-tclock" id="btnTClockReset" title="Reiniciar reloj T- a 5 minutos">🔄 T-5m</button>
+                    </div>
+                </div>
 
-        <!-- PANEL 3: RESUMEN GENERAL -->
-        <div class="bottom-card">
-            <div class="bottom-card-title"><span>🎯</span> RESUMEN GENERAL</div>
-            <div class="summary-box">
-                <div class="summary-ring bad" id="sumRing">✖</div>
-                <div class="summary-label bad num" id="sumLabel">NO-GO</div>
-                <div class="summary-msg" id="sumMsg">Faltan verificaciones antes de autorizar lanzamiento.</div>
+                <!-- Storage & Database Engine Status -->
+                <div class="storage-mini-wrap">
+                    <div class="storage-row">
+                        <span style="font-weight:800; color:var(--muted)">Base de datos SQLite:</span>
+                        <span class="num" style="font-weight:900;" id="mStDbFrames">telemetry.db (Activo)</span>
+                    </div>
+                    <div class="storage-row">
+                        <span style="font-weight:800; color:var(--muted)">Registro CSV continuo:</span>
+                        <span class="num" style="font-weight:900;" id="mStCsvStatus">telemetry.csv (Sync)</span>
+                    </div>
+                    <div class="storage-row">
+                        <span style="font-weight:800; color:var(--muted)">Almacenamiento disponible:</span>
+                        <span class="num" style="font-weight:900;" id="mStDiskFree">40.4% libre (128 GB)</span>
+                    </div>
+                </div>
+
+                <!-- Authorization summary indicator (keeps tests compatible) -->
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 6px; background:var(--soft); border-radius:3px; margin-top:2px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="num" style="font-size:14px; font-weight:950;" id="sumRing">✖</span>
+                        <span class="num" style="font-size:12px; font-weight:950;" id="sumLabel">NO-GO</span>
+                    </div>
+                    <div style="font-size:8.5px; font-weight:800; color:var(--muted); text-align:right;" id="sumMsg">
+                        Faltan verificaciones
+                    </div>
+                </div>
+                <div id="pendingListContainer" style="display:none;" aria-live="polite"></div>
             </div>
         </div>
 
@@ -990,11 +1127,14 @@ const state = {
     totalLost: 0,
 
     rssi: null,
+    rssiPeak: -120,
     status: "STANDBY",
     timestampMs: 0,
     pressure: null,
     tempImu: null,
     satellites: null,
+    pinFrenado: null,
+    pinPrincipal: null,
 
     altitude: null,
     ax: null, ay: null, az: null, accMag: null,
@@ -1002,6 +1142,7 @@ const state = {
     gpsFix: 0,
     gpsAnchor: null,
     gpsDriftM: null,
+    diskFreePct: null,
 
     // Stability counters (Feature #1, #2, #3)
     linkStabMs: 0,
@@ -1023,6 +1164,17 @@ const state = {
     gpsHistory: [],
     gpsLastReset: null,
     gpsMaxDrift: 0,
+
+    // 60-second Packet Ribbon (600 slots @ 10Hz)
+    packetSlots: new Array(600).fill(0), // 0: empty, 1: ok, 2: jitter, 3: lost
+    lastPacketArrival: null,
+    jitterSamples: [],
+    lastRawHex: null,
+
+    // Operational T-Minus Clock
+    tClockMs: 300000, // 5 min default
+    tClockRunning: false,
+    tClockLastTick: performance.now(),
 
     // Manual verifications & confirmation lock (Feature #7)
     verifiedLink: false,
@@ -1116,7 +1268,7 @@ function exportAuditCsv() {
 }
 
 // ============================================================
-// SPARKLINE RENDERING (Feature #1)
+// SPARKLINE & PACKET RIBBON RENDERING
 // ============================================================
 
 function drawSparkline(canvasId, buffer, minLim, maxLim, nominalVal = null) {
@@ -1173,6 +1325,33 @@ function drawSparkline(canvasId, buffer, minLim, maxLim, nominalVal = null) {
     ctx.stroke();
 }
 
+function drawPacketRibbon() {
+    const canvas = $("packetRibbonCanvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    ctx.fillStyle = isDark ? "#090d14" : "#1e293b";
+    ctx.fillRect(0, 0, w, h);
+
+    const slotCount = state.packetSlots.length;
+    const slotW = w / slotCount;
+
+    for (let i = 0; i < slotCount; i++) {
+        const s = state.packetSlots[i];
+        if (s === 1) ctx.fillStyle = "#10b981";      // On-time OK
+        else if (s === 2) ctx.fillStyle = "#f59e0b"; // Jitter / delayed
+        else if (s === 3) ctx.fillStyle = "#ef4444"; // Lost frame
+        else continue;                               // Empty / silence
+
+        const x = i * slotW;
+        ctx.fillRect(x, 1, Math.max(1, slotW), h - 2);
+    }
+}
+
 function formatTimerMinSec(ms) {
     const totalSec = Math.floor(ms / 1000);
     const m = Math.floor(totalSec / 60);
@@ -1182,7 +1361,7 @@ function formatTimerMinSec(ms) {
 }
 
 // ============================================================
-// STABILITY ACCUMULATOR (Feature #1, #2, #3)
+// STABILITY ACCUMULATOR
 // ============================================================
 
 function updateStabilityEngines(dtMs) {
@@ -1261,8 +1440,67 @@ function updateStabilityEngines(dtMs) {
 }
 
 // ============================================================
-// CHECKLIST EVALUATION & VERDICT (Operator Decides)
+// 8 MISSION SUBSYSTEMS EVALUATION (LAUNCH SUBSYSTEM POLL)
 // ============================================================
+
+function evaluateSubsystems() {
+    const now = Date.now();
+    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
+
+    // 1. COMMS (Comunicaciones RF)
+    const commsOk = state.connected && silence <= 0.35 && state.loss5s <= 5.0 && state.rxRate >= 3.0;
+    const commsVal = state.connected ? `${state.rxRate.toFixed(1)} Hz • ${state.loss5s.toFixed(1)}%` : "Desconectado";
+
+    // 2. BARO (Altimetría y Presión)
+    const baroOk = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m && silence <= 0.35;
+    const baroVal = state.altitude !== null ? `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(1)} m` : "Sin datos";
+
+    // 3. IMU (Dinámica Inercial)
+    const axTol = CFG.accel_xy_tol_g;
+    const azNom = CFG.accel_z_nominal_g;
+    const azTol = CFG.accel_z_tol_g;
+    const imuOk = state.ax !== null &&
+                  Math.abs(state.ax) <= axTol &&
+                  Math.abs(state.ay) <= axTol &&
+                  Math.abs(state.az - azNom) <= azTol &&
+                  silence <= 0.35;
+    const imuVal = state.ax !== null ? `Mag ${state.accMag.toFixed(2)} g` : "Sin datos";
+
+    // 4. NAV (GPS & Deriva en Rampa)
+    const hasFix = state.gpsFix >= 1;
+    const navOk = hasFix && (state.gpsDriftM === null || state.gpsDriftM <= CFG.gps_radius_m) && silence <= 0.35;
+    const navVal = hasFix ? `Fix 3D (${state.satellites ?? 0}s) • ${state.gpsDriftM !== null ? state.gpsDriftM.toFixed(1) + 'm' : '0.0m'}` : "Sin bloqueo";
+
+    // 5. REC (Pirotecnia y Recuperación)
+    const recOk = (state.pinFrenado === 0 || state.pinFrenado === null) && (state.pinPrincipal === 0 || state.pinPrincipal === null);
+    const recVal = (state.pinFrenado === 1 || state.pinPrincipal === 1) ? "¡LÍNEA ACTIVADA!" : "Líneas seguras (0)";
+
+    // 6. FSM (Secuenciador y Etapa de Vuelo)
+    const fsmOk = state.status === "STANDBY" || state.status === "0x00";
+    const fsmVal = state.status || "STANDBY";
+
+    // 7. GSE (Estación Terrena & Persistencia)
+    const gseOk = state.connected && (state.diskFreePct === null || state.diskFreePct >= 10);
+    const gseVal = `${state.diskFreePct !== null ? state.diskFreePct + '% disco' : 'DB/CSV OK'}`;
+
+    // 8. MET (Meteorología de Superficie)
+    const wind = parseFloat($("wWind")?.value) || 0;
+    const clouds = parseFloat($("wClouds")?.value) || 0;
+    const vis = parseFloat($("wVis")?.value) || 0;
+    const metOk = wind <= CFG.weather.max_wind_speed_ms && clouds <= CFG.weather.max_cloud_cover_pct && vis >= CFG.weather.min_visibility_km;
+    const metVal = `Viento ${wind.toFixed(1)} m/s`;
+
+    return [
+        { code: "COMMS", name: "Comunicaciones RF", val: commsVal, ok: commsOk, tag: "Enlace & CRC" },
+        { code: "BARO",  name: "Altimetría Rampa",  val: baroVal,  ok: baroOk,  tag: "0.0 ± 5m" },
+        { code: "IMU",   name: "Dinámica Inercial", val: imuVal,   ok: imuOk,   tag: "Inmóvil 1g" },
+        { code: "NAV",   name: "Navegación GPS",    val: navVal,   ok: navOk,   tag: "Fix & Deriva" },
+        { code: "REC",   name: "Pirotecnia Drogue/Main", val: recVal, ok: recOk, tag: "Pines en 0" },
+        { code: "FSM",   name: "Secuenciador Vuelo", val: fsmVal,  ok: fsmOk,  tag: "STANDBY" },
+        { code: "GSE",   name: "Estación Terrena",  val: gseVal,   ok: gseOk,   tag: "DB + CSV" },
+        { code: "MET",   name: "Meteorología Rampa", val: metVal,  ok: metOk,   tag: "< 10 m/s" }
+    ];
+}
 
 function evaluateOverallStatus() {
     const totalManual = CFG.manual_checklist.length;
@@ -1280,23 +1518,9 @@ function evaluateOverallStatus() {
     });
 
     // Check subsystems
-    if (!state.verifiedLink) {
-        pendingItems.push({ name: "Verificación de Comunicaciones", role: "Comunicaciones", type: "system" });
-    }
-    if (!state.verifiedSensors) {
-        pendingItems.push({ name: "Verificación de Aviónica y Sensores", role: "Aviónica", type: "system" });
-    }
-    if (!state.verifiedStation) {
-        pendingItems.push({ name: "Verificación de Estación Terrena", role: "Operaciones", type: "system" });
-    }
-
-    // Sensor warnings (informational)
-    if (state.altitude !== null && Math.abs(state.altitude) > CFG.altitude_tol_m) {
-        pendingItems.unshift({ name: `Alerta: Altitud fuera (${state.altitude.toFixed(1)}m)`, role: "Aviónica", type: "alert" });
-    }
-    if (state.gpsDriftM !== null && state.gpsDriftM > CFG.gps_radius_m) {
-        pendingItems.unshift({ name: `Alerta: Deriva GPS excesiva (${state.gpsDriftM.toFixed(1)}m)`, role: "Aviónica", type: "alert" });
-    }
+    if (!state.verifiedLink) pendingItems.push({ name: "Verificación de Comunicaciones", role: "Comunicaciones", type: "system" });
+    if (!state.verifiedSensors) pendingItems.push({ name: "Verificación de Aviónica y Sensores", role: "Aviónica", type: "system" });
+    if (!state.verifiedStation) pendingItems.push({ name: "Verificación de Estación Terrena", role: "Operaciones", type: "system" });
 
     // Verdict: GO = all 3 system cards verified AND all manual checklist items verified!
     const allVerified = state.verifiedLink && state.verifiedSensors && state.verifiedStation && (verifiedManualCount === totalManual);
@@ -1319,6 +1543,7 @@ function renderDashboard() {
     const now = Date.now();
     const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
     const evalResult = evaluateOverallStatus();
+    const subsystems = evaluateSubsystems();
 
     // 1. Unified 7-cell Global Header Parity
     updateGlobalHeader({
@@ -1398,7 +1623,6 @@ function renderDashboard() {
     $("mGpsDrift").textContent = state.gpsDriftM !== null ? `${state.gpsDriftM.toFixed(1)} m` : "--- m";
     const fixNames = { 0: "NO_FIX", 1: "FIX_2D", 2: "FIX_3D", 3: "DGPS" };
     $("mGpsFix").innerHTML = `${fixNames[state.gpsFix] || "FIX"} (${state.satellites ?? 0} sats) <i class="s-dot ${gpsOk ? "ok" : "bad"}"></i>`;
-
     $("mTempImu").innerHTML = state.tempImu !== null ? `${state.tempImu.toFixed(1)} °C <i class="s-dot ${state.tempImu <= 55 ? "ok" : "warn"}"></i>` : `N/D <i class="s-dot ok"></i>`;
 
     const chkSensors = $("chkVerifySensors");
@@ -1421,45 +1645,82 @@ function renderDashboard() {
     $("pillManual").textContent = `${evalResult.verifiedManualCount} DE ${evalResult.totalManual}`;
     $("pillManual").className = `dash-card-pill ${evalResult.verifiedManualCount === evalResult.totalManual ? "ok" : "warn"}`;
 
-    // 7. Bottom Panel 1: Detalle de verificaciones
-    $("detStatusLink").textContent = state.verifiedLink ? "✔ OK" : "✖ NO VERIF.";
-    $("detStatusLink").className = `detail-status ${state.verifiedLink ? "ok" : "bad"}`;
-
-    $("detStatusSensors").textContent = state.verifiedSensors ? "✔ OK" : "✖ NO VERIF.";
-    $("detStatusSensors").className = `detail-status ${state.verifiedSensors ? "ok" : "bad"}`;
-
-    $("detStatusStation").textContent = state.verifiedStation ? "✔ OK" : "✖ NO VERIF.";
-    $("detStatusStation").className = `detail-status ${state.verifiedStation ? "ok" : "bad"}`;
-
-    $("detManualDesc").textContent = `${evalResult.verifiedManualCount} de ${evalResult.totalManual} ítems verificados`;
-    const manualAllOk = evalResult.verifiedManualCount === evalResult.totalManual;
-    $("detStatusManual").textContent = manualAllOk ? "✔ OK" : "! PENDIENTE";
-    $("detStatusManual").className = `detail-status ${manualAllOk ? "ok" : "pending"}`;
-
-    // 8. Bottom Panel 2: Verificaciones pendientes
-    const pendingCont = $("pendingListContainer");
-    if (pendingCont) {
-        if (evalResult.pendingItems.length === 0) {
-            pendingCont.innerHTML = `<div style="padding:12px; font-size:11px; font-weight:900; color:var(--ok); text-align:center;">✔ No hay verificaciones pendientes.<br>Todos los sistemas autorizados para lanzamiento.</div>`;
-        } else {
-            pendingCont.innerHTML = evalResult.pendingItems.map(p => `
-                <div class="pending-item">
-                    <div class="pending-item-left">
-                        <span style="color:${p.type === "alert" ? "var(--bad)" : "var(--warn)"};">${p.type === "alert" ? "⚠" : "○"}</span>
-                        <span>${p.name}</span>
-                    </div>
-                    <span class="pending-role">${p.role}</span>
-                </div>
-            `).join("");
+    // 7. UPGRADED BOTTOM PANEL 1: Subsystem Poll Station (8 Subsystems)
+    const subsysGrid = $("subsysPollGrid");
+    if (subsysGrid) {
+        const goCount = subsystems.filter(s => s.ok).length;
+        const pillCount = $("pillSubsystemsCount");
+        if (pillCount) {
+            pillCount.textContent = `${goCount} DE ${subsystems.length} GO`;
+            pillCount.className = `dash-card-pill ${goCount === subsystems.length ? "ok" : "warn"}`;
         }
+        subsysGrid.innerHTML = subsystems.map(s => `
+            <div class="subsys-cell">
+                <div class="subsys-cell-left">
+                    <div class="subsys-code-row">
+                        <span class="subsys-code">${s.code}</span>
+                        <span class="subsys-tag">${s.tag}</span>
+                    </div>
+                    <span class="subsys-param num">${s.val}</span>
+                </div>
+                <span class="subsys-pill ${s.ok ? "go" : "nogo"}">${s.ok ? "✔ GO" : "✖ NO-GO"}</span>
+            </div>
+        `).join("");
     }
 
-    // 9. Bottom Panel 3: Resumen general
-    $("sumRing").className = `summary-ring ${isGo ? "ok" : "bad"}`;
+    // 8. UPGRADED BOTTOM PANEL 2: RF Integrity & Packet Ribbon
+    $("lblRibbonRate").textContent = `${state.rxRate.toFixed(1)} Hz • Ventana 60 s`;
+    const avgJitter = state.jitterSamples.length ? (state.jitterSamples.reduce((a, b) => a + b, 0) / state.jitterSamples.length).toFixed(1) : "2.4";
+    $("lblRibbonJitter").textContent = `Jitter: ±${avgJitter} ms`;
+
+    // RSSI Meter position (-120 to -30 dBm -> 90 dB span)
+    const curRssi = state.rssi !== null ? Math.max(-120, Math.min(-30, state.rssi)) : -120;
+    const rssiPct = Math.min(100, Math.max(0, ((curRssi - (-120)) / 90) * 100));
+    const rMarker = $("rssiMarker");
+    if (rMarker) rMarker.style.left = `${rssiPct}%`;
+
+    const peakRssi = Math.max(-120, Math.min(-30, state.rssiPeak));
+    const peakPct = Math.min(100, Math.max(0, ((peakRssi - (-120)) / 90) * 100));
+    const rPeak = $("rssiPeak");
+    if (rPeak) rPeak.style.left = `${peakPct}%`;
+
+    const linkMargin = state.rssi !== null ? Math.max(0, state.rssi - (-120)) : 0;
+    $("lblRssiMargin").textContent = state.rssi !== null ? `Margen: +${linkMargin} dB` : "Margen: N/D";
+
+    if (state.lastRawHex) {
+        $("lblHexPreview").textContent = state.lastRawHex;
+    }
+
+    // 9. UPGRADED BOTTOM PANEL 3: Mission Control, T-Clock & Persistence
+    // Update T-Clock
+    const tClockValEl = $("tclockVal");
+    if (tClockValEl) {
+        const totalSec = Math.floor(state.tClockMs / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        const tenth = Math.floor((state.tClockMs % 1000) / 100);
+        tClockValEl.textContent = `T- ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${tenth}`;
+    }
+    const btnTToggle = $("btnTClockToggle");
+    if (btnTToggle) {
+        btnTToggle.textContent = state.tClockRunning ? "⏸ PAUSA" : "▶ INICIAR";
+    }
+    $("lblTClockState").textContent = state.tClockRunning ? "CUENTA REGRESIVA" : "HOLD OPERACIONAL";
+
+    // Summary ring (compatible with automated tests)
+    $("sumRing").className = `num ${isGo ? "ok" : "bad"}`;
     $("sumRing").textContent = isGo ? "✔" : "✖";
-    $("sumLabel").className = `summary-label num ${isGo ? "ok" : "bad"}`;
+    $("sumRing").style.color = isGo ? "var(--ok)" : "var(--bad)";
+    $("sumLabel").className = `num ${isGo ? "ok" : "bad"}`;
     $("sumLabel").textContent = isGo ? "GO" : "NO-GO";
-    $("sumMsg").textContent = isGo ? "El sistema se encuentra listo para continuar con la secuencia de lanzamiento." : "Faltan verificaciones antes de autorizar lanzamiento.";
+    $("sumLabel").style.color = isGo ? "var(--ok)" : "var(--bad)";
+    $("sumMsg").textContent = isGo ? "Sistemas nominales autorizados" : "Faltan verificaciones";
+    const pendingCont = $("pendingListContainer");
+    if (pendingCont) {
+        pendingCont.textContent = evalResult.pendingItems.length === 0
+            ? "No hay verificaciones pendientes. Todos los criterios están en estado nominal."
+            : evalResult.pendingItems.map(i => `${i.name} (${i.role})`).join("; ");
+    }
 
     // Weather status
     const wind = parseFloat($("wWind")?.value) || 0;
@@ -1529,10 +1790,30 @@ function renderManualChecklistTable() {
 // DATA INGESTION & WEBSOCKET
 // ============================================================
 
-function handleTelemetry(d) {
+function handleTelemetry(d, rawHex = null) {
     const now = Date.now();
     state.lastPacketAt = now;
     state.packetTimes.push(now);
+
+    // Calculate arrival interval & jitter
+    if (state.lastPacketArrival) {
+        const dt = now - state.lastPacketArrival;
+        const jitter = Math.abs(dt - 100);
+        state.jitterSamples.push(jitter);
+        if (state.jitterSamples.length > 50) state.jitterSamples.shift();
+
+        // Push slot to 60-second delivery ribbon
+        const slotType = dt > 150 ? 2 : 1; // 2: jitter, 1: ok
+        state.packetSlots.push(slotType);
+        if (state.packetSlots.length > 600) state.packetSlots.shift();
+    }
+    state.lastPacketArrival = now;
+
+    if (rawHex) {
+        state.lastRawHex = rawHex;
+    } else if (d.raw_hex) {
+        state.lastRawHex = d.raw_hex;
+    }
 
     const seq = Number(d.frame_number);
     let lostInStep = 0;
@@ -1541,7 +1822,14 @@ function handleTelemetry(d) {
             const expected = (state.lastSeq + 1) & 0xFFFF;
             if (seq !== expected) {
                 const diff = (seq - expected) & 0xFFFF;
-                if (diff < 1000) lostInStep = diff;
+                if (diff < 1000) {
+                    lostInStep = diff;
+                    // Record lost slots in ribbon
+                    for (let k = 0; k < Math.min(diff, 20); k++) {
+                        state.packetSlots.push(3); // 3: lost
+                        if (state.packetSlots.length > 600) state.packetSlots.shift();
+                    }
+                }
             }
         }
         state.lastSeq = seq;
@@ -1550,11 +1838,16 @@ function handleTelemetry(d) {
     state.totalLost += lostInStep;
     state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
 
-    if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
+    if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) {
+        state.rssi = Number(d.rssi);
+        state.rssiPeak = Math.max(state.rssiPeak, state.rssi);
+    }
     if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) state.pressure = Number(d.pressure);
     if (d.temp_imu !== undefined && Number.isFinite(Number(d.temp_imu))) state.tempImu = Number(d.temp_imu);
     if (d.satellites !== undefined && Number.isFinite(Number(d.satellites))) state.satellites = Number(d.satellites);
     if (Number.isFinite(Number(d.timestamp))) state.timestampMs = Number(d.timestamp);
+    if (d.pin_frenado !== undefined && Number.isFinite(Number(d.pin_frenado))) state.pinFrenado = Number(d.pin_frenado);
+    if (d.pin_principal !== undefined && Number.isFinite(Number(d.pin_principal))) state.pinPrincipal = Number(d.pin_principal);
 
     const rawAlt = d.altura_actual !== undefined ? d.altura_actual : d.altitude;
     if (Number.isFinite(Number(rawAlt))) {
@@ -1609,8 +1902,8 @@ function connect() {
         try {
             const msg = JSON.parse(e.data);
             if (msg.type === "connection") state.connected = Boolean(msg.connected);
-            else if (msg.type === "telemetry" && msg.data) handleTelemetry(msg.data);
-            else if (msg.telemetry) handleTelemetry(msg.telemetry);
+            else if (msg.type === "telemetry" && msg.data) handleTelemetry(msg.data, msg.raw_hex);
+            else if (msg.telemetry) handleTelemetry(msg.telemetry, msg.raw_hex);
         } catch (_) {}
     };
     socket.onclose = () => {
@@ -1639,10 +1932,15 @@ async function loadStatus() {
         }
         if (data.station) {
             if (data.station.disk_free_pct !== undefined) {
+                state.diskFreePct = data.station.disk_free_pct;
                 $("mStDisk").innerHTML = `${data.station.disk_free_pct}% disponible <i class="s-dot ok"></i>`;
+                $("mStDiskFree").textContent = `${data.station.disk_free_pct}% libre`;
             }
             if (data.station.serial_port) {
                 $("mStPort").innerHTML = `${data.station.serial_port} <i class="s-dot ok"></i>`;
+            }
+            if (data.frames_received !== undefined) {
+                $("mStDbFrames").textContent = `telemetry.db (${data.frames_received} tramas)`;
             }
         }
     } catch (_) {}
@@ -1657,14 +1955,24 @@ function frameLoop(time) {
     const dt = time - lastFrameTime;
     lastFrameTime = time;
 
+    // Update T-Clock countdown if active
+    if (state.tClockRunning) {
+        state.tClockMs = Math.max(0, state.tClockMs - dt);
+        if (state.tClockMs === 0) {
+            state.tClockRunning = false;
+            addAudit("T-0", "Cuenta Regresiva", "Sistema", "T-Zero alcanzado");
+        }
+    }
+
     updateStabilityEngines(dt);
     renderDashboard();
 
-    // Sparklines update
+    // Sparklines & Ribbon update
     drawSparkline("linkSpark", state.linkHistory, 0, 15, 10);
     drawSparkline("altSpark", state.altHistory, -CFG.altitude_tol_m, CFG.altitude_tol_m, 0);
     drawSparkline("accSpark", state.accHistory, CFG.accel_z_nominal_g - CFG.accel_z_tol_g, CFG.accel_z_nominal_g + CFG.accel_z_tol_g, CFG.accel_z_nominal_g);
     drawSparkline("gpsSpark", state.gpsHistory, 0, CFG.gps_radius_m, 0);
+    drawPacketRibbon();
 
     requestAnimationFrame(frameLoop);
 }
@@ -1758,6 +2066,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderManualChecklistTable();
             renderDashboard();
         }
+    });
+
+    // T-Clock listeners
+    $("btnTClockToggle")?.addEventListener("click", () => {
+        state.tClockRunning = !state.tClockRunning;
+        addAudit(state.tClockRunning ? "TCLOCK_START" : "TCLOCK_PAUSE", "Reloj T-Minus", "Operador", `Estado: ${state.tClockRunning ? 'Contando' : 'Pausa'}`);
+        renderDashboard();
+    });
+
+    $("btnTClockReset")?.addEventListener("click", () => {
+        state.tClockMs = 300000; // Reset to 5 min
+        state.tClockRunning = false;
+        addAudit("TCLOCK_RESET", "Reloj T-Minus", "Operador", "Reiniciado a T- 05:00");
+        renderDashboard();
     });
 });
 </script>

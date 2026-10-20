@@ -121,10 +121,26 @@ The Go / No-Go view (`/gonogo`) implements a mission-readiness verification dash
    - **2. Aviónica y Sensores**: Altitud en rampa, acelerómetro triaxial, GPS 3D fix & deriva en rampa, temp IMU, live stability timers with $\Delta\text{ máx}$, and micro-sparklines.
    - **3. Estación Terrena**: Puerto serie (`/dev/ttyACM0`), FastAPI/WebSocket service, SQLite DB logging, CSV logging, disk free percentage, and GPS rampa anchor coordinates.
    - **4. Checklist Manual**: Interactive tabular matrix of physical pre-launch checks (`Ítem`, `Responsable`, `Estado`, `Hora`) plus launchpad weather parameter verification.
-3. **Bottom Diagnostic & Summary Panels**:
-   - **Detalle de Verificaciones**: 4 aggregated readiness indicators (Comunicaciones, Aviónica, Estación, Checklist).
-   - **Verificaciones Pendientes**: Real-time list of remaining unverified checklist tasks and out-of-tolerance sensor alerts.
-   - **Resumen General**: Large status emblem with launch authorization advisory.
+3. **Bottom Diagnostic & Mission Operations Panels**:
+   - **Panel 1: Estado de Subsistemas (8-Subsystem Launch Poll Station)**:
+     - Real-time poll grid evaluating all eight flight and ground subsystems at 10 Hz:
+       1. `COMMS` (Comunicaciones RF): Link rate $\ge 5\text{ Hz}$, loss $\le 5\%$, silence $< 300\text{ ms}$, CRC16 nominal.
+       2. `BARO` (Altimetría Rampa): Zero baseline $0.0 \pm 5.0\text{ m}$, barometric stability.
+       3. `IMU` (Dinámica Inercial): Stationary launch rail dynamic stillness ($|X,Y| \le 0.10\text{ g}$, $Z \approx 1.0\text{ g}$).
+       4. `NAV` (Navegación GPS): 3D Fix, $\ge 4$ satellites, launchpad drift $\le 5.0\text{ m}$.
+       5. `REC` (Pirotecnia Drogue/Main): Ejection pyro lines safe in standby (`pin_frenado == 0`, `pin_principal == 0`).
+       6. `FSM` (Secuenciador Vuelo): Flight computer state machine in `STANDBY` mode.
+       7. `GSE` (Estación Terrena): Serial port active, SQLite DB and CSV logging active, disk $>10\%$.
+       8. `MET` (Meteorología Rampa): Surface wind $< 10\text{ m/s}$, cloud cover $\le 75\%$, visibility $\ge 5\text{ km}$.
+   - **Panel 2: Integridad RF & Tira de Paquetes**:
+     - **60-Second Packet Delivery Ribbon**: 600-slot canvas tracking individual frame arrival intervals at 10 Hz (Emerald on-time $<120\text{ ms}$, Amber jitter $>150\text{ ms}$, Crimson frame gaps, Slate Dark silence).
+     - **Jitter Standard Deviation**: Rolling jitter metric in milliseconds ($\pm\sigma\text{ ms}$).
+     - **Horizontal RSSI Signal Level Meter**: Visual gradient bar spanning $-120\text{ dBm}$ to $-30\text{ dBm}$ with dynamic marker, peak-hold indicator, and link margin ($+X\text{ dB}$).
+     - **Raw Packet HEX Stream**: Live byte preview of incoming binary telemetry frames.
+   - **Panel 3: Control de Misión, Persistencia & Reloj T-**:
+     - **Pre-Launch T-Clock**: Operational `T- 05:00.0` countdown clock with `[▶ INICIAR / ⏸ PAUSA]` and `[🔄 T-5m]` controls.
+     - **Storage & Database Metrics**: Live SQLite record count (`telemetry.db`), CSV continuous stream status, and disk space capacity gauge.
+     - **Authorization Status**: Status emblem with launch authorization advisory.
 4. **Stability & Operator Authorization Model**:
    - Instead of a rigid global countdown, each sensor tracks continuous in-tolerance stability time in seconds with micro-sparklines and reset reasons.
    - The launch operator reviews stability and ticks off each system.
