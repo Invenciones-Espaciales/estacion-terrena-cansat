@@ -25,8 +25,8 @@ try:
     import serial_asyncio
     import uvicorn
     import yaml
-    from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-    from fastapi.responses import FileResponse
+    from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+    from fastapi.responses import FileResponse, JSONResponse
     from fastapi.staticfiles import StaticFiles
 except ModuleNotFoundError as exc:
     missing_mod = exc.name or "required dependencies"
@@ -814,6 +814,27 @@ class Database:
             ON telemetry(timestamp)
             """
         )
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS gonogo_audit_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp REAL NOT NULL,
+                iso_time TEXT NOT NULL,
+                action TEXT NOT NULL,
+                item_id TEXT,
+                item_label TEXT,
+                state TEXT NOT NULL,
+                operator TEXT,
+                details TEXT
+            )
+            """
+        )
+        self.connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_gonogo_audit_ts
+            ON gonogo_audit_log(timestamp)
+            """
+        )
         self.connection.commit()
 
     def insert(self, data: dict[str, Any], sequence_field: Optional[str]):
@@ -826,6 +847,79 @@ class Database:
             (time.time(), sequence, json.dumps(data, ensure_ascii=False)),
         )
         self.connection.commit()
+
+    def insert_gonogo_audit(
+        self,
+        action: str,
+        item_id: Optional[str],
+        item_label: Optional[str],
+        state: str,
+        operator: Optional[str] = None,
+        details: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
+        ts = time.time()
+        iso = datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).isoformat()
+        det_str = json.dumps(details, ensure_ascii=False) if details else None
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO gonogo_audit_log (timestamp, iso_time, action, item_id, item_label, state, operator, details)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (ts, iso, action, item_id, item_label, state, operator, det_str),
+        )
+        self.connection.commit()
+        return {
+            "id": cursor.lastrowid,
+            "timestamp": ts,
+            "iso_time": iso,
+            "action": action,
+            "item_id": item_id,
+            "item_label": item_label,
+            "state": state,
+            "operator": operator,
+            "details": details,
+        }
+
+    def get_gonogo_audit_logs(self, limit: int = 100) -> list[dict[str, Any]]:
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                """
+                SELECT id, timestamp, iso_time, action, item_id, item_label, state, operator, details
+                FROM gonogo_audit_log
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
+            rows = cursor.fetchall()
+            logs = []
+            for r in rows:
+                det = None
+                if r[8]:
+                    try:
+                        det = json.loads(r[8])
+                    except Exception:
+                        det = r[8]
+                logs.append({
+                    "id": r[0],
+                    "timestamp": r[1],
+                    "iso_time": r[2],
+                    "action": r[3],
+                    "item_id": r[4],
+                    "item_label": r[5],
+                    "state": r[6],
+                    "operator": r[7],
+                    "details": det,
+                })
+            return logs
+        except Exception:
+            logger.exception("Error querying Go/No-Go audit logs from SQLite")
+            return []
+
+    def close(self):
+        self.connection.close()
 
     def get_recent(self, seconds: float = 60.0, limit: int = 1200) -> list[dict[str, Any]]:
         try:
@@ -903,6 +997,47 @@ class CSVLogger:
         self.file.close()
 
 
+class GoNoGoCSVLogger:
+    def __init__(self, path: str):
+        self.path = Path(path)
+        if not self.path.is_absolute():
+            self.path = DATA_DIR / self.path if len(self.path.parts) == 1 else BASE_DIR / self.path
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.fields = [
+            "timestamp",
+            "iso_time",
+            "action",
+            "item_id",
+            "item_label",
+            "state",
+            "operator",
+            "details",
+        ]
+        self.file = self.path.open("a", newline="", encoding="utf-8")
+        self.writer = csv.DictWriter(self.file, fieldnames=self.fields)
+        if self.path.stat().st_size == 0:
+            self.writer.writeheader()
+            self.file.flush()
+
+    def write(self, entry: dict[str, Any]):
+        row = {
+            "timestamp": entry.get("timestamp", time.time()),
+            "iso_time": entry.get("iso_time", datetime.datetime.fromtimestamp(time.time(), tz=datetime.timezone.utc).isoformat()),
+            "action": entry.get("action", ""),
+            "item_id": entry.get("item_id", ""),
+            "item_label": entry.get("item_label", ""),
+            "state": entry.get("state", ""),
+            "operator": entry.get("operator", ""),
+            "details": json.dumps(entry.get("details"), ensure_ascii=False) if entry.get("details") else "",
+        }
+        self.writer.writerow(row)
+        self.file.flush()
+
+    def close(self):
+        self.file.close()
+
+
 # ============================================================
 # WEBSOCKET MANAGER
 # ============================================================
@@ -968,6 +1103,7 @@ frame_buffer: Optional[FrameBuffer] = None
 statistics: Optional[PacketStatistics] = None
 database: Optional[Database] = None
 csv_logger: Optional[CSVLogger] = None
+gonogo_csv_logger: Optional[GoNoGoCSVLogger] = None
 websocket_manager = WebSocketManager()
 runtime = RuntimeState()
 
@@ -1367,12 +1503,65 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 # ============================================================
+# GO / NO-GO AUDIT LOG ENDPOINTS
+# ============================================================
+
+@app.get("/api/gonogo/logs")
+async def get_gonogo_logs(limit: int = 100):
+    if database is None:
+        return {"logs": []}
+    logs = database.get_gonogo_audit_logs(limit=min(limit, 500))
+    return {"logs": logs}
+
+
+@app.post("/api/gonogo/log")
+async def log_gonogo_event(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"status": "error", "message": "Invalid JSON body"}, status_code=400)
+
+    action = body.get("action", "UPDATE")
+    item_id = body.get("item_id")
+    item_label = body.get("item_label")
+    state_val = body.get("state", "UNKNOWN")
+    operator = body.get("operator", "OPERATOR")
+    details = body.get("details")
+
+    if database is None:
+        return JSONResponse({"status": "error", "message": "Database not initialized"}, status_code=500)
+
+    entry = database.insert_gonogo_audit(
+        action=action,
+        item_id=item_id,
+        item_label=item_label,
+        state=state_val,
+        operator=operator,
+        details=details,
+    )
+
+    if gonogo_csv_logger is not None:
+        try:
+            gonogo_csv_logger.write(entry)
+        except Exception:
+            logger.exception("Error writing to Go/No-Go CSV log")
+
+    # Broadcast audit event to all connected UI clients
+    await websocket_manager.broadcast({
+        "type": "gonogo_audit",
+        "entry": entry,
+    })
+
+    return {"status": "ok", "entry": entry}
+
+
+# ============================================================
 # STARTUP & SHUTDOWN LIFECYCLE
 # ============================================================
 
 @app.on_event("startup")
 async def startup():
-    global app_config, frame_config, parser, frame_buffer, statistics, database, csv_logger
+    global app_config, frame_config, parser, frame_buffer, statistics, database, csv_logger, gonogo_csv_logger
 
     logger.info("Initializing Ground Station...")
 
@@ -1393,9 +1582,12 @@ async def startup():
             for out_name in ([ff.name, f"{ff.name}_label"] if ff.values else [ff.name])
         ],
     )
+    gonogo_csv_path = Path(app_config.storage.csv).parent / "gonogo_audit.csv"
+    gonogo_csv_logger = GoNoGoCSVLogger(str(gonogo_csv_path))
 
     logger.info("Database: %s", database.path)
     logger.info("CSV Log: %s", csv_logger.path)
+    logger.info("Go/No-Go Audit CSV Log: %s", gonogo_csv_logger.path)
 
     # Pre-hydrate recent history from SQLite
     try:
@@ -1437,6 +1629,12 @@ async def shutdown():
             csv_logger.close()
         except Exception:
             logger.exception("Error closing CSV file")
+
+    if gonogo_csv_logger is not None:
+        try:
+            gonogo_csv_logger.close()
+        except Exception:
+            logger.exception("Error closing Go/No-Go CSV file")
 
     logger.info("Ground Station shutdown complete")
 
