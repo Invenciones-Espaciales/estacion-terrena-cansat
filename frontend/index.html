@@ -37,27 +37,27 @@ html, body {
     height: 100vh;
     padding: 6px 10px;
     display: grid;
-    grid-template-rows: 42px minmax(0, 72fr) minmax(0, 20fr);
-    gap: 6px;
+    grid-template-rows: 42px minmax(0, 81fr) minmax(0, 13fr);
+    gap: 8px;
     box-sizing: border-box;
     overflow: hidden;
 }
 
-/* ===== GRID 25 / 45 / 30 ===== */
+/* ===== GRID 26 / 44 / 30 ===== */
 
 .dashboard {
     min-height: 0;
     display: grid;
-    grid-template-columns: 25fr 45fr 30fr;
-    gap: 6px;
+    grid-template-columns: 26fr 44fr 30fr;
+    gap: 8px;
 }
 
-.panel { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.panel { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 
 .card {
     border: 2px solid var(--border);
     background: var(--card);
-    padding: 6px 8px;
+    padding: 8px 10px;
     min-height: 0;
     min-width: 0;
     display: flex;
@@ -67,36 +67,37 @@ html, body {
 .card.grow { flex: 1 1 0; }
 
 .card-title {
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: .08em;
-    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: .06em;
+    margin-bottom: 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
     flex: none;
 }
-.card-title .hint { font-weight: 700; color: var(--muted); letter-spacing: 0; text-align: right; }
+.card-title .hint { font-size: 11px; font-weight: 800; color: var(--gray); letter-spacing: 0; text-align: right; }
 
-.row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; padding: 1px 0; }
+.row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; padding: 3px 0; border-bottom: 1px solid var(--soft-border); }
+.row:last-of-type { border-bottom: none; }
 .row .k { font-weight: 800; color: var(--gray); }
-.row .v { font-weight: 900; font-size: 14px; }
+.row .v { font-weight: 950; font-size: 18px; }
 
 canvas { display: block; }
 
 /* ===== ALTITUD ===== */
 
-.alt-body { flex: 1 1 0; min-height: 0; display: flex; gap: 8px; }
-.tape { width: 92px; flex: none; border: 2px solid var(--border); position: relative; }
+.alt-body { flex: 1 1 0; min-height: 0; display: flex; gap: 10px; }
+.tape { width: 96px; flex: none; border: 2px solid var(--border); position: relative; }
 .tape canvas { width: 100%; height: 100%; }
-.alt-side { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 6px; }
-.big { font-size: 40px; font-weight: 900; line-height: 1; }
-.unit { font-size: 14px; font-weight: 700; color: var(--gray); margin-left: 3px; }
-.lbl { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .08em; }
+.alt-side { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; }
+.big { font-size: 46px; font-weight: 950; line-height: 1; }
+.unit { font-size: 16px; font-weight: 800; color: var(--gray); margin-left: 4px; }
+.lbl { font-size: 11px; font-weight: 900; color: var(--gray); letter-spacing: .06em; }
 
 .basecard { flex: none; }
-.basecard .big { font-size: 34px; }
+.basecard .big { font-size: 36px; }
 .axis-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; border-bottom: 1px solid var(--soft-border); }
 .axis-row:last-child { border-bottom: none; }
 .axis-row .a { font-size: 16px; font-weight: 900; color: var(--gray); }
@@ -107,43 +108,43 @@ canvas { display: block; }
 .chart-card { flex: 1 1 0; }
 .chart-box { position: relative; flex: 1; min-height: 0; }
 .chart-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.legend { display: flex; gap: 10px; font-size: 11px; font-weight: 800; }
-.legend i { display: inline-block; width: 12px; height: 4px; margin-right: 3px; vertical-align: middle; }
+.legend { display: flex; gap: 12px; font-size: 12px; font-weight: 900; }
+.legend i { display: inline-block; width: 14px; height: 4px; margin-right: 4px; vertical-align: middle; }
 
 /* ===== MAPA ===== */
 
 #gpsMap { flex: 1; min-height: 80px; border: 2px solid var(--border); overflow: hidden; }
-.coords { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
-.coords .k { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .06em; }
-.coords .v { font-size: 17px; font-weight: 900; }
+.coords { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.coords .k { font-size: 11px; font-weight: 900; color: var(--gray); letter-spacing: .05em; }
+.coords .v { font-size: 19px; font-weight: 950; }
 
-/* ===== INFERIOR ===== */
+/* ===== INFERIOR COMPACTO (2 PANELES) ===== */
 
 .bottom {
     min-height: 0;
     display: grid;
-    grid-template-columns: 5fr 5fr 2.5fr;
-    gap: 6px;
+    grid-template-columns: 0.8fr 1fr 1fr;
+    gap: 8px;
 }
 
-.scroll { flex: 1; min-height: 0; overflow-y: auto; font-size: 12px; }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; font-size: 13.5px; }
 
-table.t { width: 100%; border-collapse: collapse; font-size: 12px; }
-table.t th { text-align: left; font-size: 10px; letter-spacing: .06em; color: var(--muted); position: sticky; top: 0; background: var(--card); border-bottom: 2px solid var(--border); padding: 1px 4px; }
-table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); white-space: nowrap; }
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.t th { text-align: left; font-size: 11px; letter-spacing: .06em; color: var(--gray); position: sticky; top: 0; background: var(--card); border-bottom: 2px solid var(--border); padding: 2px 4px; }
+table.t td { padding: 3px 4px; border-bottom: 1px solid var(--soft-border); white-space: nowrap; }
 
-.empty { color: var(--muted); font-style: italic; padding: 4px; }
-.ev-time { font-weight: 900; width: 95px; flex-shrink: 0; display: inline-block; }
-.ev-row { padding: 3px 0; border-bottom: 1px solid var(--soft-border); display: flex; align-items: baseline; gap: 8px; }
+.empty { color: var(--muted); font-style: italic; padding: 4px; font-size: 13px; }
+.ev-time { font-weight: 950; width: 105px; flex-shrink: 0; display: inline-block; color: var(--accent); }
+.ev-row { padding: 4px 0; border-bottom: 1px solid var(--soft-border); display: flex; align-items: baseline; gap: 8px; font-weight: 700; }
 
-.al-row { padding: 3px 4px; border-bottom: 1px solid var(--soft-border); display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
-.al-badge { font-weight: 900; font-size: 10px; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.al-row { padding: 4px 6px; border-bottom: 1px solid var(--soft-border); display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; }
+.al-badge { font-weight: 950; font-size: 11px; padding: 2px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
 .al-badge.crit { background: var(--bad); color: #fff; }
 .al-badge.warn { background: var(--warn); color: #000; }
 .al-badge.info { background: #1a4fd6; color: #fff; }
 .al-badge.ok { background: var(--ok); color: #fff; }
-.al-desc { font-weight: 700; flex: 1; margin: 0 8px; }
-.al-val { font-weight: 900; font-family: monospace; font-size: 13px; }
+.al-desc { font-weight: 800; flex: 1; margin: 0 10px; }
+.al-val { font-weight: 950; font-family: monospace; font-size: 14.5px; }
 
 /* ============================================================
    RESPONSIVE DESIGN: MOBILE VIEWPORTS (SMARTPHONES)
@@ -282,14 +283,13 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
 
     <main class="dashboard">
 
-        <!-- ==================== ZONA 2: COLUMNA IZQUIERDA (25% × 72%) ==================== -->
-        <!-- Nivel 1 (Percepción Instantánea): ¿Qué está haciendo el cohete ahora mismo? -->
+        <!-- ==================== ZONA 2: COLUMNA IZQUIERDA (26% × 81%) ==================== -->
         <section class="panel">
 
-            <!-- 1. ALTITUD Y PRESIÓN -->
-            <div class="card" style="flex: 1.1 1 0;">
+            <!-- 1. ALTITUD Y VELOCIDAD -->
+            <div class="card" style="flex: 1.6 1 0;">
                 <div class="card-title">
-                    <span>ALTITUD Y PRESIÓN</span>
+                    <span>ALTITUD Y VELOCIDAD</span>
                     <span class="card-frozen-badge" id="badgeFrozenAlt">CONGELADO</span>
                 </div>
                 <div class="alt-body">
@@ -298,58 +298,40 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
                         <div>
                             <div class="lbl">ACTUAL (BARO)</div>
                             <div><span class="big num" id="altitude">---</span><span class="unit">m</span></div>
-                            <div style="font-size:11px; font-weight:800; color:var(--muted); margin-top:2px;">
-                                PRESIÓN: <span class="num" id="pressure">--- hPa</span>
+                            <div style="font-size:13px; font-weight:800; color:var(--gray); margin-top:3px;">
+                                PRESIÓN: <span class="num" style="color:var(--ink); font-weight:950;" id="pressure">--- hPa</span>
                             </div>
                         </div>
-                        <div class="row"><span class="k">MÁXIMA</span><span class="v num" id="altitudeMax">---</span></div>
-                        <div class="row"><span class="k">VARIACIÓN VERTICAL</span><span class="v num" id="altitudeVz">---</span></div>
+                        <div class="row"><span class="k">APOGEO (MÁX)</span><span class="v num" id="altitudeMax">---</span></div>
+                        <div class="row"><span class="k">VEL. VERTICAL (Vz)</span><span class="v num" id="altitudeVz">---</span></div>
 
-                        <!-- Comparador de Divergencia Baro vs GPS (Alerta Transónica Mach Dip) -->
-                        <div class="divergence-wrap" id="divergenceWrap" title="Divergencia entre altitud barométrica y GPS">
-                            <span class="divergence-title">Δ BARO-GPS</span>
-                            <span class="divergence-delta num" id="divergenceDelta">--- m</span>
+                        <!-- GPS altitude readout -->
+                        <div class="divergence-wrap" id="gpsAltWrap" title="Altitud GPS" style="padding:6px 10px;">
+                            <span class="divergence-title">GPS ALTITUD</span>
+                            <span class="divergence-delta num" id="gpsAltCard">--- m</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. EVENTOS PIROTÉCNICOS (CABINA) -->
-            <div class="card basecard" style="padding: 4px 6px;">
-                <div class="card-title" style="margin-bottom:3px;">
-                    <span>EVENTOS PIROTÉCNICOS</span>
-                    <span class="hint">CABINA</span>
-                </div>
-                <div class="annun-grid">
-                    <div class="annun-card state-idle" id="annunDrogue">
-                        <div class="annun-label">DROGUE (FRENADO)</div>
-                        <div class="annun-state" id="annunDrogueState">[0: EN ESPERA]</div>
-                    </div>
-                    <div class="annun-card state-idle" id="annunMain">
-                        <div class="annun-label">MAIN (PRINCIPAL)</div>
-                        <div class="annun-state" id="annunMainState">[0: EN ESPERA]</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. DINÁMICA INERCIAL (G-METER AXIAL & GIROSCOPIO BIPOLAR) -->
-            <div class="card" style="flex: 1.2 1 0; padding: 4px 6px;">
-                <div class="card-title" style="margin-bottom:3px;">
-                    <span>DINÁMICA INERCIAL</span>
+            <!-- 2. DINÁMICA INERCIAL (G-METER AXIAL & GIROSCOPIO BIPOLAR) -->
+            <div class="card" style="flex: 0.8 1 0; padding: 6px 8px;">
+                <div class="card-title" style="margin-bottom:4px;">
+                    <span>DINÁMICA INERCIAL (IMU)</span>
                     <span class="card-frozen-badge" id="badgeFrozenImu">CONGELADO</span>
                 </div>
 
-                <div style="display:flex; gap:8px; flex:1; min-height:0; align-items:stretch;">
+                <div style="display:flex; gap:10px; flex:1; min-height:0; align-items:stretch;">
                     <!-- G-METER AXIAL (accel_x) con marcas Dual Peak (-2g a +12g) -->
-                    <div style="display:flex; flex-direction:column; align-items:center; width:34px; flex-shrink:0;">
-                        <div style="font-size:8px; font-weight:900; color:var(--muted); margin-bottom:2px;">G-LOAD</div>
-                        <div class="gmeter-track" style="flex:1; width:22px; position:relative;" id="gmeterTrack">
+                    <div style="display:flex; flex-direction:column; align-items:center; width:42px; flex-shrink:0;">
+                        <div style="font-size:10px; font-weight:900; color:var(--gray); margin-bottom:3px;">G-LOAD</div>
+                        <div class="gmeter-track" style="flex:1; width:26px; position:relative;" id="gmeterTrack">
                             <div class="gmeter-zero" id="gmeterZero" style="bottom: 14.3%;"></div>
                             <div class="gmeter-bar" id="gmeterBar" style="height: 14.3%;"></div>
                             <div class="gmeter-peak-boost" id="gmeterPeakBoost" style="bottom: 14.3%;" title="Pico Boost"></div>
                             <div class="gmeter-peak-shock" id="gmeterPeakShock" style="bottom: 14.3%;" title="Pico Shock"></div>
                         </div>
-                        <div style="font-size:9.5px; font-weight:950; font-family:monospace; margin-top:2px;" id="gmeterVal">+0.0g</div>
+                        <div style="font-size:12.5px; font-weight:950; font-family:monospace; margin-top:3px;" id="gmeterVal">+0.0g</div>
                     </div>
 
                     <!-- TABLA AXES + BARRAS BIPOLARES GYRO -->
@@ -357,28 +339,28 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
 
                         <!-- Micro-tabla Accel XYZ con signo explícito -->
                         <div>
-                            <div style="font-size:8.5px; font-weight:900; color:var(--muted); letter-spacing:.05em; margin-bottom:2px;">ACELERACIÓN LINEAL (g)</div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px; text-align:center;">
-                                <div class="num" style="background:var(--soft); border:1px solid var(--soft-border); padding:2px; border-radius:2px;">
-                                    <div style="font-size:8px; font-weight:800; color:var(--muted)">AXIAL X</div>
-                                    <div style="font-size:11.5px; font-weight:950" id="ax">+00.00</div>
+                            <div style="font-size:10.5px; font-weight:900; color:var(--gray); letter-spacing:.05em; margin-bottom:4px;">ACELERACIÓN LINEAL (g)</div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; text-align:center;">
+                                <div class="num" style="background:var(--soft); border:1.5px solid var(--soft-border); padding:4px 2px; border-radius:3px;">
+                                    <div style="font-size:9.5px; font-weight:900; color:var(--gray)">TRANS X</div>
+                                    <div style="font-size:15.5px; font-weight:950; margin-top:1px;" id="ax">+00.00</div>
                                 </div>
-                                <div class="num" style="background:var(--soft); border:1px solid var(--soft-border); padding:2px; border-radius:2px;">
-                                    <div style="font-size:8px; font-weight:800; color:var(--muted)">TRANS Y</div>
-                                    <div style="font-size:11.5px; font-weight:950" id="ay">+00.00</div>
+                                <div class="num" style="background:var(--soft); border:1.5px solid var(--soft-border); padding:4px 2px; border-radius:3px;">
+                                    <div style="font-size:9.5px; font-weight:900; color:var(--gray)">AXIAL Y</div>
+                                    <div style="font-size:15.5px; font-weight:950; margin-top:1px;" id="ay">+00.00</div>
                                 </div>
-                                <div class="num" style="background:var(--soft); border:1px solid var(--soft-border); padding:2px; border-radius:2px;">
-                                    <div style="font-size:8px; font-weight:800; color:var(--muted)">TRANS Z</div>
-                                    <div style="font-size:11.5px; font-weight:950" id="az">+00.00</div>
+                                <div class="num" style="background:var(--soft); border:1.5px solid var(--soft-border); padding:4px 2px; border-radius:3px;">
+                                    <div style="font-size:9.5px; font-weight:900; color:var(--gray)">TRANS Z</div>
+                                    <div style="font-size:15.5px; font-weight:950; margin-top:1px;" id="az">+00.00</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Barras Bipolares Gyroscope XYZ (Centro 0, ±360°/s) -->
                         <div style="margin-top:4px;">
-                            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;">
-                                <span style="font-size:8.5px; font-weight:900; color:var(--muted); letter-spacing:.05em;">TASA DE GIRO (°/s)</span>
-                                <span style="font-size:8px; font-weight:800; color:var(--muted)">±360°/s</span>
+                            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px;">
+                                <span style="font-size:10.5px; font-weight:900; color:var(--gray); letter-spacing:.05em;">GIROSCOPIO (°/s)</span>
+                                <span style="font-size:10px; font-weight:800; color:var(--gray)">±360°/s</span>
                             </div>
 
                             <!-- Roll / Spin (X) -->
@@ -418,17 +400,16 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
 
         </section>
 
-        <!-- ==================== ZONA 3: PANEL CENTRAL (45% × 72%) ==================== -->
-        <!-- Nivel 2 (Comprensión Temporal): 3 Gráficos de Línea Apilados Sincronizados -->
+        <!-- ==================== ZONA 3: PANEL CENTRAL (44% × 81%) — 2 LARGE GRAPHS ==================== -->
         <section class="panel">
 
-            <!-- 1. GRÁFICO SUPERIOR (50% DEL ALTO): ALTITUD BARO vs GPS -->
-            <div class="card chart-card" style="flex: 2 1 0;">
+            <!-- 1. GRÁFICO SUPERIOR (55% DEL ALTO): ALTITUD BARO vs GPS -->
+            <div class="card chart-card" style="flex: 1.25 1 0;">
                 <div class="card-title">
-                    <span>ALTITUD vs TIEMPO</span>
+                    <span>ALTITUD vs TIEMPO (m)</span>
                     <span class="legend">
-                        <span><i style="background:#000; border-top:2px solid #000;"></i>BAROMÉTRICA</span>
-                        <span><i style="background:transparent; border-top:2px dashed #087a3b;"></i>GPS</span>
+                        <span><i style="background:#38bdf8; border-top:3px solid #38bdf8;"></i>BAROMÉTRICA</span>
+                        <span><i style="background:transparent; border-top:3px dashed #10b981;"></i>GPS</span>
                     </span>
                     <div class="scale-mode-pill" id="scaleSelector" title="Alternar modo de escala vertical (Trinquete / Auto / Fija)">
                         <span class="scale-mode-lbl">ESCALA:</span>
@@ -436,45 +417,35 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
                         <button type="button" class="btn-scale-opt" data-scale="auto" title="Auto-escala dinámica por ventana">AUTO</button>
                         <button type="button" class="btn-scale-opt" data-scale="fixed" title="Escala fija al apogeo planificado">FIJA</button>
                     </div>
-                    <span class="hint">ventana 60 s</span>
+                    <span class="hint">60 s</span>
                 </div>
                 <div class="chart-box"><canvas id="chAlt"></canvas></div>
             </div>
 
-            <!-- 2. GRÁFICO MEDIO (25% DEL ALTO): ACELERACIÓN AXIAL (EMPUJE / SHOCK) -->
+            <!-- 2. GRÁFICO INFERIOR: G-LOAD (aceleración axial) -->
             <div class="card chart-card" style="flex: 1 1 0;">
                 <div class="card-title">
-                    <span>ACELERACIÓN AXIAL (EMPUJE)</span>
+                    <span>G-LOAD (ACEL. AXIAL — g)</span>
                     <span class="legend">
-                        <span><i style="background:#b00020"></i>ACCEL X (AXIAL)</span>
+                        <span><i style="background:#b00020"></i>ACEL. AXIAL (g)</span>
+                        <span><i style="background:#f59e0b"></i>REF. 1 g</span>
                     </span>
-                    <span class="hint">g-load</span>
-                </div>
-                <div class="chart-box"><canvas id="chAcc"></canvas></div>
-            </div>
-
-            <!-- 3. GRÁFICO INFERIOR (25% DEL ALTO): VELOCIDAD VERTICAL DERIVADA & GROUND SPEED -->
-            <div class="card chart-card" style="flex: 1 1 0;">
-                <div class="card-title">
-                    <span>PERFIL DE VELOCIDAD</span>
-                    <span class="legend">
-                        <span><i style="background:#0056b3"></i>Vz (VERTICAL)</span>
-                        <span><i style="background:#087a3b"></i>GROUND SPEED (GPS)</span>
-                    </span>
-                    <span class="hint">m/s</span>
+                    <span class="hint">g (0 = ingravidez)</span>
                 </div>
                 <div class="chart-box"><canvas id="chVel"></canvas></div>
             </div>
 
+            <!-- Hidden canvas for backwards compatibility -->
+            <canvas id="chAcc" style="display:none;" width="10" height="10"></canvas>
+
         </section>
 
-        <!-- ==================== ZONA 4: COLUMNA DERECHA (30% × 72%) ==================== -->
-        <!-- Nivel 3 (Proyección y Rescate): ¿Hacia dónde va y dónde va a aterrizar? -->
+        <!-- ==================== ZONA 4: COLUMNA DERECHA (30% × 81%) ==================== -->
         <section class="panel">
             <div class="card grow">
                 <div class="card-title">
                     <span>POSICIÓN Y NAVEGACIÓN GPS</span>
-                    <span class="hint">RESCATE</span>
+                    <span class="hint" id="fixQuality">RESCATE</span>
                 </div>
 
                 <!-- Mapa Satelital / Vectorial con rastro y semáforo de calidad -->
@@ -486,29 +457,60 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
                 </div>
 
                 <!-- Vector Guía de Rescate desde Base -->
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--soft); border:1.5px solid var(--border); padding:3px 6px; border-radius:2px; margin-top:4px;">
-                    <span style="font-size:9px; font-weight:900; letter-spacing:0.04em;">VECTOR DESDE BASE:</span>
-                    <span class="num" style="font-size:11.5px; font-weight:950;" id="guidanceVector">--- m • ---°</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--soft); border:1.5px solid var(--border); padding:5px 10px; border-radius:3px; margin-top:6px;">
+                    <span style="font-size:11.5px; font-weight:900; color:var(--gray); letter-spacing:0.04em;">VECTOR DESDE BASE:</span>
+                    <span class="num" style="font-size:16px; font-weight:950; color:var(--accent);" id="guidanceVector">--- m • ---°</span>
                 </div>
 
-                <!-- Coordenadas Tabulares Monospace con Signo -->
-                <div class="coords" style="grid-template-columns: 1fr 1fr 0.8fr; margin-top: 4px;">
-                    <div><div class="k">LATITUD</div><div class="v num" id="lat">---</div></div>
-                    <div><div class="k">LONGITUD</div><div class="v num" id="lon">---</div></div>
-                    <div><div class="k">SATÉLITES</div><div class="v num" id="satellites">--</div></div>
+                <!-- Coordenadas Tabulares Grandes (2x2) -->
+                <div class="coords" style="grid-template-columns: 1fr 1fr; margin-top: 6px;">
+                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
+                        <div class="k">LATITUD</div>
+                        <div class="v num" id="lat">---</div>
+                    </div>
+                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
+                        <div class="k">LONGITUD</div>
+                        <div class="v num" id="lon">---</div>
+                    </div>
                 </div>
-                <div class="coords" style="grid-template-columns: 1fr 1fr 0.8fr; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--soft);">
-                    <div><div class="k">ALTITUD GPS</div><div class="v num" id="altGps">--- m</div></div>
-                    <div><div class="k">VEL. SUELO</div><div class="v num" id="groundSpeed">--- m/s</div></div>
-                    <div><div class="k">CALIDAD FIX</div><div class="v num" id="fixQuality" style="font-size:12px;">---</div></div>
+                <div class="coords" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 6px;">
+                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
+                        <div class="k">ALTITUD GPS</div>
+                        <div class="v num" style="font-size:16px;" id="altGps">--- m</div>
+                    </div>
+                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
+                        <div class="k">VEL. SUELO</div>
+                        <div class="v num" style="font-size:16px;" id="groundSpeed">--- m/s</div>
+                    </div>
+                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
+                        <div class="k">SATÉLITES</div>
+                        <div class="v num" style="font-size:16px;" id="satellites">--</div>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- ==================== ZONA 5: FRANJA INFERIOR (100% × 20%) ==================== -->
-    <!-- Toma de Decisiones y Alertas: Avisos críticos filtrados según etapa de vuelo -->
+    <!-- ==================== ZONA 5: FRANJA INFERIOR COMPACTA (2 PANELES) ==================== -->
     <footer class="bottom">
+
+        <!-- EVENTOS PIROTÉCNICOS (RECUPERACIÓN) -->
+        <div class="card basecard" style="padding: 6px 8px;">
+            <div class="card-title" style="margin-bottom:4px;">
+                <span>EVENTOS PIROTÉCNICOS</span>
+                <span class="hint">RECUPERACIÓN</span>
+            </div>
+            <div class="annun-grid">
+                <div class="annun-card state-idle" id="annunDrogue">
+                    <div class="annun-label">DROGUE (FRENADO)</div>
+                    <div class="annun-state" id="annunDrogueState">[0: EN ESPERA]</div>
+                </div>
+                <div class="annun-card state-idle" id="annunMain">
+                    <div class="annun-label">MAIN (PRINCIPAL)</div>
+                    <div class="annun-state" id="annunMainState">[0: EN ESPERA]</div>
+                </div>
+            </div>
+        </div>
 
         <div class="card">
             <div class="card-title">
@@ -526,23 +528,13 @@ table.t td { padding: 2px 4px; border-bottom: 1px solid var(--soft-border); whit
             <div class="scroll" id="alertBox"></div>
         </div>
 
-        <div class="card">
-            <div class="card-title">
-                <span>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;">
-                        <path d="M12 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
-                        <path d="M12 15V3"/>
-                        <path d="M4.93 7.93a10 10 0 0 1 14.14 0"/>
-                        <path d="M7.76 10.76a6 6 0 0 1 8.48 0"/>
-                    </svg>
-                    SALUD DEL ENLACE Y CRC16
-                </span>
-            </div>
-            <div class="row"><span class="k">TOTAL RX (POST-P0)</span><span class="v num" id="diagRxAfterP0">0</span></div>
-            <div class="row"><span class="k">ID DE TRAMA (SEQ)</span><span class="v num" id="diagSeq">---</span></div>
-            <div class="row"><span class="k">PÉRDIDA (5 s)</span><span class="v num" id="diagLoss5s">0,0 %</span></div>
-            <div class="row"><span class="k">TASA RX EFECTIVA</span><span class="v num" id="diagRate">0,0 Hz</span></div>
-            <div class="row"><span class="k">INTEGRIDAD CRC16</span><span class="v num" id="diagCrc" style="color:var(--ok)">100%</span></div>
+        <!-- Hidden compatibility DOM nodes -->
+        <div style="display:none;" aria-hidden="true">
+            <span id="diagRxAfterP0">0</span>
+            <span id="diagSeq">---</span>
+            <span id="diagLoss5s">0,0 %</span>
+            <span id="diagRate">0,0 Hz</span>
+            <span id="diagCrc">100%</span>
         </div>
 
     </footer>
@@ -858,6 +850,10 @@ function ingest(message, isHistory = false) {
         pushHist("alt", ts, alt);
 
         // Variación vertical (derivada con ventana deslizante de ~500 ms a 1 s)
+        if (state.vzHistory.length > 0 && Math.abs(alt - state.vzHistory[state.vzHistory.length - 1].alt) > 250) {
+            // Salto abrupto de reinicio del simulador: limpiar ventana de derivada
+            state.vzHistory = [];
+        }
         state.vzHistory.push({ t: now, alt });
         const vzCutoff = now - 1000;
         let cutVz = 0;
@@ -868,10 +864,13 @@ function ingest(message, isHistory = false) {
             const first = state.vzHistory[0];
             const dt = (now - first.t) / 1000;
             if (dt >= 0.2) {
-                state.vz = (alt - first.alt) / dt;
-                state.maxChartVz = Math.max(state.maxChartVz || 0, state.vz);
-                state.minChartVz = Math.min(state.minChartVz || 0, state.vz);
-                pushHist("vz", ts, state.vz);
+                const rawVz = (alt - first.alt) / dt;
+                if (Math.abs(rawVz) <= 350) {
+                    state.vz = rawVz;
+                    state.maxChartVz = Math.max(state.maxChartVz || 0, state.vz);
+                    state.minChartVz = Math.min(state.minChartVz || 0, state.vz);
+                    pushHist("vz", ts, state.vz);
+                }
             }
         }
     }
@@ -1025,10 +1024,12 @@ function niceRange(min, max, minSpan, fixedMin, fixedMax) {
 }
 
 function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, fixedMax) {
-    const { ctx, w, h } = fitCanvas($(canvasId));
+    const canvasEl = $(canvasId);
+    if (!canvasEl || canvasEl.style.display === "none") return;
+    const { ctx, w, h } = fitCanvas(canvasEl);
     ctx.clearRect(0, 0, w, h);
 
-    const left = 46, right = 8, top = 6, bottom = 16;
+    const left = 54, right = 10, top = 8, bottom = 20;
     const pw = w - left - right, ph = h - top - bottom;
     if (pw <= 0 || ph <= 0) return;
 
@@ -1052,12 +1053,12 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
     const Y = v => top + ph - (v - lo) * invRange;
 
     const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    const textCol = isDark ? "#9ba7b4" : "#333333";
+    const textCol = isDark ? "#c9d4e0" : "#222222";
     const gridCol = isDark ? "#1e2a38" : "#dddddd";
-    const zeroCol = isDark ? "#4a5c70" : "#888888";
+    const zeroCol = isDark ? "#64788f" : "#666666";
     const borderCol = isDark ? "#2d4057" : "#000000";
 
-    ctx.font = "bold 11px Arial";
+    ctx.font = "bold 12px Arial";
     ctx.fillStyle = textCol;
     ctx.strokeStyle = gridCol;
     ctx.lineWidth = 1;
@@ -1068,37 +1069,40 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
         ctx.strokeStyle = gridCol;
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + pw, y); ctx.stroke();
-        ctx.fillText((signedLabels && v > 0 ? "+" : "") + fmt(v, decimals), left - 5, y);
+        ctx.fillText((signedLabels && v > 0 ? "+" : "") + fmt(v, decimals), left - 6, y);
     }
 
-    // Línea de referencia del 0 bien visible si está dentro del marco
+    // Prominent zero reference line (double line)
     if (lo <= 0 && hi >= 0) {
         const y0 = Y(0);
-        ctx.strokeStyle = zeroCol;
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([3, 2]);
-        ctx.beginPath(); ctx.moveTo(left, y0); ctx.lineTo(left + pw, y0); ctx.stroke();
+        ctx.strokeStyle = isDark ? "#e2e8f0" : "#000000";
+        ctx.lineWidth = 2;
         ctx.setLineDash([]);
+        for (const dy of [-2.5, 2.5]) {
+            ctx.beginPath(); ctx.moveTo(left, y0 + dy); ctx.lineTo(left + pw, y0 + dy); ctx.stroke();
+        }
     }
+    ctx.strokeStyle = gridCol;
+    ctx.lineWidth = 1;
     ctx.textBaseline = "top";
     for (let s = 0; s <= 60; s += 15) {
         const x = left + (s / 60) * pw;
         ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
         ctx.textAlign = s === 0 ? "left" : (s === 60 ? "right" : "center");
-        ctx.fillText(s === 60 ? "0 s" : `−${60 - s} s`, s === 0 ? left : (s === 60 ? left + pw : x), top + ph + 2);
+        ctx.fillText(s === 60 ? "0 s" : `−${60 - s} s`, s === 0 ? left : (s === 60 ? left + pw : x), top + ph + 3);
     }
 
     ctx.save();
     ctx.beginPath(); ctx.rect(left, top, pw, ph); ctx.clip();
-    ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+    ctx.lineWidth = 2.6; ctx.lineJoin = "round";
     for (const s of series) {
         if (s.data.length < 2) continue;
         let strokeColor = s.color;
-        if (isDark && (s.color === "#000" || s.color === "#000000")) {
-            strokeColor = (s.data === state.hist.alt) ? "#38bdf8" : "#e6edf3";
+        if (isDark && (s.color === "#000" || s.color === "#000000" || s.color === "#0056b3")) {
+            strokeColor = "#38bdf8";
         }
         ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = s.lineWidth || 2.2;
+        ctx.lineWidth = s.lineWidth || 2.6;
         ctx.setLineDash(s.dash || []);
 
         ctx.beginPath();
@@ -1114,7 +1118,7 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
                     // Red dashed bridging line for dropout
                     ctx.save();
                     ctx.strokeStyle = "#ef4444";
-                    ctx.lineWidth = 1.2;
+                    ctx.lineWidth = 1.5;
                     ctx.setLineDash([3, 3]);
                     ctx.beginPath();
                     ctx.moveTo(X(prev.t), Y(prev.v));
@@ -1124,7 +1128,7 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
                     // Resume normal series line
                     ctx.beginPath();
                     ctx.strokeStyle = strokeColor;
-                    ctx.lineWidth = s.lineWidth || 2.2;
+                    ctx.lineWidth = s.lineWidth || 2.6;
                     ctx.setLineDash(s.dash || []);
                     ctx.moveTo(x, y);
                 } else {
@@ -1136,21 +1140,21 @@ function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, 
         ctx.setLineDash([]);
     }
 
-    // marcadores verticales de cambio de fase
+    // Vertical phase markers
     ctx.lineWidth = 1.5;
     ctx.setLineDash([5, 4]);
-    ctx.font = "bold 10px Arial";
+    ctx.font = "bold 11px Arial";
     ctx.textAlign = "left"; ctx.textBaseline = "top";
     for (const m of state.markers) {
         if (m.t < start || m.t > end) continue;
         const x = X(m.t);
         ctx.strokeStyle = isDark ? "#38bdf8" : "#000";
         ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
-        const tw = ctx.measureText(m.label).width + 4;
+        const tw = ctx.measureText(m.label).width + 6;
         ctx.setLineDash([]);
-        ctx.fillStyle = isDark ? "#17202d" : "#fff"; ctx.fillRect(x + 1, top + 1, tw, 12);
-        ctx.fillStyle = isDark ? "#e6edf3" : "#000";
-        ctx.fillText(m.label, x + 3, top + 2);
+        ctx.fillStyle = isDark ? "#17202d" : "#fff"; ctx.fillRect(x + 1, top + 1, tw, 15);
+        ctx.fillStyle = isDark ? "#f0f6fc" : "#000";
+        ctx.fillText(m.label, x + 4, top + 2);
         ctx.setLineDash([5, 4]);
     }
     ctx.setLineDash([]);
@@ -1169,7 +1173,6 @@ function drawTape(now) {
             state.altDisplay = state.altitude;
         } else {
             const dt = (now && lastTapeTime) ? Math.min((now - lastTapeTime) / 1000, 0.1) : 0.016;
-            // Suavizado continuo independiente de FPS (curva suave tipo PFD aeroespacial)
             const factor = 1 - Math.exp(-5.5 * dt);
             state.altDisplay += (state.altitude - state.altDisplay) * factor;
         }
@@ -1180,8 +1183,8 @@ function drawTape(now) {
 
     const isDark = document.documentElement.getAttribute("data-theme") === "dark";
     ctx.fillStyle = isDark ? "#090d14" : "#fff"; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = isDark ? "#2d4057" : "#000"; ctx.fillStyle = isDark ? "#e6edf3" : "#000";
-    ctx.font = "bold 12px Arial"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.strokeStyle = isDark ? "#2d4057" : "#000"; ctx.fillStyle = isDark ? "#f0f6fc" : "#000";
+    ctx.font = "bold 13px Arial"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
 
     const first = Math.floor((alt - CFG.tapeSpanM / 2) / 10) * 10;
     const last = Math.ceil((alt + CFG.tapeSpanM / 2) / 10) * 10;
@@ -1293,31 +1296,8 @@ function renderText() {            // ~10 Hz
         setText("pressure", `${fmt(state.pressure, 1)} hPa`);
     }
 
-    // Comparador de Divergencia Baro vs GPS (Alerta Transónica Mach Dip)
-    const divWrap = $("divergenceWrap");
-    if (divWrap) {
-        if (state.altitude !== null && state.altGps !== null) {
-            const delta = state.altitude - state.altGps;
-            setText("divergenceDelta", `${fmtSigned(delta, 1)} m`);
-            const absDelta = Math.abs(delta);
-            const isAscent = state.liftoffDetected && (state.statusText || "").toUpperCase().match(/POWERED|BURNOUT|ENCENDIDO|EMPUJE/);
-            const hasGps = Number(state.satellites || 0) >= 4;
-
-            if (isAscent && hasGps && absDelta > 60) {
-                divWrap.className = "divergence-wrap crit";
-                divWrap.title = "ALERTA CRÍTICA: Fenómeno transónico (Mach dip) detectado (>60m)";
-            } else if (isAscent && hasGps && absDelta > 30) {
-                divWrap.className = "divergence-wrap warn";
-                divWrap.title = "Aviso: Divergencia barométrica moderada (>30m)";
-            } else {
-                divWrap.className = "divergence-wrap";
-                divWrap.title = "Divergencia entre altitud barométrica y GPS";
-            }
-        } else {
-            setText("divergenceDelta", "--- m");
-            divWrap.className = "divergence-wrap";
-        }
-    }
+    // GPS altitude readout
+    setText("gpsAltCard", state.altGps !== null ? `${fmt(state.altGps, 0)} m` : "--- m");
 
     // 2. G-Meter Axial (accel_x: -2g a +12g)
     const gmeterBar = $("gmeterBar");
@@ -1679,11 +1659,14 @@ function renderCharts() {          // 10 Hz
         { data: state.hist.ax, color: "#b00020", lineWidth: 2.2 }
     ], 1, accSpan, true, accMin, accMax);
 
-    // Chart 3 (25% H): Velocidad Vertical (Vz) y Ground Speed (GPS)
+    // Chart 3 (25% H): G-LOAD (axial accel, g) with a dashed 1 g reference series
+    const oneG = state.hist.ax.length >= 2
+        ? [{ t: state.hist.ax[0].t, v: 1 }, { t: state.hist.ax[state.hist.ax.length - 1].t, v: 1 }]
+        : [];
     drawChart("chVel", [
-        { data: state.hist.vz, color: "#0056b3", lineWidth: 2.2 },
-        { data: state.hist.speed, color: "#087a3b", lineWidth: 1.8, dash: [4, 4] }
-    ], 1, velSpan, true, velMin, velMax);
+        { data: oneG, color: "#f59e0b", lineWidth: 1.6, dash: [6, 4] },
+        { data: state.hist.ax, color: "#b00020", lineWidth: 2.4 }
+    ], 1, accSpan, true, accMin, accMax);
 }
 
 /* ---------- selector de escala de gráficos ---------- */

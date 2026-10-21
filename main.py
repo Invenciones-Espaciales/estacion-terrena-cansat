@@ -1225,17 +1225,22 @@ async def status():
         "serial_port": app_config.serial.port if app_config is not None else None,
         "baudrate": app_config.serial.baudrate if app_config is not None else None,
         "statistics": statistics.snapshot() if statistics else {},
-        "station": {
-            "serial_port": app_config.serial.port if app_config is not None else None,
-            "baudrate": app_config.serial.baudrate if app_config is not None else None,
-            "connected": runtime.connected,
-            "database_active": database is not None,
-            "csv_active": csv_logger is not None,
-            "disk_free_pct": round(shutil.disk_usage(".").free / shutil.disk_usage(".").total * 100, 1),
-            "storage_db": app_config.storage.database if app_config is not None else None,
-            "storage_csv": app_config.storage.csv if app_config is not None else None,
-            "server_time": datetime.datetime.now().strftime("%H:%M:%S"),
-        },
+        "station": (
+            lambda du: {
+                "serial_port": app_config.serial.port if app_config is not None else None,
+                "baudrate": app_config.serial.baudrate if app_config is not None else None,
+                "connected": runtime.connected,
+                "database_active": database is not None,
+                "csv_active": csv_logger is not None,
+                "disk_free_pct": round(du.free / du.total * 100, 1),
+                "disk_free_mb": round(du.free / (1024 * 1024), 1),
+                "min_required_mb_1h": 50.0,
+                "disk_go_1h": (du.free / (1024 * 1024)) >= 50.0,
+                "storage_db": app_config.storage.database if app_config is not None else None,
+                "storage_csv": app_config.storage.csv if app_config is not None else None,
+                "server_time": datetime.datetime.now().strftime("%H:%M:%S"),
+            }
+        )(shutil.disk_usage(".")),
         "gonogo": (
             {
                 "required_hold_s": app_config.gonogo.required_hold_s,

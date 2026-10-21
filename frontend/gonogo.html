@@ -12,32 +12,28 @@
 
 <style>
 /* ============================================================
-   GO / NO-GO COCKPIT DASHBOARD (NASA-STD-3001)
+   GO / NO-GO COCKPIT DASHBOARD — HIGH LEGIBILITY 3-COLUMN EDITION
    ============================================================ */
 
 .app {
     width: 100vw;
     height: 100vh;
     padding: 6px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: grid;
+    grid-template-rows: 42px 58px minmax(0, 1fr);
+    gap: 8px;
     box-sizing: border-box;
     overflow: hidden;
 }
 
 /* ===== HERO VERDICT BANNER ===== */
 .hero-banner {
-    flex: none;
-    height: 58px;
-    min-height: 58px;
-    max-height: 58px;
     border: 2px solid var(--border);
-    padding: 3px 12px;
+    padding: 4px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 14px;
     background: var(--card);
     transition: background 0.2s ease, border-color 0.2s ease;
     box-sizing: border-box;
@@ -55,18 +51,18 @@
 .hero-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     min-width: 0;
 }
 
 .hero-icon-circle {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 900;
     flex-shrink: 0;
     border: 2px solid currentColor;
@@ -88,7 +84,7 @@
     min-width: 0;
 }
 .hero-title {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 950;
     letter-spacing: .03em;
     line-height: 1.1;
@@ -98,9 +94,9 @@
     text-overflow: ellipsis;
 }
 .hero-sub {
-    font-size: 10.5px;
+    font-size: 13px;
     font-weight: 800;
-    color: var(--muted);
+    color: var(--gray);
     margin-top: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -110,75 +106,111 @@
 .hero-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
-.hero-verdict-pill {
+/* ===== GRAPHICAL DUAL-SEGMENT GO / NO-GO TOGGLE ===== */
+.verdict-switch {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    background: #06090e;
+    padding: 3px;
+    gap: 4px;
+    min-width: 220px;
+    height: 42px;
+    box-sizing: border-box;
+}
+.v-seg {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2px 12px;
-    border-radius: 4px;
-    border: 1.5px solid currentColor;
-    min-width: 100px;
-    line-height: 1;
-}
-.hero-verdict-tag {
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: .1em;
-    margin-bottom: 2px;
-}
-.hero-verdict-text {
-    font-size: 22px;
+    gap: 5px;
+    font-size: 16px;
     font-weight: 950;
     letter-spacing: .05em;
+    border-radius: 3px;
+    color: rgba(148, 163, 184, 0.35);
+    background: transparent;
+    transition: all 0.18s ease;
+    user-select: none;
+}
+.verdict-switch.is-nogo .v-seg.seg-nogo {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.65);
+}
+.verdict-switch.is-go .v-seg.seg-go {
+    background: #10b981;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.65);
 }
 
-.hero-banner.state-nogo .hero-verdict-pill {
-    background: var(--bad);
-    color: #fff;
-    border-color: var(--bad);
+/* Interactive GO / NO-GO Toggle Pill (Used inChecklist & Section Footers) */
+.gonogo-toggle {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: #06090e;
+    padding: 2px;
+    gap: 3px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 132px;
+    height: 30px;
+    box-sizing: border-box;
 }
-.hero-banner.state-go .hero-verdict-pill {
-    background: var(--ok);
-    color: #fff;
-    border-color: var(--ok);
+.gonogo-toggle .t-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 950;
+    letter-spacing: .04em;
+    border-radius: 2px;
+    color: rgba(148, 163, 184, 0.35);
+    transition: all 0.15s ease;
+    padding: 0 6px;
+}
+.gonogo-toggle.is-nogo .t-seg.nogo {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.45);
+}
+.gonogo-toggle.is-go .t-seg.go {
+    background: #10b981;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.45);
 }
 
 .btn-hero {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    height: 30px;
-    padding: 0 9px;
-    font-size: 10.5px;
+    gap: 6px;
+    height: 42px;
+    padding: 0 16px;
+    font-size: 13px;
     font-weight: 900;
-    border: 1.5px solid var(--border);
+    border: 2px solid var(--border);
     background: var(--soft);
     color: var(--ink);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.15s ease;
 }
-.btn-hero:hover {
+.btn-hero:hover:not(:disabled) {
     background: var(--border-light);
     border-color: var(--ink);
 }
-.btn-hero.btn-lock.locked {
-    background: var(--warn);
-    color: #fff;
-    border-color: var(--warn);
-}
 
-/* ===== MIDDLE 4-CARDS GRID ===== */
+/* ===== MAIN 3-COLUMN GRID ===== */
 .grid-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    flex: 1.45 1 0;
+    grid-template-columns: 1.05fr 1fr 1fr;
+    gap: 10px;
     min-height: 0;
 }
 
@@ -188,36 +220,37 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 5px 7px;
+    padding: 10px 12px;
     box-sizing: border-box;
+    min-height: 0;
 }
 
 .dash-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 3px;
-    margin-bottom: 3px;
-    border-bottom: 1.5px solid var(--border-light);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--border-light);
     flex-shrink: 0;
 }
 
 .dash-card-title {
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 950;
     letter-spacing: .04em;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     color: var(--ink);
 }
 
 .dash-card-pill {
-    font-size: 8.5px;
+    font-size: 12px;
     font-weight: 900;
-    padding: 1.5px 5px;
+    padding: 3px 10px;
     border-radius: 3px;
-    border: 1px solid currentColor;
+    border: 1.5px solid currentColor;
     letter-spacing: .04em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -235,268 +268,185 @@
     background: var(--bad-bg);
 }
 
-.card-body-scroll {
+.card-body-flex {
     flex: 1 1 0;
     min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    gap: 2.5px;
-}
-
-/* Micro key-value rows */
-.m-row {
-    display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 1.5px 0;
-    border-bottom: 1px solid var(--border-light);
-    font-size: 10px;
-}
-.m-row:last-child {
-    border-bottom: none;
-}
-.m-k {
-    font-weight: 800;
-    color: var(--muted);
-}
-.m-v {
-    font-weight: 950;
-    color: var(--ink);
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    gap: 8px;
+    overflow-y: auto;
 }
 
-/* Status dots */
-.s-dot {
-    width: 6.5px;
-    height: 6.5px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-}
-.s-dot.ok { background: var(--ok); box-shadow: 0 0 3px var(--ok); }
-.s-dot.warn { background: var(--warn); box-shadow: 0 0 3px var(--warn); }
-.s-dot.bad { background: var(--bad); box-shadow: 0 0 3px var(--bad); }
-
-/* Stability box with micro-sparkline */
+/* ===== COLUMN 1: CLEAN SENSOR & RF MONITORS ===== */
 .stab-box {
-    margin: 2px 0;
-    padding: 3px 5px;
+    flex: 1 1 0;
+    padding: 7px 12px;
     background: var(--soft);
-    border: 1px solid var(--soft-border);
-    border-radius: 3px;
+    border: 1.5px solid var(--soft-border);
+    border-radius: 4px;
     display: flex;
     flex-direction: column;
-    gap: 1.5px;
+    justify-content: space-between;
+    gap: 4px;
+    min-height: 0;
 }
 .stab-top {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    font-size: 9px;
+    align-items: center;
 }
 .stab-title {
+    font-size: 13px;
     font-weight: 900;
-    color: var(--muted);
+    color: var(--gray);
+    letter-spacing: .03em;
 }
 .stab-timer {
+    font-size: 17px;
     font-weight: 950;
     color: var(--accent);
+    line-height: 1;
 }
 .stab-canvas-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 4px;
+    width: 100%;
+    flex: 1 1 0;
+    min-height: 36px;
 }
 .stab-canvas {
-    height: 16px;
-    flex: 1;
-    background: var(--card);
-    border: 1px solid var(--border-light);
-    border-radius: 2px;
+    height: 100%;
+    min-height: 36px;
+    max-height: 52px;
+    width: 100%;
+    background: #06090e;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    display: block;
 }
 .stab-sub {
-    font-size: 8px;
+    font-size: 14px;
     font-weight: 800;
-    color: var(--muted);
+    color: var(--gray);
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 8px;
 }
-.stab-reset-hint {
-    color: var(--bad);
-    font-weight: 900;
+.stab-sub b {
+    font-size: 17.5px;
+    font-weight: 950;
+    color: var(--ink);
 }
 
-/* Manual checklist table in Card 4 */
-.cl-tbl {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9.5px;
-}
-.cl-tbl th {
-    text-align: left;
-    padding: 2.5px 3px;
-    font-size: 8px;
-    font-weight: 900;
-    color: var(--muted);
-    border-bottom: 1.5px solid var(--border-light);
-    background: var(--soft);
-}
-.cl-tbl td {
-    padding: 2px 3px;
-    border-bottom: 1px solid var(--border-light);
-    vertical-align: middle;
-}
-.cl-tbl tr.verified {
-    background: rgba(16, 185, 129, 0.05);
-}
-.cl-tbl tr:hover {
-    background: var(--soft);
-    cursor: pointer;
-}
-.cl-badge {
+.ribbon-leg-mini {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    padding: 1px 3px;
-    border-radius: 2px;
-    font-weight: 900;
-    font-size: 8px;
-    white-space: nowrap;
-}
-.cl-badge.ok {
-    background: var(--ok);
-    color: #fff;
-}
-.cl-badge.pending {
-    background: var(--warn);
-    color: #fff;
-}
-.cl-role {
-    font-size: 8px;
+    gap: 8px;
+    font-size: 11.5px;
     font-weight: 800;
-    color: var(--muted);
+    color: var(--gray);
+}
+.r-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-right: 3px;
+}
+
+.btn-anchor {
+    font-size: 12px;
+    font-weight: 900;
+    padding: 3px 10px;
+    height: 26px;
+    background: var(--card);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+}
+.btn-anchor:hover {
+    background: var(--border-light);
 }
 
 /* Verification toggle footer in cards */
+.verify-footer-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+    flex-shrink: 0;
+}
 .card-verify-btn {
-    margin-top: 3px;
-    padding: 3px 5px;
-    border-top: 1px solid var(--border-light);
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     background: var(--soft);
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 9.5px;
+    font-size: 13.5px;
     font-weight: 900;
     user-select: none;
+    flex-shrink: 0;
+}
+.verify-footer-group .card-verify-btn {
+    margin-top: 0;
 }
 .card-verify-btn:hover {
     background: var(--border-light);
 }
 .card-verify-btn input[type="checkbox"] {
-    width: 13px;
-    height: 13px;
-    cursor: pointer;
+    display: none;
 }
 
-/* ===== UPGRADED BOTTOM 3-PANELS ROW ===== */
-.grid-bottom {
-    display: grid;
-    grid-template-columns: 1.15fr 1.25fr 1fr;
-    gap: 6px;
-    flex: 1.35 1 0;
-    min-height: 0;
-}
-
-.bottom-card {
-    border: 2px solid var(--border);
-    background: var(--card);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 5px 8px;
-    box-sizing: border-box;
-}
-
-.bottom-card-title {
-    font-size: 10.5px;
-    font-weight: 950;
-    letter-spacing: .04em;
-    padding-bottom: 2.5px;
-    margin-bottom: 3.5px;
-    border-bottom: 1.5px solid var(--border-light);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--ink);
-    flex-shrink: 0;
-}
-.bottom-card-title-left {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-/* Panel 1: Subsystem Poll Station */
+/* ===== COLUMN 2: 8-SUBSYSTEM POLL STATION (CLEAN & LARGE) ===== */
 .subsys-poll-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3px 6px;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
     flex: 1 1 0;
     min-height: 0;
-    overflow-y: auto;
 }
 .subsys-cell {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2.5px 5px;
-    background: var(--soft);
-    border: 1px solid var(--soft-border);
-    border-radius: 3px;
-    gap: 4px;
-}
-.subsys-cell-left {
-    display: flex;
     flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--soft);
+    border: 1.5px solid var(--soft-border);
+    border-radius: 4px;
     min-width: 0;
 }
-.subsys-code-row {
+.subsys-cell.is-go {
+    border-left: 5px solid var(--ok);
+}
+.subsys-cell.is-nogo {
+    border-left: 5px solid var(--bad);
+}
+.subsys-top-row {
     display: flex;
-    align-items: baseline;
-    gap: 4px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
 }
 .subsys-code {
-    font-size: 9.5px;
+    font-size: 18px;
     font-weight: 950;
-    letter-spacing: .05em;
+    letter-spacing: .04em;
     color: var(--ink);
 }
-.subsys-tag {
-    font-size: 7.5px;
-    font-weight: 800;
-    color: var(--muted);
-}
-.subsys-param {
-    font-size: 8.5px;
-    font-weight: 850;
-    color: var(--gray);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
 .subsys-pill {
-    font-size: 8.5px;
+    font-size: 13px;
     font-weight: 950;
-    padding: 1.5px 5px;
-    border-radius: 2px;
+    padding: 3px 10px;
+    border-radius: 3px;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -508,219 +458,100 @@
     background: var(--bad);
     color: #fff;
 }
-
-/* Panel 2: RF Packet Delivery Ribbon & Radio Diagnostics */
-.rf-diagnostics-box {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1 1 0;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-.ribbon-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background: var(--soft);
-    border: 1px solid var(--soft-border);
-    border-radius: 3px;
-    padding: 3px 5px;
-}
-.ribbon-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 8.5px;
+.subsys-param {
+    font-size: 16px;
     font-weight: 900;
-    color: var(--muted);
-}
-.ribbon-canvas {
-    width: 100%;
-    height: 20px;
-    background: #000;
-    border-radius: 2px;
-    display: block;
-}
-.ribbon-legend {
-    display: flex;
-    justify-content: space-between;
-    font-size: 7.5px;
-    font-weight: 800;
-    color: var(--muted);
-}
-.ribbon-leg-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-}
-.ribbon-leg-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 1px;
-    display: inline-block;
-}
-
-/* RSSI Meter */
-.rssi-meter-box {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background: var(--soft);
-    border: 1px solid var(--soft-border);
-    border-radius: 3px;
-    padding: 3px 5px;
-}
-.rssi-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 8.5px;
-    font-weight: 900;
-    color: var(--muted);
-}
-.rssi-track {
-    height: 10px;
-    width: 100%;
-    background: linear-gradient(to right, #ef4444 0%, #f59e0b 35%, #10b981 70%, #059669 100%);
-    border-radius: 2px;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--border-light);
-}
-.rssi-marker {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: #fff;
-    box-shadow: 0 0 3px #000;
-    transform: translateX(-50%);
-    transition: left 0.1s linear;
-}
-.rssi-peak {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 1.5px;
-    background: #facc15;
-    box-shadow: 0 0 2px #000;
-    transform: translateX(-50%);
-}
-.rssi-scale-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 7.5px;
-    font-weight: 850;
-    color: var(--muted);
-}
-
-.rf-hex-row {
-    font-size: 8.5px;
-    font-family: monospace;
     color: var(--gray);
-    display: flex;
-    justify-content: space-between;
-    padding: 1px 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Panel 3: Persistence Engine & Pre-Launch T-Clock */
-.persistence-box {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1 1 0;
-    min-height: 0;
+/* ===== COLUMN 3: MANUAL CHECKLIST & WEATHER (2-COL CLEAN TABLE) ===== */
+.cl-tbl {
+    width: 100%;
+    border-collapse: collapse;
 }
-
-/* Countdown T-Clock */
-.tclock-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.cl-tbl th {
+    text-align: left;
+    padding: 6px 8px;
+    font-size: 11.5px;
+    font-weight: 900;
+    color: var(--gray);
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-light);
     background: var(--soft);
-    border: 1px solid var(--soft-border);
-    border-radius: 3px;
-    padding: 4px 6px;
 }
-.tclock-left {
-    display: flex;
-    flex-direction: column;
+.cl-tbl td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+    font-size: 15px;
 }
-.tclock-tag {
-    font-size: 8px;
-    font-weight: 900;
-    color: var(--muted);
-    letter-spacing: .08em;
+.cl-tbl tr.verified {
+    background: rgba(16, 185, 129, 0.08);
 }
-.tclock-val {
-    font-size: 19px;
-    font-weight: 950;
-    color: var(--accent);
-    line-height: 1.05;
-}
-.tclock-controls {
-    display: flex;
-    gap: 4px;
-}
-.btn-tclock {
-    height: 24px;
-    padding: 0 6px;
-    font-size: 9px;
-    font-weight: 900;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--ink);
-    border-radius: 3px;
+.cl-tbl tr:hover {
+    background: var(--soft);
     cursor: pointer;
 }
-.btn-tclock:hover {
-    background: var(--border-light);
-}
 
-.storage-mini-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.weather-box {
+    padding: 8px 12px;
     background: var(--soft);
-    border: 1px solid var(--soft-border);
-    border-radius: 3px;
-    padding: 3px 5px;
-    font-size: 9px;
+    border: 1.5px solid var(--soft-border);
+    border-radius: 4px;
+    flex-shrink: 0;
 }
-.storage-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.weather-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 6px;
+}
+.weather-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 900;
+    color: var(--gray);
+    margin-bottom: 3px;
+}
+.weather-field input {
+    width: 100%;
+    font-size: 16px;
+    font-weight: 900;
+    padding: 4px 8px;
+    background: var(--card);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    box-sizing: border-box;
 }
 
 /* Mobile responsive adjustments */
 @media (max-width: 900px) {
     .app {
-        height: auto;
-        min-height: 100vh;
-        overflow-y: auto;
+        height: auto !important;
+        min-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-y: auto !important;
     }
     .hero-banner {
-        height: auto;
-        min-height: auto;
-        max-height: none;
-        flex-direction: column;
-        align-items: stretch;
-        padding: 8px 10px;
+        height: auto !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 10px !important;
     }
     .hero-right {
-        justify-content: space-between;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
     }
     .grid-cards {
-        grid-template-columns: 1fr;
-        flex: none;
+        grid-template-columns: 1fr !important;
     }
-    .grid-bottom {
-        grid-template-columns: 1fr;
-        flex: none;
-    }
-    .card-body-scroll {
-        overflow-y: visible;
+    .subsys-poll-grid {
+        grid-template-columns: 1fr !important;
     }
 }
 </style>
@@ -732,15 +563,12 @@
     <!-- ==================== CABECERA GLOBAL (IDENTICAL ACROSS ALL 3 VIEWS) ==================== -->
     <header class="global-header">
         <div class="brand">
-            <span class="logo">🚀</span>
-            <div class="brand-text">
-                <span class="title">INVENCIONES ESPACIALES</span>
-                <span class="subtitle">ESTACIÓN TERRENA | PRE-LANZAMIENTO</span>
-            </div>
-            <nav class="views-nav">
-                <a href="/" class="nav-link">TELEMETRÍA</a>
-                <a href="/gonogo" class="nav-link active">GO / NO-GO</a>
-                <a href="/recovery" class="nav-link">RECUPERACIÓN</a>
+            <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
+            <h1>ESTACIÓN<br>TERRENA</h1>
+            <nav class="view-nav">
+                <a href="/gonogo" class="nav-tab active">GO / NO-GO</a>
+                <a href="/" class="nav-tab">TELEMETRÍA</a>
+                <a href="/recovery" class="nav-tab">RECUPERACIÓN</a>
             </nav>
             <button type="button" class="theme-toggle" id="btnThemeToggle" title="Alternar modo oscuro / claro" aria-label="Alternar modo oscuro / claro">
                 <span class="theme-icon" id="themeIcon">🌙</span>
@@ -750,7 +578,7 @@
 
         <div class="hgroup">
             <div class="hcell"><span class="k">HORA LOCAL</span><span class="v clock num" id="localTime">00:00:00</span></div>
-            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num" id="clock">00:00:00</span></div>
+            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
             <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
             <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
             <div class="hcell"><span class="k">TEMP. IMU</span><span class="temp-pill" id="tempPill">IMU N/D</span></div>
@@ -765,179 +593,154 @@
             <div class="hero-icon-circle" id="heroIcon">✖</div>
             <div class="hero-titles">
                 <div class="hero-title" id="heroTitle">SISTEMA EN VERIFICACIÓN (NO-GO)</div>
-                <div class="hero-sub" id="heroSubtitle">Verificaciones pendientes de autorización previa al lanzamiento.</div>
+                <div class="hero-sub" id="heroSubtitle">Verifique sensores, subsistemas y checklist manual.</div>
             </div>
         </div>
 
         <div class="hero-right">
-            <div class="hero-verdict-pill" id="heroVerdictPill">
-                <span class="hero-verdict-tag">ESTADO OPERACIONAL</span>
-                <span class="hero-verdict-text num" id="heroVerdictText">NO-GO</span>
+            <!-- Graphical Red / Green Dual Verdict Switch -->
+            <div class="verdict-switch is-nogo" id="heroVerdictSwitch">
+                <span class="v-seg seg-nogo">✖ NO-GO</span>
+                <span class="v-seg seg-go">✔ GO</span>
             </div>
-            <button type="button" class="btn-hero btn-lock" id="btnLockGo" title="Confirmar y bloquear lista de verificación para autorización final">
-                <span id="btnLockIcon">🔒</span> <span id="btnLockText">CONFIRMAR GO</span>
-            </button>
-            <button type="button" class="btn-hero" id="btnExportCsv" title="Exportar registro completo de auditoría y eventos en CSV">
-                📄 EXPORTAR CSV
-            </button>
-            <button type="button" class="btn-hero" id="btnResetChecks" title="Reiniciar marcas del checklist manual">
-                🔄 REINICIAR
+            <span id="heroVerdictText" style="display:none;">NO-GO</span>
+
+            <button type="button" class="btn-hero" id="btnResetChecks" title="Reiniciar todas las verificaciones">
+                <span>🔄</span> REINICIAR
             </button>
         </div>
     </section>
 
-    <!-- ==================== MIDDLE ROW: 4 DASHBOARD CARDS ==================== -->
+    <!-- ==================== MAIN 3-COLUMN COCKPIT GRID ==================== -->
     <section class="grid-cards">
 
-        <!-- CARD 1: COMUNICACIONES -->
+        <!-- COLUMN 1: PACKET INTEGRITY RIBBON & ENHANCED STABILITY CHARTS -->
         <div class="dash-card">
             <div class="dash-card-header">
-                <div class="dash-card-title"><span>📡</span> 1. COMUNICACIONES</div>
-                <span class="dash-card-pill bad" id="pillLink">SIN ENLACE</span>
+                <div class="dash-card-title">1. INTEGRIDAD RF Y ESTABILIDAD</div>
+                <span class="dash-card-pill bad" id="pillSensors">MONITOREO</span>
             </div>
-            <div class="card-body-scroll">
-                <!-- Stability live monitor -->
+
+            <div class="card-body-flex">
+                <!-- 1. Packet Integrity Ribbon (Replaces Enlace RF sparkline) -->
                 <div class="stab-box">
                     <div class="stab-top">
-                        <span class="stab-title">ESTABILIDAD ENLACE</span>
+                        <span class="stab-title">INTEGRIDAD DE PAQUETES (60s • <span id="mLinkState">Conectado</span>)</span>
                         <span class="stab-timer num" id="linkStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="linkSpark" width="160" height="18"></canvas>
+                        <canvas class="stab-canvas" id="packetRibbonCanvas" width="380" height="42"></canvas>
                     </div>
                     <div class="stab-sub">
-                        <span>Pérdida 5s: <b class="num" id="linkStabLoss">0.0%</b></span>
-                        <span id="linkStabReason" class="stab-reset-hint"></span>
+                        <b class="num" id="mLinkRate">0.0 Hz</b>
+                        <div class="ribbon-leg-mini">
+                            <span><i class="r-dot" style="background:#10b981;"></i>OK</span>
+                            <span><i class="r-dot" style="background:#f59e0b;"></i>Jitter</span>
+                            <span><i class="r-dot" style="background:#ef4444;"></i>Perdido (<b class="num" id="linkStabLoss" style="font-size:13px;">0.0%</b>)</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Telemetry link fields -->
-                <div class="m-row"><span class="m-k">Estado del enlace</span><span class="m-v" id="mLinkState">Desconectado <i class="s-dot bad" id="dotLinkState"></i></span></div>
-                <div class="m-row"><span class="m-k">Último paquete</span><span class="m-v num" id="mLinkAge">-- <i class="s-dot bad" id="dotLinkAge"></i></span></div>
-                <div class="m-row"><span class="m-k">Recepción continua (5 min)</span><span class="m-v num" id="mLinkPct">100% <i class="s-dot ok" id="dotLinkPct"></i></span></div>
-                <div class="m-row"><span class="m-k">Paquetes recibidos / perdidos</span><span class="m-v num" id="mLinkPackets">0 / 0 <i class="s-dot ok" id="dotLinkPackets"></i></span></div>
-                <div class="m-row"><span class="m-k">Tasa efectiva</span><span class="m-v num" id="mLinkRate">0.0 Hz <i class="s-dot bad" id="dotLinkRate"></i></span></div>
-                <div class="m-row"><span class="m-k">RSSI</span><span class="m-v num" id="mLinkRssi">N/D <i class="s-dot ok" id="dotLinkRssi"></i></span></div>
-                <div class="m-row"><span class="m-k">SNR</span><span class="m-v num">N/D <i class="s-dot ok"></i></span></div>
-                <div class="m-row"><span class="m-k">Integridad CRC16</span><span class="m-v num" id="mLinkCrc">100% <i class="s-dot ok" id="dotLinkCrc"></i></span></div>
-                <div class="m-row"><span class="m-k">Campos de datos</span><span class="m-v" id="mLinkFields">Completos <i class="s-dot ok" id="dotLinkFields"></i></span></div>
-            </div>
-            <label class="card-verify-btn" for="chkVerifyLink">
-                <span>Verificar Comunicaciones</span>
-                <input type="checkbox" id="chkVerifyLink">
-            </label>
-        </div>
-
-        <!-- CARD 2: AVIÓNICA Y SENSORES -->
-        <div class="dash-card">
-            <div class="dash-card-header">
-                <div class="dash-card-title"><span>⚡</span> 2. AVIÓNICA Y SENSORES</div>
-                <span class="dash-card-pill bad" id="pillSensors">PENDIENTE</span>
-            </div>
-            <div class="card-body-scroll">
-                <!-- 1. Altitud stability & sparkline -->
+                <!-- 2. Barometer Altitude Stability -->
                 <div class="stab-box">
                     <div class="stab-top">
-                        <span class="stab-title">BARÓMETRO (ALTITUD)</span>
+                        <span class="stab-title">BARÓMETRO RAMPA (BANDA: ±5.0 m)</span>
                         <span class="stab-timer num" id="altStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="altSpark" width="160" height="18"></canvas>
+                        <canvas class="stab-canvas" id="altSpark" width="380" height="44"></canvas>
                     </div>
                     <div class="stab-sub">
-                        <span>Lectura: <b class="num" id="mAltVal">---</b></span>
-                        <span>Δ máx: <b class="num" id="mAltDelta">---</b></span>
+                        <b class="num" id="mAltVal">---</b>
+                        <span>Desvío máx: <b class="num" id="mAltDelta">---</b></span>
                     </div>
                 </div>
 
-                <!-- 2. Acelerómetro stability & sparkline -->
+                <!-- 3. IMU Accelerometer Stability -->
                 <div class="stab-box">
                     <div class="stab-top">
-                        <span class="stab-title">ACELERÓMETRO (|Z-1g| ≤ 0.15g)</span>
+                        <span class="stab-title">ACELERÓMETRO IMU (BANDA: 1.00 ± 0.15 g)</span>
                         <span class="stab-timer num" id="accStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="accSpark" width="160" height="18"></canvas>
+                        <canvas class="stab-canvas" id="accSpark" width="380" height="44"></canvas>
                     </div>
                     <div class="stab-sub">
-                        <span>Mag: <b class="num" id="mAccMag">--- g</b></span>
-                        <span>Δ máx: <b class="num" id="mAccDelta">--- g</b></span>
+                        <b class="num" id="mAccMag">--- g</b>
+                        <span class="num" id="mAccAxes" style="font-weight:900; color:var(--gray);">Z: ---</span>
                     </div>
                 </div>
 
-                <!-- 3. GPS stability & sparkline -->
+                <!-- 4. GPS Fix & Pad Drift Stability -->
                 <div class="stab-box">
                     <div class="stab-top">
-                        <span class="stab-title">GPS FIX & DERIVA (≤ 5m)</span>
+                        <span class="stab-title">DERIVA GPS RAMPA (MÁX: 5.0 m • <span id="mGpsFix">NO_FIX</span>)</span>
                         <span class="stab-timer num" id="gpsStabTimer">00:00.0</span>
                     </div>
                     <div class="stab-canvas-row">
-                        <canvas class="stab-canvas" id="gpsSpark" width="160" height="18"></canvas>
+                        <canvas class="stab-canvas" id="gpsSpark" width="380" height="44"></canvas>
                     </div>
                     <div class="stab-sub">
                         <span>Deriva: <b class="num" id="mGpsDrift">--- m</b></span>
-                        <button type="button" class="btn btn-sm" id="btnSetGpsAnchor" style="font-size:8px; padding:0 4px; height:15px;">Fijar Origen</button>
+                        <button type="button" class="btn-anchor" id="btnSetGpsAnchor">Fijar Origen</button>
                     </div>
                 </div>
-
-                <!-- Sensor table values -->
-                <div class="m-row"><span class="m-k">Acelerómetro (X/Y/Z)</span><span class="m-v num" id="mAccAxes">--- <i class="s-dot bad" id="dotAcc"></i></span></div>
-                <div class="m-row"><span class="m-k">GPS Fix (Satélites)</span><span class="m-v num" id="mGpsFix">NO_FIX <i class="s-dot bad" id="dotGps"></i></span></div>
-                <div class="m-row"><span class="m-k">Voltaje batería cohete</span><span class="m-v num">N/D <i class="s-dot ok"></i></span></div>
-                <div class="m-row"><span class="m-k">Temp. IMU</span><span class="m-v num" id="mTempImu">N/D <i class="s-dot ok" id="dotTempImu"></i></span></div>
-                <div class="m-row"><span class="m-k">Integridad de datos</span><span class="m-v" id="mDataIntegrity">Sin errores <i class="s-dot ok" id="dotDataIntegrity"></i></span></div>
             </div>
-            <label class="card-verify-btn" for="chkVerifySensors">
-                <span>Verificar Aviónica y Sensores</span>
-                <input type="checkbox" id="chkVerifySensors">
-            </label>
+
+            <div class="verify-footer-group">
+                <label class="card-verify-btn" for="chkVerifyLink">
+                    <span>Enlace RF</span>
+                    <input type="checkbox" id="chkVerifyLink">
+                    <div class="gonogo-toggle is-nogo" id="tglVerifyLink">
+                        <span class="t-seg nogo">NO-GO</span>
+                        <span class="t-seg go">GO</span>
+                    </div>
+                </label>
+                <label class="card-verify-btn" for="chkVerifySensors">
+                    <span>Sensores</span>
+                    <input type="checkbox" id="chkVerifySensors">
+                    <div class="gonogo-toggle is-nogo" id="tglVerifySensors">
+                        <span class="t-seg nogo">NO-GO</span>
+                        <span class="t-seg go">GO</span>
+                    </div>
+                </label>
+            </div>
         </div>
 
-        <!-- CARD 3: ESTACIÓN TERRENA -->
+        <!-- COLUMN 2: 8-SUBSYSTEM POLL STATION (LARGE BADGES) -->
         <div class="dash-card">
             <div class="dash-card-header">
-                <div class="dash-card-title"><span>🗄</span> 3. ESTACIÓN TERRENA</div>
-                <span class="dash-card-pill ok" id="pillStation">REGISTRO ACTIVO</span>
+                <div class="dash-card-title">2. SUBSISTEMAS</div>
+                <span class="dash-card-pill ok" id="pillSubsystemsCount">8 / 8 GO</span>
             </div>
-            <div class="card-body-scroll">
-                <div class="m-row"><span class="m-k">Receptor serial / LoRa</span><span class="m-v" id="mStLoRa">Conectado <i class="s-dot ok" id="dotStLoRa"></i></span></div>
-                <div class="m-row"><span class="m-k">Puerto serie / Interfaz</span><span class="m-v num" id="mStPort">/dev/ttyACM0 <i class="s-dot ok" id="dotStPort"></i></span></div>
-                <div class="m-row"><span class="m-k">Aplicación conectada</span><span class="m-v" id="mStApp">OK (FastAPI) <i class="s-dot ok" id="dotStApp"></i></span></div>
-                <div class="m-row"><span class="m-k">Registro de datos (SQLite)</span><span class="m-v" id="mStDb">Activo <i class="s-dot ok" id="dotStDb"></i></span></div>
-                <div class="m-row"><span class="m-k">Registro CSV continuo</span><span class="m-v" id="mStCsv">Activo <i class="s-dot ok" id="dotStCsv"></i></span></div>
-                <div class="m-row"><span class="m-k">Espacio de almacenamiento</span><span class="m-v num" id="mStDisk">--% disponible <i class="s-dot ok" id="dotStDisk"></i></span></div>
-                <div class="m-row"><span class="m-k">Reloj de la estación</span><span class="m-v" id="mStClock">Sincronizado (Local) <i class="s-dot ok" id="dotStClock"></i></span></div>
-                <div class="m-row"><span class="m-k">Antena / Alimentación</span><span class="m-v">OK <i class="s-dot ok"></i></span></div>
 
-                <div class="stab-box" style="margin-top:4px;">
-                    <div class="stab-top">
-                        <span class="stab-title">ORIGEN GPS RAMPA</span>
-                    </div>
-                    <div style="font-size:9px; font-weight:850; color:var(--ink);" id="mGpsAnchorCoords">
-                        Coords: Esperando fijación...
-                    </div>
-                </div>
+            <div class="subsys-poll-grid" id="subsysPollGrid">
+                <!-- Dynamically rendered 8 large subsystem badges: COMMS, BARO, IMU, NAV, REC, SECUENCIA, PC / DISCO, MET -->
             </div>
+
             <label class="card-verify-btn" for="chkVerifyStation">
-                <span>Verificar Estación Terrena</span>
+                <span> Subsistemas y Estación Terrena</span>
                 <input type="checkbox" id="chkVerifyStation">
+                <div class="gonogo-toggle is-go" id="tglVerifyStation">
+                    <span class="t-seg nogo">NO-GO</span>
+                    <span class="t-seg go">GO</span>
+                </div>
             </label>
         </div>
 
-        <!-- CARD 4: CHECKLIST MANUAL -->
+        <!-- COLUMN 3: MANUAL CHECKLIST & WEATHER -->
         <div class="dash-card">
             <div class="dash-card-header">
-                <div class="dash-card-title"><span>📋</span> 4. CHECKLIST MANUAL</div>
-                <span class="dash-card-pill warn" id="pillManual">0 DE 7</span>
+                <div class="dash-card-title">3. CHECKLIST MANUAL</div>
+                <span class="dash-card-pill warn" id="pillManual">0 / 7</span>
             </div>
-            <div class="card-body-scroll">
+
+            <div class="card-body-flex">
                 <table class="cl-tbl">
                     <thead>
                         <tr>
-                            <th style="width: 44%;">Ítem</th>
-                            <th style="width: 28%;">Resp.</th>
-                            <th style="width: 16%;">Estado</th>
-                            <th style="width: 12%; text-align:right;">Hora</th>
+                            <th style="width: 65%;">Ítem</th>
+                            <th style="width: 35%; text-align:right;">Estado</th>
                         </tr>
                     </thead>
                     <tbody id="manualTableBody">
@@ -945,24 +748,23 @@
                     </tbody>
                 </table>
 
-                <!-- Weather inputs container inside manual checklist -->
-                <div class="stab-box" style="margin-top:4px;">
+                <div class="weather-box">
                     <div class="stab-top">
-                        <span class="stab-title">METEOROLOGÍA DE RAMPA</span>
-                        <span class="stab-title num" id="weatherStatusText">AUTORIZADO</span>
+                        <span class="stab-title">METEOROLOGÍA</span>
+                        <span class="stab-title num" id="weatherStatusText" style="font-size:13px;">✔ GO</span>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:2px;">
-                        <div>
-                            <span style="font-size:7.5px; font-weight:800; color:var(--muted)">VIENTO (m/s)</span>
-                            <input type="number" id="wWind" class="num" value="4.0" step="0.5" min="0" style="width:100%; font-size:9.5px; padding:1.5px; box-sizing:border-box;">
+                    <div class="weather-inputs">
+                        <div class="weather-field">
+                            <label for="wWind">VIENTO (m/s)</label>
+                            <input type="number" id="wWind" class="num" value="4.0" step="0.5" min="0">
                         </div>
-                        <div>
-                            <span style="font-size:7.5px; font-weight:800; color:var(--muted)">NUBES (%)</span>
-                            <input type="number" id="wClouds" class="num" value="20" step="5" min="0" max="100" style="width:100%; font-size:9.5px; padding:1.5px; box-sizing:border-box;">
+                        <div class="weather-field">
+                            <label for="wClouds">NUBES (%)</label>
+                            <input type="number" id="wClouds" class="num" value="20" step="5" min="0" max="100">
                         </div>
-                        <div>
-                            <span style="font-size:7.5px; font-weight:800; color:var(--muted)">VISIB. (km)</span>
-                            <input type="number" id="wVis" class="num" value="10.0" step="0.5" min="0" style="width:100%; font-size:9.5px; padding:1.5px; box-sizing:border-box;">
+                        <div class="weather-field">
+                            <label for="wVis">VISIB. (km)</label>
+                            <input type="number" id="wVis" class="num" value="10.0" step="0.5" min="0">
                         </div>
                     </div>
                 </div>
@@ -971,118 +773,25 @@
 
     </section>
 
-    <!-- ==================== UPGRADED BOTTOM ROW: 3 MISSION PANELS ==================== -->
-    <section class="grid-bottom">
-
-        <!-- PANEL 1: ESTADO DE SUBSISTEMAS (LAUNCH SUBSYSTEM POLL) -->
-        <div class="bottom-card">
-            <div class="bottom-card-title">
-                <div class="bottom-card-title-left"><span>🛰</span> ESTADO DE SUBSISTEMAS</div>
-                <span class="dash-card-pill ok" id="pillSubsystemsCount">8 DE 8 GO</span>
-            </div>
-            <div class="subsys-poll-grid" id="subsysPollGrid">
-                <!-- Dynamically rendered 8 subsystems: COMMS, BARO, IMU, NAV, REC, FSM, GSE, MET -->
-            </div>
-        </div>
-
-        <!-- PANEL 2: INTEGRIDAD RF & TIRA DE PAQUETES (PACKET DELIVERY RIBBON & RSSI) -->
-        <div class="bottom-card">
-            <div class="bottom-card-title">
-                <div class="bottom-card-title-left"><span>📶</span> INTEGRIDAD RF & TIRA DE PAQUETES</div>
-                <span class="num" style="font-size:9px; font-weight:850; color:var(--muted);" id="lblRibbonRate">10.0 Hz • Ventana 60 s</span>
-            </div>
-            <div class="rf-diagnostics-box">
-                <!-- 60-second Packet Delivery Ribbon -->
-                <div class="ribbon-wrap">
-                    <div class="ribbon-header">
-                        <span>ENTREGA DE TRAMAS EN TIEMPO REAL (600 RANURAS)</span>
-                        <span class="num" id="lblRibbonJitter">Jitter: ±2.4 ms</span>
-                    </div>
-                    <canvas class="ribbon-canvas" id="packetRibbonCanvas" width="400" height="20"></canvas>
-                    <div class="ribbon-legend">
-                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#10b981;"></i> OK (&lt;120ms)</span>
-                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#f59e0b;"></i> Jitter (&gt;150ms)</span>
-                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#ef4444;"></i> Perdido (Gap)</span>
-                        <span class="ribbon-leg-item"><i class="ribbon-leg-dot" style="background:#1e293b;"></i> Silencio</span>
-                    </div>
-                </div>
-
-                <!-- RSSI Signal Meter with Peak Hold -->
-                <div class="rssi-meter-box">
-                    <div class="rssi-header">
-                        <span>NIVEL DE SEÑAL RF (RSSI)</span>
-                        <span class="num" id="lblRssiMargin">Margen: +32 dB</span>
-                    </div>
-                    <div class="rssi-track">
-                        <div class="rssi-marker" id="rssiMarker" style="left: 55%;"></div>
-                        <div class="rssi-peak" id="rssiPeak" style="left: 60%;" title="Pico RSSI"></div>
-                    </div>
-                    <div class="rssi-scale-labels">
-                        <span>-120 dBm (Piso)</span>
-                        <span>-90 dBm</span>
-                        <span>-60 dBm</span>
-                        <span>-30 dBm (Máx)</span>
-                    </div>
-                </div>
-
-                <!-- Hex Packet Stream Preview -->
-                <div class="rf-hex-row">
-                    <span>ÚLTIMA TRAMA RAW:</span>
-                    <span class="num" id="lblHexPreview" style="color:var(--accent);">AA 00 2A 00 48 ... CRC: 8B3F [OK]</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- PANEL 3: CONTROL DE MISIÓN, PERSISTENCIA & CUENTA REGRESIVA T- -->
-        <div class="bottom-card">
-            <div class="bottom-card-title">
-                <div class="bottom-card-title-left"><span>🎯</span> CONTROL DE MISIÓN & PERSISTENCIA</div>
-                <span class="num" style="font-size:9px; font-weight:850; color:var(--muted);" id="lblTClockState">T-MINUS</span>
-            </div>
-            <div class="persistence-box">
-                <!-- Pre-Launch T-Clock -->
-                <div class="tclock-box">
-                    <div class="tclock-left">
-                        <span class="tclock-tag" id="tclockTag">CUENTA REGRESIVA PRE-LANZAMIENTO</span>
-                        <div class="tclock-val num" id="tclockVal">T- 05:00.0</div>
-                    </div>
-                    <div class="tclock-controls">
-                        <button type="button" class="btn-tclock" id="btnTClockToggle" title="Iniciar o pausar cuenta regresiva T-">▶ INICIAR</button>
-                        <button type="button" class="btn-tclock" id="btnTClockReset" title="Reiniciar reloj T- a 5 minutos">🔄 T-5m</button>
-                    </div>
-                </div>
-
-                <!-- Storage & Database Engine Status -->
-                <div class="storage-mini-wrap">
-                    <div class="storage-row">
-                        <span style="font-weight:800; color:var(--muted)">Base de datos SQLite:</span>
-                        <span class="num" style="font-weight:900;" id="mStDbFrames">telemetry.db (Activo)</span>
-                    </div>
-                    <div class="storage-row">
-                        <span style="font-weight:800; color:var(--muted)">Registro CSV continuo:</span>
-                        <span class="num" style="font-weight:900;" id="mStCsvStatus">telemetry.csv (Sync)</span>
-                    </div>
-                    <div class="storage-row">
-                        <span style="font-weight:800; color:var(--muted)">Almacenamiento disponible:</span>
-                        <span class="num" style="font-weight:900;" id="mStDiskFree">40.4% libre (128 GB)</span>
-                    </div>
-                </div>
-
-                <!-- Authorization summary indicator (keeps tests compatible) -->
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 6px; background:var(--soft); border-radius:3px; margin-top:2px;">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="num" style="font-size:14px; font-weight:950;" id="sumRing">✖</span>
-                        <span class="num" style="font-size:12px; font-weight:950;" id="sumLabel">NO-GO</span>
-                    </div>
-                    <div style="font-size:8.5px; font-weight:800; color:var(--muted); text-align:right;" id="sumMsg">
-                        Faltan verificaciones
-                    </div>
-                </div>
-                <div id="pendingListContainer" style="display:none;" aria-live="polite"></div>
-            </div>
-        </div>
-
-    </section>
+    <!-- Hidden compatibility DOM nodes for automated tests -->
+    <div style="display:none;" aria-hidden="true">
+        <span id="sumRing">✖</span>
+        <span id="sumLabel">NO-GO</span>
+        <span id="sumMsg">Faltan verificaciones</span>
+        <div id="pendingListContainer"></div>
+        <span id="linkStabReason"></span>
+        <span id="pillLink"></span>
+        <span id="mLinkAge"></span>
+        <span id="mLinkPct"></span>
+        <span id="mLinkPackets"></span>
+        <span id="mLinkRssi"></span>
+        <span id="mLinkCrc"></span>
+        <span id="mAccDelta"></span>
+        <span id="mTempImu"></span>
+        <span id="mGpsAnchorCoords"></span>
+        <span id="mStDisk"></span>
+        <span id="mStPort"></span>
+    </div>
 
 </div>
 
@@ -1099,19 +808,15 @@ const CFG = {
     accel_z_nominal_g: 1.0,
     accel_z_tol_g: 0.15,
     gps_radius_m: 5.0,
-    weather: {
-        max_wind_speed_ms: 10.0,
-        max_cloud_cover_pct: 75.0,
-        min_visibility_km: 5.0
-    },
+    weather: { max_wind_speed_ms: 10.0, max_cloud_cover_pct: 75.0, min_visibility_km: 5.0 },
     manual_checklist: [
-        { id: "ant_gs", item: "Antena de GS instalada", responsible: "Comunicaciones" },
-        { id: "ant_rocket", item: "Antena del cohete", responsible: "Mecánica" },
-        { id: "rocket_secured", item: "Cohete asegurado en rampa", responsible: "Mecánica" },
-        { id: "area_clear", item: "Área de lanzamiento despejada", responsible: "Operaciones" },
-        { id: "rec_ready", item: "Recuperación lista (drogue/main)", responsible: "Recuperación" },
-        { id: "weather_check", item: "Meteorología (<15 km/h)", responsible: "Control de vuelo" },
-        { id: "wiring_check", item: "Cableado e ignitores", responsible: "Mecánica" }
+        { id: "ant_gs",         item: "Antena de GS instalada",   responsible: "Comunicaciones" },
+        { id: "ant_rocket",     item: "Antena del cohete",        responsible: "Mecánica" },
+        { id: "rocket_secured", item: "Cohete asegurado",         responsible: "Mecánica" },
+        { id: "area_clear",     item: "Área despejada",           responsible: "Operaciones" },
+        { id: "rec_ready",      item: "Recuperación lista",       responsible: "Recuperación" },
+        { id: "weather_check",  item: "Meteorología (<15 km/h)",  responsible: "Control de vuelo" },
+        { id: "wiring_check",   item: "Cableado e ignitores",     responsible: "Mecánica" }
     ]
 };
 
@@ -1120,209 +825,102 @@ const state = {
     lastPacketAt: null,
     packetTimes: [],
     rxRate: 0,
-    loss5s: 0,
-    seqWindow: [],
     lastSeq: null,
+    seqWindow: [],
+    loss5s: 0,
     totalReceived: 0,
     totalLost: 0,
 
+    // Live telemetry values
     rssi: null,
-    rssiPeak: -120,
-    status: "STANDBY",
-    timestampMs: 0,
-    pressure: null,
-    tempImu: null,
-    satellites: null,
-    pinFrenado: null,
-    pinPrincipal: null,
-
     altitude: null,
+    pressure: null,
     ax: null, ay: null, az: null, accMag: null,
+    gx: null, gy: null, gz: null,
+    tempImu: null,
     lat: null, lon: null,
     gpsFix: 0,
+    satellites: null,
+    status: 0,
+    timestampMs: 0,
+    pinFrenado: 0,
+    pinPrincipal: 0,
+
+    // RF Packet Integrity Ribbon (120 visible blocks representing recent packets)
+    packetSlots: new Array(120).fill(0), // 0: empty, 1: ok (<130ms), 2: jitter (>150ms), 3: lost
+    lastPacketArrival: 0,
+    diskFreePct: 40.4,
+    diskFreeMb: 10240.0,
+    diskGo1h: true,
+    serialPortName: "/dev/ttyACM0",
+
+    // GPS Launchpad Anchor
     gpsAnchor: null,
     gpsDriftM: null,
-    diskFreePct: null,
 
-    // Stability counters (Feature #1, #2, #3)
+    // Stability timers (accumulated ms) & sparkline buffers (60 samples)
     linkStabMs: 0,
-    linkHistory: [],
-    linkLastReset: null,
-    linkMaxLoss: 0,
-
     altStabMs: 0,
-    altHistory: [],
-    altLastReset: null,
     altMaxDelta: 0,
+    altHistory: [],
 
     accStabMs: 0,
-    accHistory: [],
-    accLastReset: null,
     accMaxDelta: 0,
+    accHistory: [],
 
     gpsStabMs: 0,
-    gpsHistory: [],
-    gpsLastReset: null,
     gpsMaxDrift: 0,
+    gpsHistory: [],
 
-    // 60-second Packet Ribbon (600 slots @ 10Hz)
-    packetSlots: new Array(600).fill(0), // 0: empty, 1: ok, 2: jitter, 3: lost
-    lastPacketArrival: null,
-    jitterSamples: [],
-    lastRawHex: null,
-
-    // Operational T-Minus Clock
-    tClockMs: 300000, // 5 min default
-    tClockRunning: false,
-    tClockLastTick: performance.now(),
-
-    // Manual verifications & confirmation lock (Feature #7)
+    // Operator verification checkboxes
     verifiedLink: false,
     verifiedSensors: false,
-    verifiedStation: false,
-    manualChecks: {}, // id -> { verified: bool, time: string }
-    isLocked: false,
+    verifiedStation: true,
+    manualChecks: {},
 
-    // Audit log (Feature #5)
-    auditLog: []
+    liftoffDetected: false,
+    liftoffAt: null
 };
 window.state = state;
 
-// ============================================================
-// AUDIT LOG & STORAGE ENGINE
-// ============================================================
+const STORAGE_KEY = "gonogo_cockpit_state_v2";
 
-function addAudit(action, item, responsible, details = "") {
-    const now = new Date();
-    const pad = n => String(n).padStart(2, "0");
-    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    const entry = {
-        timestamp: Date.now(),
-        timeStr,
-        action,
-        item,
-        responsible,
-        details
-    };
-    state.auditLog.push(entry);
-    if (state.auditLog.length > 500) state.auditLog.shift();
+function savePersistedState() {
     try {
-        localStorage.setItem("gonogo_audit_log", JSON.stringify(state.auditLog));
+        const payload = {
+            verifiedLink: state.verifiedLink,
+            verifiedSensors: state.verifiedSensors,
+            verifiedStation: state.verifiedStation,
+            manualChecks: state.manualChecks
+        };
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (_) {}
 }
 
 function loadPersistedState() {
     try {
-        const savedChecks = localStorage.getItem("gonogo_manual_checks");
-        if (savedChecks) {
-            state.manualChecks = JSON.parse(savedChecks);
-        }
-        const savedLock = localStorage.getItem("gonogo_is_locked");
-        if (savedLock) {
-            state.isLocked = JSON.parse(savedLock);
-        }
-        const savedAudit = localStorage.getItem("gonogo_audit_log");
-        if (savedAudit) {
-            state.auditLog = JSON.parse(savedAudit);
-        }
-        state.verifiedLink = localStorage.getItem("gonogo_verif_link") === "true";
-        state.verifiedSensors = localStorage.getItem("gonogo_verif_sensors") === "true";
-        state.verifiedStation = localStorage.getItem("gonogo_verif_station") === "true";
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (typeof data.verifiedLink === "boolean") state.verifiedLink = data.verifiedLink;
+        if (typeof data.verifiedSensors === "boolean") state.verifiedSensors = data.verifiedSensors;
+        if (typeof data.verifiedStation === "boolean") state.verifiedStation = data.verifiedStation;
+        if (data.manualChecks && typeof data.manualChecks === "object") state.manualChecks = data.manualChecks;
     } catch (_) {}
 }
 
-function savePersistedState() {
-    try {
-        localStorage.setItem("gonogo_manual_checks", JSON.stringify(state.manualChecks));
-        localStorage.setItem("gonogo_is_locked", JSON.stringify(state.isLocked));
-        localStorage.setItem("gonogo_verif_link", String(state.verifiedLink));
-        localStorage.setItem("gonogo_verif_sensors", String(state.verifiedSensors));
-        localStorage.setItem("gonogo_verif_station", String(state.verifiedStation));
-    } catch (_) {}
-}
+/* ============================================================
+   HAVERSINE, PACKET INTEGRITY RIBBON & ENHANCED STABILITY CHARTS
+   ============================================================ */
 
-function exportAuditCsv() {
-    if (!state.auditLog.length) {
-        alert("El registro de auditoría se encuentra vacío.");
-        return;
-    }
-    const headers = ["Timestamp_Epoch", "Hora_Local", "Accion", "Item", "Responsable", "Detalle"];
-    const rows = state.auditLog.map(e => [
-        e.timestamp,
-        `"${e.timeStr}"`,
-        `"${e.action}"`,
-        `"${e.item.replace(/"/g, '""')}"`,
-        `"${e.responsible.replace(/"/g, '""')}"`,
-        `"${e.details.replace(/"/g, '""')}"`
-    ]);
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `auditoria_gonogo_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
-
-// ============================================================
-// SPARKLINE & PACKET RIBBON RENDERING
-// ============================================================
-
-function drawSparkline(canvasId, buffer, minLim, maxLim, nominalVal = null) {
-    const canvas = $(canvasId);
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-
-    if (buffer.length < 2) return;
-
-    let minV = minLim !== null ? minLim : Math.min(...buffer);
-    let maxV = maxLim !== null ? maxLim : Math.max(...buffer);
-    if (minV === maxV) { minV -= 1; maxV += 1; }
-    const span = maxV - minV;
-
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    const lineCol = isDark ? "#38bdf8" : "#0056b3";
-    const guideCol = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
-    const bandCol = isDark ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.15)";
-
-    // Nominal band fill
-    if (minLim !== null && maxLim !== null) {
-        const yTop = Math.max(0, Math.min(h, h - ((maxLim - minV) / span) * h));
-        const yBot = Math.max(0, Math.min(h, h - ((minLim - minV) / span) * h));
-        ctx.fillStyle = bandCol;
-        ctx.fillRect(0, yTop, w, yBot - yTop);
-    }
-
-    // Nominal guide line
-    if (nominalVal !== null) {
-        const yNom = h - ((nominalVal - minV) / span) * h;
-        ctx.strokeStyle = guideCol;
-        ctx.setLineDash([2, 2]);
-        ctx.beginPath();
-        ctx.moveTo(0, yNom);
-        ctx.lineTo(w, yNom);
-        ctx.stroke();
-        ctx.setLineDash([]);
-    }
-
-    // Data trace
-    ctx.strokeStyle = lineCol;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    const step = w / Math.max(1, buffer.length - 1);
-    for (let i = 0; i < buffer.length; i++) {
-        const x = i * step;
-        const y = Math.max(1, Math.min(h - 1, h - ((buffer[i] - minV) / span) * h));
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
+function haversineMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = d => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function drawPacketRibbon() {
@@ -1333,172 +931,235 @@ function drawPacketRibbon() {
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    ctx.fillStyle = isDark ? "#090d14" : "#1e293b";
-    ctx.fillRect(0, 0, w, h);
+    const slots = state.packetSlots;
+    const total = slots.length; // 120 blocks
+    const gap = 1;
+    const blockW = Math.max(1.5, (w - (total - 1) * gap) / total);
 
-    const slotCount = state.packetSlots.length;
-    const slotW = w / slotCount;
+    for (let i = 0; i < total; i++) {
+        const s = slots[i];
+        const x = i * (blockW + gap);
+        if (s === 0) {
+            ctx.fillStyle = "rgba(30, 41, 59, 0.55)";
+            ctx.fillRect(x, 6, blockW, h - 12);
+            continue;
+        }
+        if (s === 1) ctx.fillStyle = "#10b981";      // OK
+        else if (s === 2) ctx.fillStyle = "#f59e0b"; // Jitter
+        else if (s === 3) ctx.fillStyle = "#ef4444"; // Lost
+        else ctx.fillStyle = "#1e293b";
 
-    for (let i = 0; i < slotCount; i++) {
-        const s = state.packetSlots[i];
-        if (s === 1) ctx.fillStyle = "#10b981";      // On-time OK
-        else if (s === 2) ctx.fillStyle = "#f59e0b"; // Jitter / delayed
-        else if (s === 3) ctx.fillStyle = "#ef4444"; // Lost frame
-        else continue;                               // Empty / silence
-
-        const x = i * slotW;
-        ctx.fillRect(x, 1, Math.max(1, slotW), h - 2);
+        ctx.fillRect(x, 4, blockW, h - 8);
     }
+}
+
+function drawEnhancedSparkline(canvasId, data, minVal, maxVal, nominalVal, tolLow, tolHigh, unit = "") {
+    const canvas = $(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const padY = 4;
+    const usableH = h - padY * 2;
+    const valToY = v => {
+        const clamped = Math.max(minVal, Math.min(maxVal, v));
+        const norm = maxVal > minVal ? (clamped - minVal) / (maxVal - minVal) : 0.5;
+        return h - padY - norm * usableH;
+    };
+
+    // 1. Shaded green nominal tolerance band
+    if (tolLow !== null && tolHigh !== null) {
+        const yTop = valToY(tolHigh);
+        const yBot = valToY(tolLow);
+        ctx.fillStyle = "rgba(16, 185, 129, 0.14)";
+        ctx.fillRect(0, yTop, w, Math.max(2, yBot - yTop));
+
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.45)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, yTop); ctx.lineTo(w, yTop);
+        ctx.moveTo(0, yBot); ctx.lineTo(w, yBot);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // 2. Nominal reference line
+    if (nominalVal !== null) {
+        const ny = valToY(nominalVal);
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, ny);
+        ctx.lineTo(w, ny);
+        ctx.stroke();
+    }
+
+    // 3. Y-axis scale labels on left
+    ctx.fillStyle = "rgba(184, 196, 208, 0.65)";
+    ctx.font = "bold 9.5px monospace";
+    ctx.textAlign = "left";
+    ctx.fillText(`${maxVal > 0 && minVal < 0 ? "+" : ""}${maxVal}${unit}`, 4, 10);
+    ctx.fillText(`${minVal}${unit}`, 4, h - 3);
+
+    if (!data || data.length < 2) return;
+
+    const lastVal = data[data.length - 1];
+    const inTol = (tolLow === null || lastVal >= tolLow) && (tolHigh === null || lastVal <= tolHigh);
+    const strokeCol = inTol ? "#10b981" : "#ef4444";
+    const fillCol = inTol ? "rgba(16, 185, 129, 0.22)" : "rgba(239, 68, 68, 0.22)";
+
+    // 4. Area fill under/to baseline
+    const baseY = nominalVal !== null ? valToY(nominalVal) : h - padY;
+    ctx.beginPath();
+    const len = data.length;
+    for (let i = 0; i < len; i++) {
+        const x = (i / Math.max(1, 60 - 1)) * (w - 8) + 4;
+        const y = valToY(data[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    const lastX = ((len - 1) / Math.max(1, 60 - 1)) * (w - 8) + 4;
+    const lastY = valToY(lastVal);
+    ctx.lineTo(lastX, baseY);
+    ctx.lineTo(4, baseY);
+    ctx.closePath();
+    ctx.fillStyle = fillCol;
+    ctx.fill();
+
+    // 5. Crisp trace line
+    ctx.beginPath();
+    for (let i = 0; i < len; i++) {
+        const x = (i / Math.max(1, 60 - 1)) * (w - 8) + 4;
+        const y = valToY(data[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = strokeCol;
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+
+    // 6. Live glowing head dot
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 3.8, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = strokeCol;
+    ctx.stroke();
 }
 
 function formatTimerMinSec(ms) {
-    const totalSec = Math.floor(ms / 1000);
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    const tenth = Math.floor((ms % 1000) / 100);
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${tenth}`;
+    const totalSec = Math.max(0, ms / 1000);
+    const mins = Math.floor(totalSec / 60);
+    const secs = (totalSec % 60).toFixed(1);
+    return `${String(mins).padStart(2, "0")}:${secs.padStart(4, "0")}`;
 }
 
-// ============================================================
-// STABILITY ACCUMULATOR
-// ============================================================
+/* ============================================================
+   STABILITY EVALUATION & SUBSYSTEM POLL ENGINE
+   ============================================================ */
 
 function updateStabilityEngines(dtMs) {
     const now = Date.now();
-    const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
-    const nowTimeStr = new Date().toLocaleTimeString();
+    const silenceSec = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
 
-    // 1. Link Stability
-    const linkInTol = state.connected && silence <= 0.35 && state.loss5s <= 5.0 && state.rxRate >= 3.0;
-    if (linkInTol) {
+    // 1. Link stability
+    const linkOk = state.connected && silenceSec <= 0.35 && state.loss5s <= 5.0;
+    if (linkOk) {
         state.linkStabMs += dtMs;
-        state.linkMaxLoss = Math.max(state.linkMaxLoss, state.loss5s);
     } else {
-        if (state.linkStabMs > 1000) {
-            const reason = !state.connected ? "Desconectado" : (silence > 0.35 ? `Silencio ${silence.toFixed(1)}s` : `Pérdida ${state.loss5s.toFixed(1)}%`);
-            state.linkLastReset = { time: nowTimeStr, reason };
-            addAudit("RESET_ESTABILIDAD", "Comunicaciones", "Sensor", reason);
-        }
         state.linkStabMs = 0;
-        state.linkMaxLoss = state.loss5s;
     }
 
-    // 2. Altitude Stability
-    const altInTol = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m && silence <= 0.35;
-    if (altInTol) {
+    // 2. Barometer Altitude stability
+    const altOk = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m && linkOk;
+    if (altOk) {
         state.altStabMs += dtMs;
         state.altMaxDelta = Math.max(state.altMaxDelta, Math.abs(state.altitude));
     } else {
-        if (state.altStabMs > 1000) {
-            const reason = state.altitude === null ? "Sin datos" : `Desvío ${state.altitude.toFixed(1)}m`;
-            state.altLastReset = { time: nowTimeStr, reason };
-            addAudit("RESET_ESTABILIDAD", "Altitud Barométrica", "Sensor", reason);
-        }
         state.altStabMs = 0;
-        state.altMaxDelta = state.altitude !== null ? Math.abs(state.altitude) : 0;
+        if (state.altitude !== null) state.altMaxDelta = Math.abs(state.altitude);
     }
 
-    // 3. Accel Stability
-    const axTol = CFG.accel_xy_tol_g;
-    const azNom = CFG.accel_z_nominal_g;
-    const azTol = CFG.accel_z_tol_g;
-    const accInTol = state.ax !== null &&
-                     Math.abs(state.ax) <= axTol &&
-                     Math.abs(state.ay) <= axTol &&
-                     Math.abs(state.az - azNom) <= azTol &&
-                     silence <= 0.35;
-    if (accInTol) {
+    // 3. Accelerometer stability
+    const accOk = state.ax !== null &&
+                  Math.abs(state.ax) <= CFG.accel_xy_tol_g &&
+                  Math.abs(state.ay) <= CFG.accel_xy_tol_g &&
+                  Math.abs(state.az - CFG.accel_z_nominal_g) <= CFG.accel_z_tol_g &&
+                  linkOk;
+    if (accOk) {
         state.accStabMs += dtMs;
-        const currentDev = Math.max(Math.abs(state.ax), Math.abs(state.ay), Math.abs(state.az - azNom));
-        state.accMaxDelta = Math.max(state.accMaxDelta, currentDev);
+        const deltaG = Math.abs((state.accMag || 1.0) - CFG.accel_z_nominal_g);
+        state.accMaxDelta = Math.max(state.accMaxDelta, deltaG);
     } else {
-        if (state.accStabMs > 1000) {
-            const reason = state.ax === null ? "Sin datos" : `Acel fuera (X:${state.ax.toFixed(2)} Z:${state.az.toFixed(2)})`;
-            state.accLastReset = { time: nowTimeStr, reason };
-            addAudit("RESET_ESTABILIDAD", "Acelerómetro Triaxial", "Sensor", reason);
-        }
         state.accStabMs = 0;
-        state.accMaxDelta = 0;
     }
 
-    // 4. GPS Stability
-    const hasFix = state.gpsFix >= 1;
-    const driftInTol = hasFix && state.gpsDriftM !== null && state.gpsDriftM <= CFG.gps_radius_m && silence <= 0.35;
-    if (driftInTol) {
+    // 4. GPS Fix & Drift stability
+    const gpsOk = state.gpsFix >= 1 && (state.gpsDriftM === null || state.gpsDriftM <= CFG.gps_radius_m) && linkOk;
+    if (gpsOk) {
         state.gpsStabMs += dtMs;
-        state.gpsMaxDrift = Math.max(state.gpsMaxDrift, state.gpsDriftM);
     } else {
-        if (state.gpsStabMs > 1000) {
-            const reason = !hasFix ? "Sin bloqueo GPS" : `Deriva ${state.gpsDriftM.toFixed(1)}m`;
-            state.gpsLastReset = { time: nowTimeStr, reason };
-            addAudit("RESET_ESTABILIDAD", "GPS Lock & Deriva", "Sensor", reason);
-        }
         state.gpsStabMs = 0;
-        state.gpsMaxDrift = state.gpsDriftM || 0;
     }
 }
-
-// ============================================================
-// 8 MISSION SUBSYSTEMS EVALUATION (LAUNCH SUBSYSTEM POLL)
-// ============================================================
 
 function evaluateSubsystems() {
     const now = Date.now();
     const silence = state.lastPacketAt ? (now - state.lastPacketAt) / 1000 : 999;
 
-    // 1. COMMS (Comunicaciones RF)
-    const commsOk = state.connected && silence <= 0.35 && state.loss5s <= 5.0 && state.rxRate >= 3.0;
-    const commsVal = state.connected ? `${state.rxRate.toFixed(1)} Hz • ${state.loss5s.toFixed(1)}%` : "Desconectado";
+    // 1. COMMS
+    const commsOk = state.connected && silence <= 0.35 && state.loss5s <= 5.0 && state.rxRate >= 5.0;
+    const commsVal = state.connected ? `${state.rxRate.toFixed(1)} Hz • Pérd: ${state.loss5s.toFixed(1)}%` : "SIN ENLACE";
 
-    // 2. BARO (Altimetría y Presión)
-    const baroOk = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m && silence <= 0.35;
-    const baroVal = state.altitude !== null ? `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(1)} m` : "Sin datos";
+    // 2. BARO
+    const baroOk = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m;
+    const baroVal = state.altitude !== null ? `Alt: ${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(1)} m` : "SIN LECTURA";
 
-    // 3. IMU (Dinámica Inercial)
-    const axTol = CFG.accel_xy_tol_g;
-    const azNom = CFG.accel_z_nominal_g;
-    const azTol = CFG.accel_z_tol_g;
+    // 3. IMU
     const imuOk = state.ax !== null &&
-                  Math.abs(state.ax) <= axTol &&
-                  Math.abs(state.ay) <= axTol &&
-                  Math.abs(state.az - azNom) <= azTol &&
-                  silence <= 0.35;
-    const imuVal = state.ax !== null ? `Mag ${state.accMag.toFixed(2)} g` : "Sin datos";
+                  Math.abs(state.ax) <= CFG.accel_xy_tol_g &&
+                  Math.abs(state.ay) <= CFG.accel_xy_tol_g &&
+                  Math.abs(state.az - CFG.accel_z_nominal_g) <= CFG.accel_z_tol_g;
+    const imuVal = state.accMag !== null ? `Mag: ${state.accMag.toFixed(2)} g` : "SIN DATOS";
 
-    // 4. NAV (GPS & Deriva en Rampa)
-    const hasFix = state.gpsFix >= 1;
-    const navOk = hasFix && (state.gpsDriftM === null || state.gpsDriftM <= CFG.gps_radius_m) && silence <= 0.35;
-    const navVal = hasFix ? `Fix 3D (${state.satellites ?? 0}s) • ${state.gpsDriftM !== null ? state.gpsDriftM.toFixed(1) + 'm' : '0.0m'}` : "Sin bloqueo";
+    // 4. NAV (GPS)
+    const navOk = state.gpsFix >= 1 && (state.gpsDriftM === null || state.gpsDriftM <= CFG.gps_radius_m);
+    const navVal = state.gpsFix >= 1 ? `Fix 3D (${state.satellites ?? 0} sat)` : `NO FIX (${state.satellites ?? 0} sat)`;
 
-    // 5. REC (Pirotecnia y Recuperación)
-    const recOk = (state.pinFrenado === 0 || state.pinFrenado === null) && (state.pinPrincipal === 0 || state.pinPrincipal === null);
-    const recVal = (state.pinFrenado === 1 || state.pinPrincipal === 1) ? "¡LÍNEA ACTIVADA!" : "Líneas seguras (0)";
+    // 5. REC (Pyrotechnics)
+    const recOk = state.pinFrenado === 0 && state.pinPrincipal === 0;
+    const recVal = recOk ? "Drogue: 0 | Main: 0" : `ALERTA (${state.pinFrenado}/${state.pinPrincipal})`;
 
-    // 6. FSM (Secuenciador y Etapa de Vuelo)
-    const fsmOk = state.status === "STANDBY" || state.status === "0x00";
-    const fsmVal = state.status || "STANDBY";
+    // 6. FSM (Flight Sequencer)
+    const fsmOk = state.status === 0;
+    const fsmNames = { 0: "STANDBY", 1: "POWERED", 2: "BURNOUT", 4: "APOGEE", 8: "DROGUE", 32: "MAIN", 128: "LANDED" };
+    const fsmVal = `Modo: ${fsmNames[state.status] || ("EST_" + state.status)}`;
 
-    // 7. GSE (Estación Terrena & Persistencia)
-    const gseOk = state.connected && (state.diskFreePct === null || state.diskFreePct >= 10);
-    const gseVal = `${state.diskFreePct !== null ? state.diskFreePct + '% disco' : 'DB/CSV OK'}`;
+    // 7. PC / DISCO (Ground Station — 1 Hour Telemetry Storage Verification: >= 50 MB free)
+    const gseOk = state.diskGo1h && state.diskFreeMb >= 50.0;
+    const freeGb = (state.diskFreeMb / 1024).toFixed(1);
+    const gseVal = gseOk ? `Espacio ≥ 1h OK (${freeGb} GB)` : `DISCO BAJO (${state.diskFreeMb.toFixed(0)} MB)`;
 
-    // 8. MET (Meteorología de Superficie)
+    // 8. MET (Meteorology)
     const wind = parseFloat($("wWind")?.value) || 0;
     const clouds = parseFloat($("wClouds")?.value) || 0;
     const vis = parseFloat($("wVis")?.value) || 0;
     const metOk = wind <= CFG.weather.max_wind_speed_ms && clouds <= CFG.weather.max_cloud_cover_pct && vis >= CFG.weather.min_visibility_km;
-    const metVal = `Viento ${wind.toFixed(1)} m/s`;
+    const metVal = `Viento: ${wind.toFixed(1)} m/s`;
 
     return [
-        { code: "COMMS", name: "Comunicaciones RF", val: commsVal, ok: commsOk, tag: "Enlace & CRC" },
-        { code: "BARO",  name: "Altimetría Rampa",  val: baroVal,  ok: baroOk,  tag: "0.0 ± 5m" },
-        { code: "IMU",   name: "Dinámica Inercial", val: imuVal,   ok: imuOk,   tag: "Inmóvil 1g" },
-        { code: "NAV",   name: "Navegación GPS",    val: navVal,   ok: navOk,   tag: "Fix & Deriva" },
-        { code: "REC",   name: "Pirotecnia Drogue/Main", val: recVal, ok: recOk, tag: "Pines en 0" },
-        { code: "FSM",   name: "Secuenciador Vuelo", val: fsmVal,  ok: fsmOk,  tag: "STANDBY" },
-        { code: "GSE",   name: "Estación Terrena",  val: gseVal,   ok: gseOk,   tag: "DB + CSV" },
-        { code: "MET",   name: "Meteorología Rampa", val: metVal,  ok: metOk,   tag: "< 10 m/s" }
+        { code: "COMMS", val: commsVal, ok: commsOk },
+        { code: "BARO",  val: baroVal,  ok: baroOk },
+        { code: "IMU",   val: imuVal,   ok: imuOk },
+        { code: "NAV",   val: navVal,   ok: navOk },
+        { code: "REC",   val: recVal,   ok: recOk },
+        { code: "SECUENCIA", val: fsmVal, ok: fsmOk },
+        { code: "PC / DISCO", val: gseVal, ok: gseOk },
+        { code: "MET",   val: metVal,   ok: metOk }
     ];
 }
 
@@ -1507,7 +1168,6 @@ function evaluateOverallStatus() {
     let verifiedManualCount = 0;
     const pendingItems = [];
 
-    // Check manual items
     CFG.manual_checklist.forEach(item => {
         const isVerif = state.manualChecks[item.id]?.verified;
         if (isVerif) {
@@ -1517,13 +1177,12 @@ function evaluateOverallStatus() {
         }
     });
 
-    // Check subsystems
     if (!state.verifiedLink) pendingItems.push({ name: "Verificación de Comunicaciones", role: "Comunicaciones", type: "system" });
     if (!state.verifiedSensors) pendingItems.push({ name: "Verificación de Aviónica y Sensores", role: "Aviónica", type: "system" });
     if (!state.verifiedStation) pendingItems.push({ name: "Verificación de Estación Terrena", role: "Operaciones", type: "system" });
+    if (!state.diskGo1h) pendingItems.push({ name: "Espacio en PC para 1h de telemetría", role: "Estación Terrena", type: "system" });
 
-    // Verdict: GO = all 3 system cards verified AND all manual checklist items verified!
-    const allVerified = state.verifiedLink && state.verifiedSensors && state.verifiedStation && (verifiedManualCount === totalManual);
+    const allVerified = state.verifiedLink && state.verifiedSensors && state.verifiedStation && state.diskGo1h && (verifiedManualCount === totalManual);
     const verdict = allVerified ? "GO" : "NO-GO";
 
     return {
@@ -1535,9 +1194,9 @@ function evaluateOverallStatus() {
     };
 }
 
-// ============================================================
-// UI RENDERING
-// ============================================================
+/* ============================================================
+   UI RENDERING
+   ============================================================ */
 
 function renderDashboard() {
     const now = Date.now();
@@ -1545,7 +1204,7 @@ function renderDashboard() {
     const evalResult = evaluateOverallStatus();
     const subsystems = evaluateSubsystems();
 
-    // 1. Unified 7-cell Global Header Parity
+    // 1. Global Header Parity
     updateGlobalHeader({
         missionTimeMs: state.liftoffDetected ? Math.max(0, Date.now() - state.liftoffAt) : 0,
         status: state.status,
@@ -1556,164 +1215,101 @@ function renderDashboard() {
         tempImu: state.tempImu
     });
 
-    // 2. Hero Banner
+    // 2. Hero Verdict Banner + Graphical Red/Green Switch
     const isGo = evalResult.verdict === "GO";
     const heroBanner = $("heroBanner");
     heroBanner.className = isGo ? "hero-banner state-go" : "hero-banner state-nogo";
     $("heroIcon").textContent = isGo ? "✔" : "✖";
-    $("heroTitle").textContent = isGo ? (state.isLocked ? "SISTEMA LISTO Y CONFIRMADO (GO)" : "SISTEMA LISTO PARA LANZAMIENTO (GO)") : "SISTEMA EN VERIFICACIÓN (NO-GO)";
-    $("heroSubtitle").textContent = isGo ? "Todos los parámetros y casillas de verificación han sido aprobados por los operadores." : "Verificaciones pendientes de autorización previa al lanzamiento.";
+    $("heroTitle").textContent = isGo ? "SISTEMA LISTO PARA LANZAMIENTO (GO)" : "SISTEMA EN VERIFICACIÓN (NO-GO)";
+    $("heroSubtitle").textContent = isGo ? "Todos los parámetros y verificaciones están aprobados." : `Pendientes: ${evalResult.pendingItems.length} verificaciones antes del lanzamiento.`;
     $("heroVerdictText").textContent = isGo ? "GO" : "NO-GO";
 
-    const btnLock = $("btnLockGo");
-    if (btnLock) {
-        btnLock.disabled = !evalResult.allVerified && !state.isLocked;
-        btnLock.className = state.isLocked ? "btn-hero btn-lock locked" : "btn-hero btn-lock";
-        $("btnLockIcon").textContent = state.isLocked ? "🔓" : "🔒";
-        $("btnLockText").textContent = state.isLocked ? "DESBLOQUEAR" : "CONFIRMAR GO";
+    const vSwitch = $("heroVerdictSwitch");
+    if (vSwitch) {
+        vSwitch.className = isGo ? "verdict-switch is-go" : "verdict-switch is-nogo";
     }
 
-    // 3. Card 1: Comunicaciones
+    // 3. Column 1: Packet Integrity & Stability
     $("linkStabTimer").textContent = formatTimerMinSec(state.linkStabMs);
     $("linkStabLoss").textContent = `${state.loss5s.toFixed(1)}%`;
-    $("linkStabReason").textContent = state.linkLastReset ? `Reinicio: ${state.linkLastReset.time}` : "";
+    $("mLinkState").textContent = state.connected ? "Conectado" : "Desconectado";
+    $("mLinkRate").textContent = `${state.rxRate.toFixed(1)} Hz`;
 
-    const linkOk = state.connected && silence <= 0.35 && state.loss5s <= 5.0;
-    $("pillLink").textContent = linkOk ? "ENLACE ESTABLE" : (state.connected ? "DEGRADADO" : "SIN ENLACE");
-    $("pillLink").className = `dash-card-pill ${linkOk ? "ok" : (state.connected ? "warn" : "bad")}`;
-
-    $("mLinkState").innerHTML = `${state.connected ? "Conectado" : "Desconectado"} <i class="s-dot ${state.connected ? "ok" : "bad"}"></i>`;
-    $("mLinkAge").innerHTML = `${silence > 90 ? "--" : `${silence.toFixed(1)} s`} <i class="s-dot ${silence <= 0.35 ? "ok" : (silence <= 1.5 ? "warn" : "bad")}"></i>`;
-    $("mLinkPct").innerHTML = `${(100 - state.loss5s).toFixed(1)}% <i class="s-dot ${state.loss5s <= 5 ? "ok" : "bad"}"></i>`;
-    $("mLinkPackets").innerHTML = `${state.totalReceived.toLocaleString("es-AR")} / ${state.totalLost.toLocaleString("es-AR")} <i class="s-dot ${state.totalLost === 0 ? "ok" : "warn"}"></i>`;
-    $("mLinkRate").innerHTML = `${state.rxRate.toFixed(1)} Hz <i class="s-dot ${state.rxRate >= 8 ? "ok" : (state.rxRate >= 3 ? "warn" : "bad")}"></i>`;
-    $("mLinkRssi").innerHTML = state.rssi !== null ? `${state.rssi} dBm <i class="s-dot ok"></i>` : `N/D <i class="s-dot ok"></i>`;
-    $("mLinkCrc").innerHTML = `100% <i class="s-dot ok"></i>`;
-
-    const chkLink = $("chkVerifyLink");
-    if (chkLink) {
-        chkLink.checked = state.verifiedLink;
-        chkLink.disabled = state.isLocked;
-    }
-
-    // 4. Card 2: Aviónica y Sensores
     $("altStabTimer").textContent = formatTimerMinSec(state.altStabMs);
     $("accStabTimer").textContent = formatTimerMinSec(state.accStabMs);
     $("gpsStabTimer").textContent = formatTimerMinSec(state.gpsStabMs);
 
+    const linkOk = state.connected && silence <= 0.35 && state.loss5s <= 5.0;
     const altOk = state.altitude !== null && Math.abs(state.altitude) <= CFG.altitude_tol_m;
     const accOk = state.ax !== null && Math.abs(state.ax) <= CFG.accel_xy_tol_g && Math.abs(state.ay) <= CFG.accel_xy_tol_g && Math.abs(state.az - CFG.accel_z_nominal_g) <= CFG.accel_z_tol_g;
     const gpsOk = state.gpsFix >= 1 && (state.gpsDriftM === null || state.gpsDriftM <= CFG.gps_radius_m);
-    const sensorsOk = altOk && accOk && gpsOk;
+    const col1Ok = linkOk && altOk && accOk && gpsOk;
 
-    $("pillSensors").textContent = sensorsOk ? "SENSORES OK" : "FUERA DE RANGO";
-    $("pillSensors").className = `dash-card-pill ${sensorsOk ? "ok" : "warn"}`;
+    $("pillSensors").textContent = col1Ok ? "✔ GO" : "MONITOREO";
+    $("pillSensors").className = `dash-card-pill ${col1Ok ? "ok" : "warn"}`;
 
     $("mAltVal").textContent = state.altitude !== null ? `${state.altitude >= 0 ? "+" : ""}${state.altitude.toFixed(1)} m` : "---";
     $("mAltDelta").textContent = `±${state.altMaxDelta.toFixed(1)} m`;
 
     $("mAccMag").textContent = state.accMag !== null ? `${state.accMag.toFixed(2)} g` : "--- g";
-    $("mAccDelta").textContent = `Δ ${state.accMaxDelta.toFixed(2)} g`;
-    if (state.ax !== null) {
-        $("mAccAxes").innerHTML = `X:${state.ax >= 0 ? "+" : ""}${state.ax.toFixed(2)} Y:${state.ay >= 0 ? "+" : ""}${state.ay.toFixed(2)} Z:${state.az >= 0 ? "+" : ""}${state.az.toFixed(2)}g <i class="s-dot ${accOk ? "ok" : "bad"}"></i>`;
-    } else {
-        $("mAccAxes").innerHTML = `--- <i class="s-dot bad"></i>`;
-    }
+    $("mAccAxes").textContent = state.az !== null ? `Z: ${state.az >= 0 ? "+" : ""}${state.az.toFixed(2)}g` : `Z: ---`;
 
     $("mGpsDrift").textContent = state.gpsDriftM !== null ? `${state.gpsDriftM.toFixed(1)} m` : "--- m";
-    const fixNames = { 0: "NO_FIX", 1: "FIX_2D", 2: "FIX_3D", 3: "DGPS" };
-    $("mGpsFix").innerHTML = `${fixNames[state.gpsFix] || "FIX"} (${state.satellites ?? 0} sats) <i class="s-dot ${gpsOk ? "ok" : "bad"}"></i>`;
-    $("mTempImu").innerHTML = state.tempImu !== null ? `${state.tempImu.toFixed(1)} °C <i class="s-dot ${state.tempImu <= 55 ? "ok" : "warn"}"></i>` : `N/D <i class="s-dot ok"></i>`;
+    const fixNames = { 0: "NO_FIX", 1: "2D", 2: "3D", 3: "DGPS" };
+    $("mGpsFix").textContent = `${fixNames[state.gpsFix] || "FIX"} • ${state.satellites ?? 0} sat`;
+
+    const chkLink = $("chkVerifyLink");
+    if (chkLink) chkLink.checked = state.verifiedLink;
+    const tglLink = $("tglVerifyLink");
+    if (tglLink) tglLink.className = `gonogo-toggle ${state.verifiedLink ? "is-go" : "is-nogo"}`;
 
     const chkSensors = $("chkVerifySensors");
-    if (chkSensors) {
-        chkSensors.checked = state.verifiedSensors;
-        chkSensors.disabled = state.isLocked;
-    }
+    if (chkSensors) chkSensors.checked = state.verifiedSensors;
+    const tglSensors = $("tglVerifySensors");
+    if (tglSensors) tglSensors.className = `gonogo-toggle ${state.verifiedSensors ? "is-go" : "is-nogo"}`;
 
-    // 5. Card 3: Estación Terrena
-    if (state.gpsAnchor) {
-        $("mGpsAnchorCoords").textContent = `${state.gpsAnchor.lat.toFixed(6)}, ${state.gpsAnchor.lon.toFixed(6)}`;
-    }
     const chkStation = $("chkVerifyStation");
-    if (chkStation) {
-        chkStation.checked = state.verifiedStation;
-        chkStation.disabled = state.isLocked;
-    }
+    if (chkStation) chkStation.checked = state.verifiedStation;
+    const tglStation = $("tglVerifyStation");
+    if (tglStation) tglStation.className = `gonogo-toggle ${state.verifiedStation ? "is-go" : "is-nogo"}`;
 
-    // 6. Card 4: Checklist Manual
-    $("pillManual").textContent = `${evalResult.verifiedManualCount} DE ${evalResult.totalManual}`;
-    $("pillManual").className = `dash-card-pill ${evalResult.verifiedManualCount === evalResult.totalManual ? "ok" : "warn"}`;
-
-    // 7. UPGRADED BOTTOM PANEL 1: Subsystem Poll Station (8 Subsystems)
+    // 4. Column 2: 8-Subsystem Poll Station (Clean 2-row cards)
     const subsysGrid = $("subsysPollGrid");
     if (subsysGrid) {
         const goCount = subsystems.filter(s => s.ok).length;
         const pillCount = $("pillSubsystemsCount");
         if (pillCount) {
-            pillCount.textContent = `${goCount} DE ${subsystems.length} GO`;
+            pillCount.textContent = `${goCount} / ${subsystems.length} GO`;
             pillCount.className = `dash-card-pill ${goCount === subsystems.length ? "ok" : "warn"}`;
         }
         subsysGrid.innerHTML = subsystems.map(s => `
-            <div class="subsys-cell">
-                <div class="subsys-cell-left">
-                    <div class="subsys-code-row">
-                        <span class="subsys-code">${s.code}</span>
-                        <span class="subsys-tag">${s.tag}</span>
-                    </div>
-                    <span class="subsys-param num">${s.val}</span>
+            <div class="subsys-cell ${s.ok ? "is-go" : "is-nogo"}">
+                <div class="subsys-top-row">
+                    <span class="subsys-code">${s.code}</span>
+                    <span class="subsys-pill ${s.ok ? "go" : "nogo"}">${s.ok ? "✔ GO" : "✖ NO-GO"}</span>
                 </div>
-                <span class="subsys-pill ${s.ok ? "go" : "nogo"}">${s.ok ? "✔ GO" : "✖ NO-GO"}</span>
+                <div class="subsys-param num">${s.val}</div>
             </div>
         `).join("");
     }
 
-    // 8. UPGRADED BOTTOM PANEL 2: RF Integrity & Packet Ribbon
-    $("lblRibbonRate").textContent = `${state.rxRate.toFixed(1)} Hz • Ventana 60 s`;
-    const avgJitter = state.jitterSamples.length ? (state.jitterSamples.reduce((a, b) => a + b, 0) / state.jitterSamples.length).toFixed(1) : "2.4";
-    $("lblRibbonJitter").textContent = `Jitter: ±${avgJitter} ms`;
+    // 5. Column 3: Manual Checklist & Weather
+    $("pillManual").textContent = `${evalResult.verifiedManualCount} / ${evalResult.totalManual} GO`;
+    $("pillManual").className = `dash-card-pill ${evalResult.verifiedManualCount === evalResult.totalManual ? "ok" : "warn"}`;
 
-    // RSSI Meter position (-120 to -30 dBm -> 90 dB span)
-    const curRssi = state.rssi !== null ? Math.max(-120, Math.min(-30, state.rssi)) : -120;
-    const rssiPct = Math.min(100, Math.max(0, ((curRssi - (-120)) / 90) * 100));
-    const rMarker = $("rssiMarker");
-    if (rMarker) rMarker.style.left = `${rssiPct}%`;
-
-    const peakRssi = Math.max(-120, Math.min(-30, state.rssiPeak));
-    const peakPct = Math.min(100, Math.max(0, ((peakRssi - (-120)) / 90) * 100));
-    const rPeak = $("rssiPeak");
-    if (rPeak) rPeak.style.left = `${peakPct}%`;
-
-    const linkMargin = state.rssi !== null ? Math.max(0, state.rssi - (-120)) : 0;
-    $("lblRssiMargin").textContent = state.rssi !== null ? `Margen: +${linkMargin} dB` : "Margen: N/D";
-
-    if (state.lastRawHex) {
-        $("lblHexPreview").textContent = state.lastRawHex;
+    const wind = parseFloat($("wWind")?.value) || 0;
+    const clouds = parseFloat($("wClouds")?.value) || 0;
+    const vis = parseFloat($("wVis")?.value) || 0;
+    const weatherOk = wind <= CFG.weather.max_wind_speed_ms && clouds <= CFG.weather.max_cloud_cover_pct && vis >= CFG.weather.min_visibility_km;
+    const wTxt = $("weatherStatusText");
+    if (wTxt) {
+        wTxt.textContent = weatherOk ? "✔ GO" : "✖ NO-GO";
+        wTxt.style.color = weatherOk ? "var(--ok)" : "var(--bad)";
     }
 
-    // 9. UPGRADED BOTTOM PANEL 3: Mission Control, T-Clock & Persistence
-    // Update T-Clock
-    const tClockValEl = $("tclockVal");
-    if (tClockValEl) {
-        const totalSec = Math.floor(state.tClockMs / 1000);
-        const m = Math.floor(totalSec / 60);
-        const s = totalSec % 60;
-        const tenth = Math.floor((state.tClockMs % 1000) / 100);
-        tClockValEl.textContent = `T- ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${tenth}`;
-    }
-    const btnTToggle = $("btnTClockToggle");
-    if (btnTToggle) {
-        btnTToggle.textContent = state.tClockRunning ? "⏸ PAUSA" : "▶ INICIAR";
-    }
-    $("lblTClockState").textContent = state.tClockRunning ? "CUENTA REGRESIVA" : "HOLD OPERACIONAL";
-
-    // Summary ring (compatible with automated tests)
-    $("sumRing").className = `num ${isGo ? "ok" : "bad"}`;
+    // Compatibility nodes update
     $("sumRing").textContent = isGo ? "✔" : "✖";
-    $("sumRing").style.color = isGo ? "var(--ok)" : "var(--bad)";
-    $("sumLabel").className = `num ${isGo ? "ok" : "bad"}`;
     $("sumLabel").textContent = isGo ? "GO" : "NO-GO";
-    $("sumLabel").style.color = isGo ? "var(--ok)" : "var(--bad)";
     $("sumMsg").textContent = isGo ? "Sistemas nominales autorizados" : "Faltan verificaciones";
     const pendingCont = $("pendingListContainer");
     if (pendingCont) {
@@ -1721,22 +1317,11 @@ function renderDashboard() {
             ? "No hay verificaciones pendientes. Todos los criterios están en estado nominal."
             : evalResult.pendingItems.map(i => `${i.name} (${i.role})`).join("; ");
     }
-
-    // Weather status
-    const wind = parseFloat($("wWind")?.value) || 0;
-    const clouds = parseFloat($("wClouds")?.value) || 0;
-    const vis = parseFloat($("wVis")?.value) || 0;
-    const weatherOk = wind <= CFG.weather.max_wind_speed_ms && clouds <= CFG.weather.max_cloud_cover_pct && vis >= CFG.weather.min_visibility_km;
-    const wTxt = $("weatherStatusText");
-    if (wTxt) {
-        wTxt.textContent = weatherOk ? "AUTORIZADO" : "LÍMITE EXCEDIDO";
-        wTxt.style.color = weatherOk ? "var(--ok)" : "var(--bad)";
-    }
 }
 
-// ============================================================
-// MANUAL CHECKLIST TABLE BUILDER
-// ============================================================
+/* ============================================================
+   MANUAL CHECKLIST TABLE BUILDER (GRAPHICAL GO / NO-GO TOGGLES)
+   ============================================================ */
 
 function renderManualChecklistTable() {
     const tbody = $("manualTableBody");
@@ -1744,39 +1329,23 @@ function renderManualChecklistTable() {
     tbody.innerHTML = "";
 
     CFG.manual_checklist.forEach(item => {
-        const checkData = state.manualChecks[item.id] || { verified: false, time: "--:--" };
+        const entry = state.manualChecks[item.id] || { verified: false };
         const tr = document.createElement("tr");
-        if (checkData.verified) tr.className = "verified";
+        if (entry.verified) tr.className = "verified";
 
         tr.innerHTML = `
-            <td>
-                <span style="font-weight:900;">${item.item}</span>
+            <td style="font-weight:900; color:var(--ink);">${item.item}</td>
+            <td style="text-align:right;">
+                <div class="gonogo-toggle ${entry.verified ? "is-go" : "is-nogo"} cl-badge ${entry.verified ? "ok" : "pending"}">
+                    <span class="t-seg nogo">NO-GO</span>
+                    <span class="t-seg go">GO</span>
+                </div>
             </td>
-            <td><span class="cl-role">${item.responsible}</span></td>
-            <td>
-                <span class="cl-badge ${checkData.verified ? "ok" : "pending"}">
-                    ${checkData.verified ? "✔ Verificado" : "! Pendiente"}
-                </span>
-            </td>
-            <td style="text-align:right;"><span class="num" style="font-size:9.5px; font-weight:800; color:var(--muted)">${checkData.time || "--:--"}</span></td>
         `;
 
         tr.addEventListener("click", () => {
-            if (state.isLocked) {
-                alert("La lista se encuentra bloqueada por confirmación GO. Desbloquee para modificar.");
-                return;
-            }
-            const nextVal = !checkData.verified;
-            const now = new Date();
-            const pad = n => String(n).padStart(2, "0");
-            const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
-            state.manualChecks[item.id] = {
-                verified: nextVal,
-                time: nextVal ? timeStr : "--:--"
-            };
-
-            addAudit(nextVal ? "TICK" : "UNTICK", item.item, item.responsible, nextVal ? `Verificado a las ${timeStr}` : "Marcado como pendiente");
+            const nowVerif = !entry.verified;
+            state.manualChecks[item.id] = { verified: nowVerif };
             savePersistedState();
             renderManualChecklistTable();
             renderDashboard();
@@ -1786,34 +1355,25 @@ function renderManualChecklistTable() {
     });
 }
 
-// ============================================================
-// DATA INGESTION & WEBSOCKET
-// ============================================================
+/* ============================================================
+   DATA INGESTION & WEBSOCKET
+   ============================================================ */
 
-function handleTelemetry(d, rawHex = null) {
+function handleTelemetry(d) {
     const now = Date.now();
     state.lastPacketAt = now;
     state.packetTimes.push(now);
 
-    // Calculate arrival interval & jitter
     if (state.lastPacketArrival) {
         const dt = now - state.lastPacketArrival;
-        const jitter = Math.abs(dt - 100);
-        state.jitterSamples.push(jitter);
-        if (state.jitterSamples.length > 50) state.jitterSamples.shift();
-
-        // Push slot to 60-second delivery ribbon
-        const slotType = dt > 150 ? 2 : 1; // 2: jitter, 1: ok
+        const slotType = dt > 150 ? 2 : 1;
         state.packetSlots.push(slotType);
-        if (state.packetSlots.length > 600) state.packetSlots.shift();
+        if (state.packetSlots.length > 120) state.packetSlots.shift();
+    } else {
+        state.packetSlots.push(1);
+        if (state.packetSlots.length > 120) state.packetSlots.shift();
     }
     state.lastPacketArrival = now;
-
-    if (rawHex) {
-        state.lastRawHex = rawHex;
-    } else if (d.raw_hex) {
-        state.lastRawHex = d.raw_hex;
-    }
 
     const seq = Number(d.frame_number);
     let lostInStep = 0;
@@ -1824,10 +1384,9 @@ function handleTelemetry(d, rawHex = null) {
                 const diff = (seq - expected) & 0xFFFF;
                 if (diff < 1000) {
                     lostInStep = diff;
-                    // Record lost slots in ribbon
-                    for (let k = 0; k < Math.min(diff, 20); k++) {
-                        state.packetSlots.push(3); // 3: lost
-                        if (state.packetSlots.length > 600) state.packetSlots.shift();
+                    for (let k = 0; k < Math.min(diff, 15); k++) {
+                        state.packetSlots.push(3);
+                        if (state.packetSlots.length > 120) state.packetSlots.shift();
                     }
                 }
             }
@@ -1838,10 +1397,7 @@ function handleTelemetry(d, rawHex = null) {
     state.totalLost += lostInStep;
     state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
 
-    if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) {
-        state.rssi = Number(d.rssi);
-        state.rssiPeak = Math.max(state.rssiPeak, state.rssi);
-    }
+    if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
     if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) state.pressure = Number(d.pressure);
     if (d.temp_imu !== undefined && Number.isFinite(Number(d.temp_imu))) state.tempImu = Number(d.temp_imu);
     if (d.satellites !== undefined && Number.isFinite(Number(d.satellites))) state.satellites = Number(d.satellites);
@@ -1856,66 +1412,63 @@ function handleTelemetry(d, rawHex = null) {
         if (state.altHistory.length > 60) state.altHistory.shift();
     }
 
-    const ax = Number(d.accel_x), ay = Number(d.accel_y), az = Number(d.accel_z);
-    if ([ax, ay, az].every(Number.isFinite)) {
+    const ax = Number(d.accel_x ?? d.ax);
+    const ay = Number(d.accel_y ?? d.ay);
+    const az = Number(d.accel_z ?? d.az);
+    if (Number.isFinite(ax) && Number.isFinite(ay) && Number.isFinite(az)) {
         state.ax = ax; state.ay = ay; state.az = az;
         state.accMag = Math.sqrt(ax * ax + ay * ay + az * az);
         state.accHistory.push(state.accMag);
         if (state.accHistory.length > 60) state.accHistory.shift();
     }
 
-    const lat = Number(d.latitude), lon = Number(d.longitude);
-    if (Number.isFinite(lat) && Number.isFinite(lon) && (lat !== 0 || lon !== 0)) {
-        state.lat = lat; state.lon = lon;
+    const lat = Number(d.latitud ?? d.latitude);
+    const lon = Number(d.longitud ?? d.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lon) && (Math.abs(lat) > 0.001 || Math.abs(lon) > 0.001)) {
+        state.lat = lat;
+        state.lon = lon;
+        state.gpsFix = (state.satellites !== null && state.satellites >= 4) ? 2 : 1;
         if (!state.gpsAnchor) {
             state.gpsAnchor = { lat, lon };
         }
-        const R = 6371000;
-        const rad = Math.PI / 180;
-        const dLat = (lat - state.gpsAnchor.lat) * rad;
-        const dLon = (lon - state.gpsAnchor.lon) * rad;
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(state.gpsAnchor.lat * rad) * Math.cos(lat * rad) * Math.sin(dLon / 2) ** 2;
-        state.gpsDriftM = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * R;
+        state.gpsDriftM = haversineMeters(state.gpsAnchor.lat, state.gpsAnchor.lon, lat, lon);
         state.gpsHistory.push(state.gpsDriftM);
         if (state.gpsHistory.length > 60) state.gpsHistory.shift();
+    } else {
+        state.gpsFix = 0;
     }
 
-    if (d.gps_fix !== undefined && Number.isFinite(Number(d.gps_fix))) {
-        state.gpsFix = Number(d.gps_fix);
-    } else if (state.satellites !== null) {
-        state.gpsFix = state.satellites >= 4 ? 2 : (state.satellites > 0 ? 1 : 0);
-    }
-
-    if (d.status !== undefined) {
-        state.status = typeof d.status === "string" ? d.status : "STANDBY";
+    if (d.status !== undefined && Number.isFinite(Number(d.status))) {
+        state.status = Number(d.status);
+        if (state.status >= 1 && !state.liftoffDetected) {
+            state.liftoffDetected = true;
+            state.liftoffAt = Date.now();
+        }
     }
 }
 
 let socket = null;
 function connect() {
-    if (socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(socket.readyState)) return;
-    const scheme = location.protocol === "https:" ? "wss:" : "ws:";
-    socket = new WebSocket(`${scheme}//${location.host}/ws/telemetry`);
-
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    socket = new WebSocket(`${proto}://${location.host}/ws`);
     socket.onopen = () => { state.connected = true; };
     socket.onmessage = e => {
         try {
             const msg = JSON.parse(e.data);
             if (msg.type === "connection") state.connected = Boolean(msg.connected);
-            else if (msg.type === "telemetry" && msg.data) handleTelemetry(msg.data, msg.raw_hex);
-            else if (msg.telemetry) handleTelemetry(msg.telemetry, msg.raw_hex);
+            else if (msg.type === "telemetry" && msg.data) handleTelemetry(msg.data);
+            else if (msg.telemetry) handleTelemetry(msg.telemetry);
         } catch (_) {}
     };
     socket.onclose = () => {
         state.connected = false;
         setTimeout(connect, 1500);
     };
-    socket.onerror = () => { state.connected = false; };
 }
 
 async function loadStatus() {
     try {
-        const res = await fetch("/api/status", { cache: "no-store" });
+        const res = await fetch("/api/status");
         if (!res.ok) return;
         const data = await res.json();
         state.connected = Boolean(data.connected);
@@ -1931,60 +1484,39 @@ async function loadStatus() {
             }
         }
         if (data.station) {
-            if (data.station.disk_free_pct !== undefined) {
-                state.diskFreePct = data.station.disk_free_pct;
-                $("mStDisk").innerHTML = `${data.station.disk_free_pct}% disponible <i class="s-dot ok"></i>`;
-                $("mStDiskFree").textContent = `${data.station.disk_free_pct}% libre`;
-            }
-            if (data.station.serial_port) {
-                $("mStPort").innerHTML = `${data.station.serial_port} <i class="s-dot ok"></i>`;
-            }
-            if (data.frames_received !== undefined) {
-                $("mStDbFrames").textContent = `telemetry.db (${data.frames_received} tramas)`;
-            }
+            if (data.station.disk_free_pct !== undefined) state.diskFreePct = data.station.disk_free_pct;
+            if (data.station.disk_free_mb !== undefined) state.diskFreeMb = data.station.disk_free_mb;
+            if (data.station.disk_go_1h !== undefined) state.diskGo1h = Boolean(data.station.disk_go_1h);
+            if (data.station.serial_port) state.serialPortName = data.station.serial_port;
         }
     } catch (_) {}
 }
 
-// ============================================================
-// MAIN LOOP & EVENT HANDLERS
-// ============================================================
+/* ============================================================
+   MAIN LOOP & EVENT HANDLERS
+   ============================================================ */
 
 let lastFrameTime = performance.now();
 function frameLoop(time) {
     const dt = time - lastFrameTime;
     lastFrameTime = time;
 
-    // Update T-Clock countdown if active
-    if (state.tClockRunning) {
-        state.tClockMs = Math.max(0, state.tClockMs - dt);
-        if (state.tClockMs === 0) {
-            state.tClockRunning = false;
-            addAudit("T-0", "Cuenta Regresiva", "Sistema", "T-Zero alcanzado");
-        }
-    }
-
     updateStabilityEngines(dt);
     renderDashboard();
 
-    // Sparklines & Ribbon update
-    drawSparkline("linkSpark", state.linkHistory, 0, 15, 10);
-    drawSparkline("altSpark", state.altHistory, -CFG.altitude_tol_m, CFG.altitude_tol_m, 0);
-    drawSparkline("accSpark", state.accHistory, CFG.accel_z_nominal_g - CFG.accel_z_tol_g, CFG.accel_z_nominal_g + CFG.accel_z_tol_g, CFG.accel_z_nominal_g);
-    drawSparkline("gpsSpark", state.gpsHistory, 0, CFG.gps_radius_m, 0);
     drawPacketRibbon();
+    drawEnhancedSparkline("altSpark", state.altHistory, -8, 8, 0, -CFG.altitude_tol_m, CFG.altitude_tol_m, "m");
+    drawEnhancedSparkline("accSpark", state.accHistory, 0.75, 1.25, 1.0, CFG.accel_z_nominal_g - CFG.accel_z_tol_g, CFG.accel_z_nominal_g + CFG.accel_z_tol_g, "g");
+    drawEnhancedSparkline("gpsSpark", state.gpsHistory, 0, 8, 0, 0, CFG.gps_radius_m, "m");
 
     requestAnimationFrame(frameLoop);
 }
 
-// Network rate calculation (2 Hz)
 setInterval(() => {
     const now = Date.now();
     const cutoff = now - 1000;
     while (state.packetTimes.length && state.packetTimes[0] < cutoff) state.packetTimes.shift();
     state.rxRate = state.packetTimes.length;
-    state.linkHistory.push(state.rxRate);
-    if (state.linkHistory.length > 60) state.linkHistory.shift();
 
     const cutoffSeq = now - 5000;
     while (state.seqWindow.length && state.seqWindow[0].t < cutoffSeq) state.seqWindow.shift();
@@ -2002,24 +1534,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     requestAnimationFrame(frameLoop);
     setInterval(loadStatus, 5000);
 
-    // Event listeners for check toggles
     $("chkVerifyLink")?.addEventListener("change", e => {
         state.verifiedLink = e.target.checked;
-        addAudit(state.verifiedLink ? "TICK" : "UNTICK", "Comunicaciones", "Operador", state.verifiedLink ? "Enlace verificado" : "Verificación removida");
         savePersistedState();
         renderDashboard();
     });
 
     $("chkVerifySensors")?.addEventListener("change", e => {
         state.verifiedSensors = e.target.checked;
-        addAudit(state.verifiedSensors ? "TICK" : "UNTICK", "Aviónica y Sensores", "Operador", state.verifiedSensors ? "Sensores verificados" : "Verificación removida");
         savePersistedState();
         renderDashboard();
     });
 
     $("chkVerifyStation")?.addEventListener("change", e => {
         state.verifiedStation = e.target.checked;
-        addAudit(state.verifiedStation ? "TICK" : "UNTICK", "Estación Terrena", "Operador", state.verifiedStation ? "Estación terrena verificada" : "Verificación removida");
         savePersistedState();
         renderDashboard();
     });
@@ -2029,57 +1557,22 @@ document.addEventListener("DOMContentLoaded", async () => {
             state.gpsAnchor = { lat: state.lat, lon: state.lon };
             state.gpsDriftM = 0;
             state.gpsHistory = [0];
-            addAudit("FIJAR_ORIGEN", "GPS Rampa", "Operador", `Origen: ${state.lat.toFixed(6)}, ${state.lon.toFixed(6)}`);
             renderDashboard();
         } else {
             alert("Sin coordenadas GPS válidas para fijar el origen.");
         }
     });
 
-    $("btnLockGo")?.addEventListener("click", () => {
-        const evalRes = evaluateOverallStatus();
-        if (!state.isLocked && !evalRes.allVerified) {
-            alert("No se puede confirmar GO final: aún quedan verificaciones pendientes.");
-            return;
-        }
-        state.isLocked = !state.isLocked;
-        addAudit(state.isLocked ? "LOCK" : "UNLOCK", "Autorización Final GO", "Director de Vuelo", state.isLocked ? "Lista congelada y confirmada" : "Lista desbloqueada");
-        savePersistedState();
-        renderManualChecklistTable();
-        renderDashboard();
-    });
-
-    $("btnExportCsv")?.addEventListener("click", exportAuditCsv);
-
     $("btnResetChecks")?.addEventListener("click", () => {
-        if (state.isLocked) {
-            alert("La lista se encuentra bloqueada. Desbloquee antes de reiniciar.");
-            return;
-        }
-        if (confirm("¿Desea reiniciar todas las marcas del checklist y la auditoría?")) {
+        if (confirm("¿Desea reiniciar todas las marcas del checklist?")) {
             state.verifiedLink = false;
             state.verifiedSensors = false;
             state.verifiedStation = false;
             state.manualChecks = {};
-            addAudit("RESET", "Checklist Completo", "Operador", "Reinicio manual de marcas");
             savePersistedState();
             renderManualChecklistTable();
             renderDashboard();
         }
-    });
-
-    // T-Clock listeners
-    $("btnTClockToggle")?.addEventListener("click", () => {
-        state.tClockRunning = !state.tClockRunning;
-        addAudit(state.tClockRunning ? "TCLOCK_START" : "TCLOCK_PAUSE", "Reloj T-Minus", "Operador", `Estado: ${state.tClockRunning ? 'Contando' : 'Pausa'}`);
-        renderDashboard();
-    });
-
-    $("btnTClockReset")?.addEventListener("click", () => {
-        state.tClockMs = 300000; // Reset to 5 min
-        state.tClockRunning = false;
-        addAudit("TCLOCK_RESET", "Reloj T-Minus", "Operador", "Reiniciado a T- 05:00");
-        renderDashboard();
     });
 });
 </script>

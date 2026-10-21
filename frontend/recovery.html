@@ -22,8 +22,8 @@
     height: 100vh;
     padding: 6px 10px;
     display: grid;
-    grid-template-rows: auto auto 1fr;
-    gap: 6px;
+    grid-template-rows: 42px auto minmax(0, 1fr);
+    gap: 8px;
     box-sizing: border-box;
     overflow: hidden;
 }
@@ -33,60 +33,60 @@
     flex: none;
     border: 2px solid var(--border);
     border-radius: 4px;
-    padding: 4px 10px;
+    padding: 8px 14px;
     background: var(--card);
     display: grid;
-    grid-template-columns: 1fr 1fr 1.2fr auto;
+    grid-template-columns: 1fr 1fr 1.1fr auto;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
 }
 
 .guidance-box {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
 }
 .guidance-box .lbl {
-    font-size: 9px;
-    font-weight: 800;
-    color: var(--muted);
+    font-size: 11px;
+    font-weight: 900;
+    color: var(--gray);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 .guidance-box .val-wrap {
     display: flex;
     align-items: baseline;
-    gap: 4px;
+    gap: 6px;
 }
 .guidance-box .big {
-    font-size: 18px;
-    font-weight: 900;
+    font-size: 28px;
+    font-weight: 950;
     line-height: 1.05;
     color: var(--ink);
 }
 .guidance-box .unit {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--muted);
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--gray);
 }
 .guidance-box .sub {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
     color: var(--gray);
 }
 
 .compass-visual {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 .compass-dial {
-    width: 32px;
-    height: 32px;
-    border: 1.5px solid var(--border);
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
     border-radius: 50%;
     background: var(--soft);
     position: relative;
@@ -96,17 +96,17 @@
     flex-shrink: 0;
 }
 .compass-arrow {
-    width: 2px;
-    height: 22px;
+    width: 3px;
+    height: 26px;
     background: var(--bad);
     border-radius: 2px;
     transform-origin: center center;
     transition: transform 0.25s ease;
 }
 .compass-center {
-    width: 5px;
-    height: 5px;
-    background: #000;
+    width: 6px;
+    height: 6px;
+    background: var(--ink);
     border-radius: 50%;
     position: absolute;
 }
@@ -114,42 +114,42 @@
 /* BOTONES DE ACCION DIRECTA */
 .action-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    justify-content: center;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
 }
 .btn-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 4px 10px;
-    font-size: 10px;
-    font-weight: 900;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 950;
     letter-spacing: 0.04em;
-    border: 1.5px solid var(--border);
-    border-radius: 3px;
-    background: #0f172a;
-    color: #ffffff;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent);
+    color: #000000;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.1s ease, transform 0.05s ease;
+    transition: filter 0.1s ease, transform 0.05s ease;
 }
-.btn-action:hover { background: #334155; }
+.btn-action:hover { filter: brightness(1.1); }
 .btn-action.sec {
-    background: var(--card);
+    background: var(--soft);
     color: var(--ink);
-    border: 1.5px solid var(--border);
+    border: 2px solid var(--border);
 }
 .btn-action.sec:hover { background: var(--soft-border); }
 
-/* ===== MAIN CONTENT GRID (MAPA + PANELES LATERALES) ===== */
+/* ===== MAIN CONTENT GRID (COL-7 MAPA + COL-5 PANELES LATERALES) ===== */
 .recovery-grid {
     flex: 1 1 0;
     min-height: 0;
     display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 4px;
+    grid-template-columns: 7fr 5fr;
+    gap: 8px;
 }
 
 .panel-map {
@@ -163,7 +163,7 @@
 }
 .panel-header {
     flex: none;
-    padding: 4px 8px;
+    padding: 6px 12px;
     border-bottom: 2px solid var(--border);
     display: flex;
     align-items: center;
@@ -171,8 +171,8 @@
     background: var(--soft);
 }
 .panel-title {
-    font-size: 10px;
-    font-weight: 900;
+    font-size: 13px;
+    font-weight: 950;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     display: flex;
@@ -182,12 +182,12 @@
 }
 .map-controls {
     display: flex;
-    gap: 4px;
+    gap: 6px;
 }
 .map-btn {
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: 800;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 900;
     border: 1.5px solid var(--border);
     border-radius: 3px;
     background: var(--card);
@@ -203,32 +203,32 @@
     min-height: 180px;
 }
 
-/* PANEL LATERAL DERECHO */
+/* PANEL LATERAL DERECHO (COL-5 — HIGH LEGIBILITY) */
 .side-panel {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 .card {
     border: 2px solid var(--border);
-    border-radius: 3px;
+    border-radius: 4px;
     background: var(--card);
-    padding: 4px 8px;
+    padding: 8px 12px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 6px;
     flex-shrink: 0;
 }
 .card-title {
-    font-size: 10px;
-    font-weight: 900;
+    font-size: 13px;
+    font-weight: 950;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    border-bottom: 1.5px solid var(--border-light);
-    padding-bottom: 2px;
+    border-bottom: 2px solid var(--border-light);
+    padding-bottom: 4px;
     margin-bottom: 2px;
     display: flex;
     justify-content: space-between;
@@ -236,33 +236,73 @@
     color: var(--ink);
 }
 
-.data-row {
+/* HERO COORDINATE BOXES IN CARD 1 */
+.hero-coords-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.coord-box {
+    background: var(--soft);
+    border: 1.5px solid var(--soft-border);
+    border-radius: 4px;
+    padding: 6px 10px;
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 1px 0;
-    border-bottom: 1px solid #f1f5f9;
+    flex-direction: column;
+    gap: 2px;
 }
-.data-row:last-child { border-bottom: none; }
-.data-row .k {
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-.data-row .v {
+.coord-box .k {
     font-size: 11px;
-    font-weight: 800;
-    text-align: right;
+    font-weight: 900;
+    color: var(--gray);
+    letter-spacing: 0.05em;
+}
+.coord-box .v {
+    font-size: 21px;
+    font-weight: 950;
+    color: var(--accent);
+    line-height: 1.1;
+}
+
+.sub-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+.sub-metric-cell {
+    background: var(--soft);
+    border: 1px solid var(--soft-border);
+    border-radius: 3px;
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.sub-metric-cell .k {
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--gray);
+    white-space: nowrap;
+}
+.sub-metric-cell .v {
+    font-size: 15.5px;
+    font-weight: 950;
     color: var(--ink);
+    white-space: nowrap;
+}
+
+.base-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.8fr;
+    gap: 6px;
+    margin-top: 2px;
 }
 
 .status-badge {
     display: inline-block;
-    padding: 2px 7px;
-    font-size: 11px;
-    font-weight: 900;
+    padding: 3px 9px;
+    font-size: 12.5px;
+    font-weight: 950;
     letter-spacing: 0.04em;
     border: 1.5px solid var(--border);
     border-radius: 3px;
@@ -276,29 +316,30 @@
 
 /* LISTA DE HITOS */
 .timeline-scroll {
-    max-height: 140px;
+    flex: 1 1 0;
+    min-height: 0;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
 }
 .tl-item {
     display: flex;
     align-items: baseline;
-    gap: 6px;
-    padding: 3px 6px;
-    border-left: 3px solid #0f172a;
+    gap: 8px;
+    padding: 5px 8px;
+    border-left: 4px solid var(--accent);
     background: var(--soft);
     border-radius: 0 3px 3px 0;
-    font-size: 11px;
+    font-size: 13.5px;
 }
 .tl-time {
-    font-weight: 900;
+    font-weight: 950;
     white-space: nowrap;
     color: var(--accent);
 }
 .tl-label {
-    font-weight: 700;
+    font-weight: 800;
     color: var(--ink);
 }
 
@@ -307,12 +348,12 @@
     position: fixed;
     bottom: 18px;
     right: 18px;
-    padding: 8px 16px;
+    padding: 10px 18px;
     background: #0f172a;
     color: #ffffff;
-    font-size: 12px;
-    font-weight: 800;
-    border: 1.5px solid #ffffff;
+    font-size: 13px;
+    font-weight: 900;
+    border: 2px solid #ffffff;
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     opacity: 0;
@@ -361,7 +402,7 @@
     .action-buttons .btn-action {
         flex: 1 1 0 !important;
         padding: 8px 4px !important;
-        font-size: 10px !important;
+        font-size: 11px !important;
         text-align: center !important;
     }
 
@@ -391,6 +432,10 @@
         gap: 8px !important;
     }
 
+    .sub-metrics-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
     .card {
         flex-shrink: 0 !important;
     }
@@ -400,7 +445,9 @@
     .hero-guidance {
         grid-template-columns: 1fr !important;
     }
-
+    .hero-coords-grid, .base-metrics-grid {
+        grid-template-columns: 1fr !important;
+    }
     .action-buttons {
         flex-direction: column !important;
     }
@@ -439,11 +486,11 @@
         </div>
     </header>
 
-    <!-- HERO GUIDANCE: DISTANCIA, RUMBO, AZIMUT Y BOTON GPS -->
+    <!-- HERO GUIDANCE: DISTANCIA, RUMBO, AZIMUT Y BOTONES GPS -->
     <section class="hero-guidance">
         <div class="guidance-box">
             <div class="lbl">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="2" y1="12" x2="22" y2="12"/>
                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
@@ -454,12 +501,12 @@
                 <span class="big num" id="guidanceDist">---</span>
                 <span class="unit" id="guidanceDistUnit">m</span>
             </div>
-            <div class="sub">Desde punto de despegue / base</div>
+            <div class="sub">Desde punto de despegue / rampa</div>
         </div>
 
         <div class="guidance-box">
             <div class="lbl">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
                 </svg>
@@ -479,24 +526,22 @@
 
         <div class="guidance-box">
             <div class="lbl">ESTADO DE ATERRIZAJE</div>
-            <div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:2px;">
                 <span class="status-badge" id="landingBadge">DESCONOCIDO</span>
-            </div>
-            <div class="sub" style="margin-top:3px;">
-                Vz al impacto: <strong class="num" id="touchdownVz">--- m/s</strong>
+                <span class="sub">Vz Impacto: <strong class="num" style="font-size:15px; color:var(--ink);" id="touchdownVz">--- m/s</strong></span>
             </div>
         </div>
 
         <div class="action-buttons">
             <button class="btn-action" id="btnGoogleMaps">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                     <circle cx="12" cy="10" r="3"/>
                 </svg>
                 ABRIR EN GOOGLE MAPS
             </button>
             <button class="btn-action sec" id="btnCopyCoords">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>
@@ -505,14 +550,14 @@
         </div>
     </section>
 
-    <!-- CUADRÍCULA PRINCIPAL: MAPA + PANELES -->
+    <!-- CUADRÍCULA PRINCIPAL: MAPA (COL-7) + PANELES DE ALTA LEGIBILIDAD (COL-5) -->
     <main class="recovery-grid">
 
-        <!-- MAPA TÁCTICO DE RECUPERACIÓN -->
+        <!-- MAPA TÁCTICO DE RECUPERACIÓN (7fr) -->
         <section class="panel-map">
             <div class="panel-header">
                 <div class="panel-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
                         <line x1="8" y1="2" x2="8" y2="18"/>
                         <line x1="16" y1="6" x2="16" y2="22"/>
@@ -529,63 +574,54 @@
             <div id="recoveryMap"></div>
         </section>
 
-        <!-- PANELES LATERALES DE INFORMACIÓN -->
+        <!-- PANEL LATERAL DERECHO (5fr — 3 TARJETAS CONSOLIDADAS) -->
         <section class="side-panel">
 
-            <!-- COORDENADAS EXACTAS GPS -->
+            <!-- 1. COORDENADAS DEL VEHÍCULO & TELEMETRÍA GPS -->
             <div class="card">
                 <div class="card-title">
-                    <span>COORDENADAS DEL VEHÍCULO</span>
-                    <span class="status-badge ok" id="fixBadge" style="font-size:10px;padding:2px 5px;">GPS FIX</span>
+                    <span>1. POSICIÓN GPS DEL VEHÍCULO</span>
+                    <span class="status-badge ok" id="fixBadge">GPS FIX</span>
                 </div>
-                <div class="data-row">
-                    <span class="k">LATITUD</span>
-                    <span class="v num" id="recLat">---</span>
+
+                <div class="hero-coords-grid">
+                    <div class="coord-box">
+                        <span class="k">LATITUD ACTUAL</span>
+                        <span class="v num" id="recLat">---</span>
+                    </div>
+                    <div class="coord-box">
+                        <span class="k">LONGITUD ACTUAL</span>
+                        <span class="v num" id="recLon">---</span>
+                    </div>
                 </div>
-                <div class="data-row">
-                    <span class="k">LONGITUD</span>
-                    <span class="v num" id="recLon">---</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">ALTITUD GPS</span>
-                    <span class="v num" id="recAlt">--- m</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">SATÉLITES</span>
-                    <span class="v num" id="recSats">--</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">ÚLTIMO REPORTE</span>
-                    <span class="v num" id="recLastTime">--</span>
+
+                <div class="sub-metrics-grid">
+                    <div class="sub-metric-cell">
+                        <span class="k">ALTITUD GPS</span>
+                        <span class="v num" id="recAlt">--- m</span>
+                    </div>
+                    <div class="sub-metric-cell">
+                        <span class="k">APOGEO MÁX</span>
+                        <span class="v num" id="diagApogee">--- m</span>
+                    </div>
+                    <div class="sub-metric-cell">
+                        <span class="k">SATÉLITES</span>
+                        <span class="v num" id="recSats">--</span>
+                    </div>
+                    <div class="sub-metric-cell">
+                        <span class="k">ÚLTIMO DATO</span>
+                        <span class="v num" id="recLastTime">--</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- REFERENCIA DE LA BASE / DESPEGUE -->
+            <!-- 2. PIROTECNIA DE RECUPERACIÓN Y ORIGEN DE BASE -->
             <div class="card">
                 <div class="card-title">
-                    <span>BASE / DESPEGUE</span>
-                    <span style="font-size:10px;font-weight:800;color:var(--muted)">ORIGEN</span>
+                    <span>2. RECUPERACIÓN Y ORIGEN DE RAMPA</span>
+                    <span style="font-size:11px;font-weight:900;color:var(--gray)">PARACAÍDAS & BASE</span>
                 </div>
-                <div class="data-row">
-                    <span class="k">BASE LATITUD</span>
-                    <span class="v num" id="baseLat">---</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">BASE LONGITUD</span>
-                    <span class="v num" id="baseLon">---</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">ELEVACIÓN ANGULAR</span>
-                    <span class="v num" id="elevAngle">---°</span>
-                </div>
-            </div>
 
-            <!-- EVENTOS PIROTÉCNICOS DE RECUPERACIÓN -->
-            <div class="card" style="padding: 6px 8px;">
-                <div class="card-title" style="margin-bottom: 4px;">
-                    <span>EVENTOS PIROTÉCNICOS</span>
-                    <span style="font-size:10px;font-weight:800;color:var(--muted)">RECUPERACIÓN</span>
-                </div>
                 <div class="annun-grid">
                     <div class="annun-card state-idle" id="annunDrogue">
                         <div class="annun-label">DROGUE (FRENADO)</div>
@@ -596,41 +632,39 @@
                         <div class="annun-state" id="annunMainState">[0: EN ESPERA]</div>
                     </div>
                 </div>
+
+                <div class="base-metrics-grid">
+                    <div class="sub-metric-cell">
+                        <span class="k">BASE LATITUD</span>
+                        <span class="v num" id="baseLat">---</span>
+                    </div>
+                    <div class="sub-metric-cell">
+                        <span class="k">BASE LONGITUD</span>
+                        <span class="v num" id="baseLon">---</span>
+                    </div>
+                    <div class="sub-metric-cell">
+                        <span class="k">ELEVACIÓN</span>
+                        <span class="v num" id="elevAngle">---°</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- HITOS DE VUELO Y CRONOLOGÍA -->
-            <div class="card" style="flex:1 1 0; min-height:100px;">
+            <!-- 3. CRONOLOGÍA DE VUELO -->
+            <div class="card" style="flex:1 1 0; min-height:0;">
                 <div class="card-title">
-                    <span>CRONOLOGÍA DE VUELO</span>
-                    <span id="eventsCount" style="font-size:10px;font-weight:800;color:var(--muted)">0 eventos</span>
+                    <span>3. CRONOLOGÍA DE HITOS DE VUELO</span>
+                    <span id="eventsCount" style="font-size:11.5px;font-weight:900;color:var(--gray)">0 eventos</span>
                 </div>
                 <div class="timeline-scroll" id="timelineList">
-                    <div style="color:var(--muted);font-style:italic;padding:4px 0;font-size:11px;">Esperando hitos de vuelo...</div>
+                    <div style="color:var(--muted);font-style:italic;padding:4px 0;font-size:13px;">Esperando hitos de vuelo...</div>
                 </div>
             </div>
 
-            <!-- DIAGNÓSTICO DEL ENLACE Y PAQUETES (G14) -->
-            <div class="card">
-                <div class="card-title">
-                    <span>ESTADO DEL ENLACE</span>
-                    <span style="font-size:10px;font-weight:800;color:var(--muted)">RF GROUND</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">PAQUETES RX (TIERRA)</span>
-                    <span class="v num" id="diagRxCount">0</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">SECUENCIA AVIONICA</span>
-                    <span class="v num" id="diagSeq">---</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">PÉRDIDA DE PAQUETES</span>
-                    <span class="v num" id="diagLoss">0.0 %</span>
-                </div>
-                <div class="data-row">
-                    <span class="k">ALTITUD MÁXIMA (APOGEO)</span>
-                    <span class="v num" id="diagApogee">--- m</span>
-                </div>
+            <!-- Hidden compatibility nodes -->
+            <div style="display:none;" aria-hidden="true">
+                <span id="diagRxCount">0</span>
+                <span id="diagSeq">---</span>
+                <span id="diagLoss">0.0 %</span>
             </div>
 
         </section>
@@ -873,6 +907,9 @@ function ingestFrame(frameItem, isHistory = false) {
             const dt = (now - recoveryState.lastAltTime) / 1000;
             if (dt >= 0.2) {
                 recoveryState.vz = (alt - recoveryState.lastAlt) / dt;
+                if (!recoveryState.vzBuffer) recoveryState.vzBuffer = [];
+                recoveryState.vzBuffer.push({ t: now, v: recoveryState.vz });
+                while (recoveryState.vzBuffer.length > 20) recoveryState.vzBuffer.shift();
             }
         }
         recoveryState.lastAlt = alt;
@@ -892,6 +929,11 @@ function ingestFrame(frameItem, isHistory = false) {
             addEvent("Despegue confirmado (T-0)");
         }
         if (text === "LANDED") {
+            // Latch the strongest recent descent rate (pre-touchdown buffer), not the decayed live value
+            const recent = (recoveryState.vzBuffer || []).filter(s => now - s.t <= 3000);
+            let latched = recoveryState.vz;
+            if (recent.length) latched = recent.reduce((a, s) => (s.v < a ? s.v : a), recent[0].v);
+            recoveryState.touchdownVz = latched;
             addEvent("¡Aterrizaje confirmado en tierra!");
         }
     }
@@ -994,7 +1036,8 @@ function renderRecoveryUI() {
         lBadge.className = "status-badge";
         lBadge.textContent = "EN ESPERA DE DESPEGUE";
     }
-    $("touchdownVz").textContent = recoveryState.vz !== null ? `${fmt(recoveryState.vz, 1)} m/s` : "---";
+    const tdVz = recoveryState.touchdownVz !== undefined && recoveryState.touchdownVz !== null ? recoveryState.touchdownVz : recoveryState.vz;
+    $("touchdownVz").textContent = tdVz !== null && tdVz !== undefined ? `${fmt(tdVz, 1)} m/s` : "---";
 }
 
 /* HISTORIAL INICIAL DESDE /api/history (60 SEGUNDOS) */
