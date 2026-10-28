@@ -732,6 +732,47 @@
             });
         }
 
+        // Draggable HUD functionality
+        const hudHeader = hud.querySelector('.demo-hud-header');
+        if (hudHeader) {
+            hudHeader.style.cursor = 'grab';
+            let isDragging = false;
+            let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+            hudHeader.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON') return;
+                isDragging = true;
+                hudHeader.style.cursor = 'grabbing';
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = hud.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                hud.style.bottom = 'auto';
+                hud.style.right = 'auto';
+                hud.style.left = `${startLeft}px`;
+                hud.style.top = `${startTop}px`;
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                const maxLeft = window.innerWidth - hud.offsetWidth - 8;
+                const maxTop = window.innerHeight - hud.offsetHeight - 8;
+                hud.style.left = `${Math.max(8, Math.min(maxLeft, startLeft + dx))}px`;
+                hud.style.top = `${Math.max(8, Math.min(maxTop, startTop + dy))}px`;
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    hudHeader.style.cursor = 'grab';
+                }
+            });
+        }
+
         updateDemoHudUI();
     }
 
