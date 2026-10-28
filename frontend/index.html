@@ -1,1800 +1,1361 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CanSat Ground Station — Team 1000</title>
 
-<title>Estación Terrena de Telemetría</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
-<link rel="icon" type="image/png" href="assets/invenciones-espaciales.png">
-<link rel="stylesheet" href="css/common.css">
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
->
-<script src="js/common.js"></script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/demo_mode.js"></script>
 
-<style>
-* { box-sizing: border-box; }
+    <style>
+        /* ============================================================
+           CanSat Flight Ground Station Theme
+           - ZERO SCROLL (100% viewport bound, overflow: hidden)
+           - Clean, uncluttered aerospace design
+           - High sunlight readability (>=14pt base, bold strokes)
+           - SI units indicated on every metric
+           ============================================================ */
 
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    overflow: hidden;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: Arial, Helvetica, sans-serif;
-}
+        :root {
+            --bg: #f8fafc;
+            --panel-bg: #ffffff;
+            --ink: #0f172a;
+            --ink-muted: #334155;
+            --ink-subtle: #64748b;
+            --border: #0f172a;
+            --border-light: #e2e8f0;
+            --accent: #0284c7;
+            --accent-dark: #0369a1;
+            --ok: #15803d;
+            --ok-bg: #dcfce7;
+            --warn: #b45309;
+            --warn-bg: #fef3c7;
+            --bad: #b91c1c;
+            --bad-bg: #fee2e2;
 
-.num { font-variant-numeric: tabular-nums; }
+            --font-base: 14pt;
+            --font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "Consolas", "Liberation Mono", "Courier New", monospace;
+        }
 
-/* ===== APP: CABECERA / 5 ZONAS FIJAS SIN SCROLL (NASA-STD-3001) ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-.app {
-    height: 100vh;
-    padding: 6px 10px;
-    display: grid;
-    grid-template-rows: 42px minmax(0, 81fr) minmax(0, 13fr);
-    gap: 8px;
-    box-sizing: border-box;
-    overflow: hidden;
-}
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            overflow: hidden; /* STRICT ZERO SCROLL */
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: var(--font-ui);
+            font-size: var(--font-base);
+            -webkit-font-smoothing: antialiased;
+        }
 
-/* ===== GRID 26 / 44 / 30 ===== */
+        .num {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-weight: 800;
+        }
 
-.dashboard {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 26fr 44fr 30fr;
-    gap: 8px;
-}
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 6px 8px;
+            gap: 6px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
 
-.panel { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+        /* ===== TOP STATUS HEADER ===== */
+        header.top-bar {
+            height: 44px;
+            min-height: 44px;
+            max-height: 44px;
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 4px;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
 
-.card {
-    border: 2px solid var(--border);
-    background: var(--card);
-    padding: 8px 10px;
-    min-height: 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-.card.grow { flex: 1 1 0; }
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-.card-title {
-    font-size: 13px;
-    font-weight: 950;
-    letter-spacing: .06em;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    flex: none;
-}
-.card-title .hint { font-size: 11px; font-weight: 800; color: var(--gray); letter-spacing: 0; text-align: right; }
+        .brand-title {
+            font-size: 15pt;
+            font-weight: 950;
+            color: var(--ink);
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+        }
 
-.row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; padding: 3px 0; border-bottom: 1px solid var(--soft-border); }
-.row:last-of-type { border-bottom: none; }
-.row .k { font-weight: 800; color: var(--gray); }
-.row .v { font-weight: 950; font-size: 18px; }
+        .brand-subtitle {
+            font-size: 11pt;
+            font-weight: 900;
+            color: var(--accent-dark);
+            background: #e0f2fe;
+            padding: 2px 8px;
+            border-radius: 3px;
+            border: 1px solid #7dd3fc;
+        }
 
-canvas { display: block; }
+        .state-badge {
+            font-size: 11pt;
+            font-weight: 950;
+            padding: 2px 10px;
+            background: #f1f5f9;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .state-badge.pad { background: #e2e8f0; color: #0f172a; }
+        .state-badge.ascent { background: #ffedd5; color: #c2410c; border-color: #ea580c; }
+        .state-badge.apogee { background: #fef08a; color: #854d0e; border-color: #ca8a04; }
+        .state-badge.descent { background: #dbeafe; color: #1d4ed8; border-color: #2563eb; }
+        .state-badge.landed { background: #dcfce7; color: #15803d; border-color: #16a34a; }
 
-/* ===== ALTITUD ===== */
+        .header-metrics {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
 
-.alt-body { flex: 1 1 0; min-height: 0; display: flex; gap: 10px; }
-.tape { width: 96px; flex: none; border: 2px solid var(--border); position: relative; }
-.tape canvas { width: 100%; height: 100%; }
-.alt-side { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; }
-.big { font-size: 46px; font-weight: 950; line-height: 1; }
-.unit { font-size: 16px; font-weight: 800; color: var(--gray); margin-left: 4px; }
-.lbl { font-size: 11px; font-weight: 900; color: var(--gray); letter-spacing: .06em; }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            font-size: 11pt;
+            font-weight: 900;
+            border-radius: 3px;
+            border: 2px solid var(--border);
+            text-transform: uppercase;
+        }
+        .status-badge.connected {
+            background: var(--ok-bg);
+            color: var(--ok);
+            border-color: var(--ok);
+        }
+        .status-badge.disconnected {
+            background: var(--bad-bg);
+            color: var(--bad);
+            border-color: var(--bad);
+        }
 
-.basecard { flex: none; }
-.basecard .big { font-size: 36px; }
-.axis-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; border-bottom: 1px solid var(--soft-border); }
-.axis-row:last-child { border-bottom: none; }
-.axis-row .a { font-size: 16px; font-weight: 900; color: var(--gray); }
-.axis-row .n { font-size: 24px; font-weight: 900; }
+        /* ===== MAIN THREE-COLUMN GRID ===== */
+        main.main-grid {
+            flex: 1 1 0;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 270px 1fr 310px;
+            gap: 6px;
+            overflow: hidden;
+        }
 
-/* ===== GRÁFICOS ===== */
+        .card {
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
 
-.chart-card { flex: 1 1 0; }
-.chart-box { position: relative; flex: 1; min-height: 0; }
-.chart-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.legend { display: flex; gap: 12px; font-size: 12px; font-weight: 900; }
-.legend i { display: inline-block; width: 14px; height: 4px; margin-right: 4px; vertical-align: middle; }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
 
-/* ===== MAPA ===== */
+        .card-title {
+            font-size: 11.5pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--ink);
+            letter-spacing: -0.01em;
+        }
 
-#gpsMap { flex: 1; min-height: 80px; border: 2px solid var(--border); overflow: hidden; }
-.coords { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
-.coords .k { font-size: 11px; font-weight: 900; color: var(--gray); letter-spacing: .05em; }
-.coords .v { font-size: 19px; font-weight: 950; }
+        .card-unit {
+            font-size: 10pt;
+            font-weight: 800;
+            color: var(--ink-subtle);
+            font-family: var(--font-mono);
+        }
 
-/* ===== INFERIOR COMPACTO (2 PANELES) ===== */
+        .metric-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 11.5pt;
+        }
 
-.bottom {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 0.8fr 1fr 1fr;
-    gap: 8px;
-}
+        .metric-label {
+            font-weight: 800;
+            color: var(--ink-muted);
+        }
 
-.scroll { flex: 1; min-height: 0; overflow-y: auto; font-size: 13.5px; }
+        .metric-val {
+            font-weight: 950;
+            color: var(--ink);
+        }
 
-table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.t th { text-align: left; font-size: 11px; letter-spacing: .06em; color: var(--gray); position: sticky; top: 0; background: var(--card); border-bottom: 2px solid var(--border); padding: 2px 4px; }
-table.t td { padding: 3px 4px; border-bottom: 1px solid var(--soft-border); white-space: nowrap; }
+        .metric-val.big {
+            font-size: 32pt;
+            font-weight: 950;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            margin: 4px 0 6px 0;
+        }
 
-.empty { color: var(--muted); font-style: italic; padding: 4px; font-size: 13px; }
-.ev-time { font-weight: 950; width: 105px; flex-shrink: 0; display: inline-block; color: var(--accent); }
-.ev-row { padding: 4px 0; border-bottom: 1px solid var(--soft-border); display: flex; align-items: baseline; gap: 8px; font-weight: 700; }
+        .metric-val.highlight {
+            color: var(--accent-dark);
+        }
 
-.al-row { padding: 4px 6px; border-bottom: 1px solid var(--soft-border); display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; }
-.al-badge { font-weight: 950; font-size: 11px; padding: 2px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
-.al-badge.crit { background: var(--bad); color: #fff; }
-.al-badge.warn { background: var(--warn); color: #000; }
-.al-badge.info { background: #1a4fd6; color: #fff; }
-.al-badge.ok { background: var(--ok); color: #fff; }
-.al-desc { font-weight: 800; flex: 1; margin: 0 10px; }
-.al-val { font-weight: 950; font-family: monospace; font-size: 14.5px; }
+        .compliance-tag {
+            font-size: 10pt;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 3px;
+            border: 1.5px solid currentColor;
+            display: inline-block;
+            text-align: center;
+        }
+        .compliance-tag.ok {
+            background: var(--ok-bg);
+            color: var(--ok);
+        }
+        .compliance-tag.warn {
+            background: var(--warn-bg);
+            color: var(--warn);
+        }
 
-/* ============================================================
-   RESPONSIVE DESIGN: MOBILE VIEWPORTS (SMARTPHONES)
-   Permite scroll vertical en teléfonos manteniendo 0-overflow
-   ============================================================ */
-@media (max-width: 900px) {
-    html, body {
-        height: auto !important;
-        min-height: 100% !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-    }
+        /* Left Column: Telemetry Cards */
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 0;
+            overflow: hidden;
+        }
 
-    .app {
-        height: auto !important;
-        min-height: 100vh !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow-x: hidden !important;
-        overflow-y: visible !important;
-        padding: 6px !important;
-        gap: 8px !important;
-    }
+        /* Center Column: 5 Real-Time Charts in 2 Rows */
+        .center-col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 0;
+            min-width: 0;
+            overflow: hidden;
+        }
 
-    .dashboard {
-        display: flex !important;
-        flex-direction: column !important;
-        min-height: auto !important;
-        gap: 8px !important;
-    }
+        .chart-row-top {
+            flex: 1.1 1 0;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 1.3fr 1fr 1fr;
+            gap: 6px;
+            overflow: hidden;
+        }
 
-    .panel {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        min-height: auto !important;
-    }
+        .chart-row-bottom {
+            flex: 1.1 1 0;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            overflow: hidden;
+        }
 
-    .card {
-        min-height: auto !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
+        .chart-card {
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .card.grow {
-        flex: none !important;
-    }
+        .chart-box {
+            position: relative;
+            flex: 1 1 0;
+            min-height: 0;
+            min-width: 0;
+            width: 100%;
+            height: 100%;
+        }
 
-    .alt-body {
-        min-height: 180px !important;
-        height: 180px !important;
-    }
+        .chart-box canvas {
+            position: absolute;
+            inset: 0;
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
 
-    .tape {
-        width: 80px !important;
-    }
+        .chart-legend {
+            display: flex;
+            gap: 12px;
+            font-size: 10pt;
+            font-weight: 900;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .legend-color {
+            width: 14px;
+            height: 4px;
+            border-radius: 1px;
+            display: inline-block;
+        }
 
-    .chart-card {
-        flex: none !important;
-        height: auto !important;
-    }
+        /* Right Column: GPS Map & Telecommands */
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 0;
+            overflow: hidden;
+        }
 
-    .chart-box {
-        position: relative !important;
-        height: 190px !important;
-        min-height: 190px !important;
-        width: 100% !important;
-    }
+        #gpsMap {
+            width: 100%;
+            height: 130px;
+            min-height: 95px;
+            border: 2px solid var(--border);
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
 
-    #gpsMap {
-        height: 250px !important;
-        min-height: 250px !important;
-        width: 100% !important;
-    }
+        .cmd-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
 
-    .bottom {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        min-height: auto !important;
-    }
+        .cmd-btn {
+            background: #ffffff;
+            color: var(--ink);
+            border: 2px solid var(--border);
+            padding: 5px 6px;
+            font-size: 11pt;
+            font-weight: 900;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .cmd-btn:hover { background: #e2e8f0; }
+        .cmd-btn:active { background: #cbd5e1; }
+        .cmd-btn.primary {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #0369a1;
+        }
+        .cmd-btn.primary:hover { background: #0369a1; }
+        .cmd-btn.danger {
+            background: #dc2626;
+            color: #ffffff;
+            border-color: #991b1b;
+        }
+        .cmd-btn.danger:hover { background: #b91c1c; }
 
-    .scroll {
-        max-height: 220px !important;
-        overflow-y: auto !important;
-    }
+        /* Safety Interlock Trigger Styles */
+        .arm-badge {
+            font-size: 8.5pt;
+            font-weight: 950;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1.5px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .arm-badge.safe {
+            background: #f1f5f9;
+            color: #475569;
+            border-color: #94a3b8;
+        }
+        .arm-badge.armed {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #b91c1c;
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+            animation: armPulse 0.9s infinite alternate;
+        }
+        @keyframes armPulse {
+            from { opacity: 0.85; }
+            to { opacity: 1; }
+        }
 
-    .ev-row {
-        flex-wrap: wrap !important;
-        gap: 4px !important;
-    }
+        .arm-toggle-btn {
+            background: #ffffff;
+            border: 1.5px solid var(--border);
+            font-size: 8.5pt;
+            font-weight: 900;
+            padding: 1px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            color: var(--ink);
+            text-transform: uppercase;
+        }
+        .arm-toggle-btn.active {
+            background: #dc2626;
+            color: #ffffff;
+            border-color: #991b1b;
+        }
 
-    .al-row {
-        flex-wrap: wrap !important;
-        gap: 4px !important;
-    }
+        .arm-hint {
+            font-size: 8.5pt;
+            font-weight: 800;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin-bottom: 4px;
+            text-align: center;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .arm-hint.warn {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-color: #ef4444;
+            animation: armShake 0.3s;
+        }
+        .arm-hint.active {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #dc2626;
+            font-weight: 900;
+        }
+        @keyframes armShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
 
-    .al-desc {
-        min-width: 0 !important;
-        word-break: break-word !important;
-    }
-}
-</style>
+        .cmd-btn.locked {
+            opacity: 0.52;
+            cursor: not-allowed;
+            filter: grayscale(40%);
+        }
+        .cmd-btn.armed {
+            opacity: 1;
+            filter: none;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(2, 132, 199, 0.4);
+        }
+        .cmd-btn.danger.armed {
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+        }
+
+        .cmd-custom-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .cmd-input {
+            flex: 1;
+            font-family: var(--font-mono);
+            font-size: 11pt;
+            font-weight: 700;
+            padding: 4px 6px;
+            border: 2px solid var(--border);
+            border-radius: 3px;
+            background: #ffffff;
+        }
+        .cmd-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* ===== BOTTOM SECTION: EXPANDED LIVE TEXT TELEMETRY STREAM ===== */
+        footer.bottom-bar {
+            height: 120px;
+            min-height: 120px;
+            max-height: 120px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .terminal-box {
+            background: #ffffff;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: var(--font-mono);
+            font-size: 9.5pt;
+            height: 100%;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+        .terminal-line {
+            padding: 1px 0;
+            border-bottom: 1px dotted #e2e8f0;
+            color: #000000;
+            font-weight: 700;
+        }
+        .terminal-line.cmd {
+            color: #0284c7;
+            font-weight: 900;
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="app">
-
-    <!-- ==================== ZONA 1: CABECERA SUPERIOR (100% × 8%) ==================== -->
-    <header class="global-header">
-        <div class="brand">
-            <img src="assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
-            <h1>ESTACIÓN<br>TERRENA</h1>
-            <nav class="view-nav">
-                <a href="/gonogo" class="nav-tab">GO / NO-GO</a>
-                <a href="/" class="nav-tab active">TELEMETRÍA</a>
-                <a href="/recovery" class="nav-tab">RECUPERACIÓN</a>
-            </nav>
-            <button type="button" class="theme-toggle" id="btnThemeToggle" title="Alternar modo oscuro / claro" aria-label="Alternar modo oscuro / claro">
-                <span class="theme-icon" id="themeIcon">🌙</span>
-                <span class="theme-label" id="themeLabel">OSCURO</span>
-            </button>
+<div class="app-container">
+    <!-- ===== TOP STATUS HEADER ===== -->
+    <header class="top-bar">
+        <div class="brand-section">
+            <span class="brand-title">CanSat GS</span>
+            <span class="brand-subtitle" id="dispTeamId">TEAM 1000</span>
+            <span class="state-badge pad" id="dispFlightState">STANDBY</span>
         </div>
 
-        <div class="hgroup">
-            <div class="hcell"><span class="k">HORA LOCAL</span><span class="v clock num" id="localTime">00:00:00</span></div>
-            <div class="hcell"><span class="k">TIEMPO DE MISIÓN</span><span class="v clock num">T+ <span id="clock">00:00:00</span></span></div>
-            <div class="hcell"><span class="k">FASE DE VUELO</span><span class="phase" id="phase">---</span></div>
-            <div class="hcell"><span class="k">TEMP. IMU</span><span class="temp-pill" id="tempPill">IMU N/D</span></div>
-            <div class="hcell"><span class="k">SEÑAL RF (RSSI)</span><span class="v num nd" id="rssi">N/D</span></div>
-            <div class="hcell"><span class="k">PÉRDIDA DE PAQUETES</span><span class="v num" id="lossPercent">0,0 %</span></div>
-            <div class="hcell"><span class="k">ENLACE</span><span class="v" style="font-size:15px"><span class="dot" id="linkDot"></span><span id="linkStatus">DESCONECTADO</span></span></div>
+        <div class="header-metrics">
+            <div style="display:flex; align-items:baseline; gap:4px;">
+                <span style="font-size:11pt; font-weight:900; color:var(--ink-muted);">UTC:</span>
+                <span class="num" style="font-size:16pt; font-weight:950;" id="dispMissionTime">00:00:00</span>
+            </div>
+
+            <div style="display:flex; align-items:baseline; gap:4px;">
+                <span style="font-size:11pt; font-weight:900; color:var(--ink-muted);">RX:</span>
+                <span class="num" style="font-size:15pt; font-weight:950; color:var(--ok);" id="dispRxCount">0</span>
+            </div>
+
+            <div style="display:flex; align-items:baseline; gap:4px;">
+                <span style="font-size:11pt; font-weight:900; color:var(--ink-muted);">TX:</span>
+                <span class="num" style="font-size:15pt; font-weight:950;" id="dispTxCount">0</span>
+            </div>
+
+            <div style="display:flex; align-items:baseline; gap:4px;">
+                <span style="font-size:11pt; font-weight:900; color:var(--ink-muted);">LOST:</span>
+                <span class="num" style="font-size:15pt; font-weight:950; color:var(--bad);" id="dispLostCount">0</span>
+                <span class="num" style="font-size:11pt; font-weight:900; color:var(--ink-subtle);" id="dispLossPct">(0.0%)</span>
+            </div>
+
+            <span class="status-badge disconnected" id="dispRadioStatus">RADIO: OFF</span>
         </div>
     </header>
 
-    <main class="dashboard">
+    <!-- ===== MAIN THREE-COLUMN GRID ===== -->
+    <main class="main-grid">
 
-        <!-- ==================== ZONA 2: COLUMNA IZQUIERDA (26% × 81%) ==================== -->
-        <section class="panel">
+        <!-- ===== LEFT COLUMN: KEY FLIGHT TELEMETRY ===== -->
+        <div class="left-col">
 
-            <!-- 1. ALTITUD Y VELOCIDAD -->
-            <div class="card" style="flex: 1.6 1 0;">
-                <div class="card-title">
-                    <span>ALTITUD Y VELOCIDAD</span>
-                    <span class="card-frozen-badge" id="badgeFrozenAlt">CONGELADO</span>
+            <!-- Altitude & Vertical Speed -->
+            <div class="card" style="flex: 1.2 1 0;">
+                <div class="card-header">
+                    <span class="card-title">Altitude</span>
+                    <span class="card-unit">[m] rel. ground</span>
                 </div>
-                <div class="alt-body">
-                    <div class="tape"><canvas id="tape"></canvas></div>
-                    <div class="alt-side">
-                        <div>
-                            <div class="lbl">ACTUAL (BARO)</div>
-                            <div><span class="big num" id="altitude">---</span><span class="unit">m</span></div>
-                            <div style="font-size:13px; font-weight:800; color:var(--gray); margin-top:3px;">
-                                PRESIÓN: <span class="num" style="color:var(--ink); font-weight:950;" id="pressure">--- hPa</span>
-                            </div>
-                        </div>
-                        <div class="row"><span class="k">APOGEO (MÁX)</span><span class="v num" id="altitudeMax">---</span></div>
-                        <div class="row"><span class="k">VEL. VERTICAL (Vz)</span><span class="v num" id="altitudeVz">---</span></div>
+                <div class="metric-val big highlight" id="dispAltitude">0.0 <span style="font-size:13pt;">m</span></div>
 
-                        <!-- GPS altitude readout -->
-                        <div class="divergence-wrap" id="gpsAltWrap" title="Altitud GPS" style="padding:6px 10px;">
-                            <span class="divergence-title">GPS ALTITUD</span>
-                            <span class="divergence-delta num" id="gpsAltCard">--- m</span>
-                        </div>
+                <div style="background:#f8fafc; border:1.5px solid var(--border-light); border-radius:3px; padding:4px 6px; margin-top:auto;">
+                    <div class="metric-row">
+                        <span class="metric-label">Vertical Speed (Vz):</span>
+                        <span class="metric-val num" id="dispVz">0.0 m/s</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:2px;">
+                        <span class="metric-label">Descent Status:</span>
+                        <span class="compliance-tag" id="tagDescent">STANDBY</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. DINÁMICA INERCIAL (G-METER AXIAL & GIROSCOPIO BIPOLAR) -->
-            <div class="card" style="flex: 0.8 1 0; padding: 6px 8px;">
-                <div class="card-title" style="margin-bottom:4px;">
-                    <span>DINÁMICA INERCIAL (IMU)</span>
-                    <span class="card-frozen-badge" id="badgeFrozenImu">CONGELADO</span>
+            <!-- Atmosphere & Power -->
+            <div class="card" style="flex: 1.1 1 0;">
+                <div class="card-header">
+                    <span class="card-title">Sensors & Power</span>
+                    <span class="card-unit">SI Units</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Pressure:</span>
+                    <span class="metric-val num" id="dispPressure">101.3 <span style="font-size:10.5pt;">kPa</span></span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Temperature:</span>
+                    <span class="metric-val num" id="dispTemperature">20.0 <span style="font-size:10.5pt;">°C</span></span>
+                </div>
+                <div class="metric-row" style="border-top:1px dotted var(--border-light); padding-top:4px; margin-top:2px;">
+                    <span class="metric-label">Battery Voltage:</span>
+                    <span class="metric-val num" id="dispVoltage">3.70 <span style="font-size:10.5pt;">V</span></span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Battery Current:</span>
+                    <span class="metric-val num" id="dispCurrent">0.24 <span style="font-size:10.5pt;">A</span></span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Power:</span>
+                    <span class="metric-val num" id="dispPower">0.89 <span style="font-size:10.5pt;">W</span></span>
+                </div>
+            </div>
+
+            <!-- Avionics & Telecommand Echo -->
+            <div class="card" style="flex: 0.9 1 0;">
+                <div class="card-header">
+                    <span class="card-title">Avionics Status</span>
+                    <span class="card-unit">System</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Flight Mode:</span>
+                    <span class="metric-val num" id="dispMode">FLIGHT (F)</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Packet Rate:</span>
+                    <span class="metric-val num" id="dispRate">1.0 Hz</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Command Echo:</span>
+                    <span class="metric-val num highlight" style="font-size:12pt;" id="dispCmdEcho">BOOT_OK</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== CENTER COLUMN: 5 REAL-TIME CHARTS ===== -->
+        <div class="center-col">
+
+            <!-- Top Row: Altitude, Voltage, Current -->
+            <div class="chart-row-top">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <span class="card-title">Altitude</span>
+                        <span class="card-unit">[m]</span>
+                    </div>
+                    <div class="chart-box"><canvas id="chartAltitude"></canvas></div>
                 </div>
 
-                <div style="display:flex; gap:10px; flex:1; min-height:0; align-items:stretch;">
-                    <!-- G-METER AXIAL (accel_x) con marcas Dual Peak (-2g a +12g) -->
-                    <div style="display:flex; flex-direction:column; align-items:center; width:42px; flex-shrink:0;">
-                        <div style="font-size:10px; font-weight:900; color:var(--gray); margin-bottom:3px;">G-LOAD</div>
-                        <div class="gmeter-track" style="flex:1; width:26px; position:relative;" id="gmeterTrack">
-                            <div class="gmeter-zero" id="gmeterZero" style="bottom: 14.3%;"></div>
-                            <div class="gmeter-bar" id="gmeterBar" style="height: 14.3%;"></div>
-                            <div class="gmeter-peak-boost" id="gmeterPeakBoost" style="bottom: 14.3%;" title="Pico Boost"></div>
-                            <div class="gmeter-peak-shock" id="gmeterPeakShock" style="bottom: 14.3%;" title="Pico Shock"></div>
-                        </div>
-                        <div style="font-size:12.5px; font-weight:950; font-family:monospace; margin-top:3px;" id="gmeterVal">+0.0g</div>
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <span class="card-title">Battery Voltage</span>
+                        <span class="card-unit">[V]</span>
                     </div>
+                    <div class="chart-box"><canvas id="chartVoltage"></canvas></div>
+                </div>
 
-                    <!-- TABLA AXES + BARRAS BIPOLARES GYRO -->
-                    <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between; min-width:0;">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <span class="card-title">Battery Current</span>
+                        <span class="card-unit">[A]</span>
+                    </div>
+                    <div class="chart-box"><canvas id="chartCurrent"></canvas></div>
+                </div>
+            </div>
 
-                        <!-- Micro-tabla Accel XYZ con signo explícito -->
-                        <div>
-                            <div style="font-size:10.5px; font-weight:900; color:var(--gray); letter-spacing:.05em; margin-bottom:4px;">ACELERACIÓN LINEAL (g)</div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; text-align:center;">
-                                <div class="num" style="background:var(--soft); border:1.5px solid var(--soft-border); padding:4px 2px; border-radius:3px;">
-                                    <div style="font-size:9.5px; font-weight:900; color:var(--gray)">TRANS X</div>
-                                    <div style="font-size:15.5px; font-weight:950; margin-top:1px;" id="ax">+00.00</div>
-                                </div>
-                                <div class="num" style="background:var(--soft); border:1.5px solid var(--soft-border); padding:4px 2px; border-radius:3px;">
-                                    <div style="font-size:9.5px; font-weight:900; color:var(--gray)">AXIAL Y</div>
-                                    <div style="font-size:15.5px; font-weight:950; margin-top:1px;" id="ay">+00.00</div>
-                                </div>
-                                <div class="num" style="background:var(--soft); border:1.5px solid var(--soft-border); padding:4px 2px; border-radius:3px;">
-                                    <div style="font-size:9.5px; font-weight:900; color:var(--gray)">TRANS Z</div>
-                                    <div style="font-size:15.5px; font-weight:950; margin-top:1px;" id="az">+00.00</div>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Bottom Row: 3-Axis Accel & 3-Axis Gyro -->
+            <div class="chart-row-bottom">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <span class="card-title">3-Axis Acceleration</span>
+                        <span class="card-unit">[m/s²]</span>
+                    </div>
+                    <div class="chart-box"><canvas id="chartAccel"></canvas></div>
+                    <div class="chart-legend">
+                        <span class="legend-item"><i class="legend-color" style="background:#0284c7;"></i> Ax (Roll)</span>
+                        <span class="legend-item"><i class="legend-color" style="background:#dc2626;"></i> Ay (Pitch)</span>
+                        <span class="legend-item"><i class="legend-color" style="background:#16a34a;"></i> Az (Yaw)</span>
+                    </div>
+                </div>
 
-                        <!-- Barras Bipolares Gyroscope XYZ (Centro 0, ±360°/s) -->
-                        <div style="margin-top:4px;">
-                            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px;">
-                                <span style="font-size:10.5px; font-weight:900; color:var(--gray); letter-spacing:.05em;">GIROSCOPIO (°/s)</span>
-                                <span style="font-size:10px; font-weight:800; color:var(--gray)">±360°/s</span>
-                            </div>
-
-                            <!-- Roll / Spin (X) -->
-                            <div class="gyro-bipolar-row">
-                                <span class="gyro-axis-lbl">X</span>
-                                <div class="gyro-track">
-                                    <div class="gyro-center-line"></div>
-                                    <div class="gyro-fill" id="gyroFillX" style="left:50%; width:0%;"></div>
-                                </div>
-                                <span class="gyro-val-text num" id="gx">+000.0</span>
-                            </div>
-
-                            <!-- Pitch (Y) -->
-                            <div class="gyro-bipolar-row">
-                                <span class="gyro-axis-lbl">Y</span>
-                                <div class="gyro-track">
-                                    <div class="gyro-center-line"></div>
-                                    <div class="gyro-fill" id="gyroFillY" style="left:50%; width:0%;"></div>
-                                </div>
-                                <span class="gyro-val-text num" id="gy">+000.0</span>
-                            </div>
-
-                            <!-- Yaw (Z) -->
-                            <div class="gyro-bipolar-row">
-                                <span class="gyro-axis-lbl">Z</span>
-                                <div class="gyro-track">
-                                    <div class="gyro-center-line"></div>
-                                    <div class="gyro-fill" id="gyroFillZ" style="left:50%; width:0%;"></div>
-                                </div>
-                                <span class="gyro-val-text num" id="gz">+000.0</span>
-                            </div>
-                        </div>
-
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <span class="card-title">3-Axis Gyroscope</span>
+                        <span class="card-unit">[°/s]</span>
+                    </div>
+                    <div class="chart-box"><canvas id="chartGyro"></canvas></div>
+                    <div class="chart-legend">
+                        <span class="legend-item"><i class="legend-color" style="background:#0284c7;"></i> Roll</span>
+                        <span class="legend-item"><i class="legend-color" style="background:#dc2626;"></i> Pitch</span>
+                        <span class="legend-item"><i class="legend-color" style="background:#16a34a;"></i> Yaw</span>
                     </div>
                 </div>
             </div>
 
-        </section>
+        </div>
 
-        <!-- ==================== ZONA 3: PANEL CENTRAL (44% × 81%) — 2 LARGE GRAPHS ==================== -->
-        <section class="panel">
+        <!-- ===== RIGHT COLUMN: GPS MAP & TELECOMMANDS ===== -->
+        <div class="right-col">
 
-            <!-- 1. GRÁFICO SUPERIOR (55% DEL ALTO): ALTITUD BARO vs GPS -->
-            <div class="card chart-card" style="flex: 1.25 1 0;">
-                <div class="card-title">
-                    <span>ALTITUD vs TIEMPO (m)</span>
-                    <span class="legend">
-                        <span><i style="background:#38bdf8; border-top:3px solid #38bdf8;"></i>BAROMÉTRICA</span>
-                        <span><i style="background:transparent; border-top:3px dashed #10b981;"></i>GPS</span>
-                    </span>
-                    <div class="scale-mode-pill" id="scaleSelector" title="Alternar modo de escala vertical (Trinquete / Auto / Fija)">
-                        <span class="scale-mode-lbl">ESCALA:</span>
-                        <button type="button" class="btn-scale-opt active" data-scale="ratchet" title="Sobre de vuelo con trinquete anti-bombeo">SOBRE</button>
-                        <button type="button" class="btn-scale-opt" data-scale="auto" title="Auto-escala dinámica por ventana">AUTO</button>
-                        <button type="button" class="btn-scale-opt" data-scale="fixed" title="Escala fija al apogeo planificado">FIJA</button>
-                    </div>
-                    <span class="hint">60 s</span>
+            <!-- GPS Position & Map -->
+            <div class="card" style="flex: 1.1 1 0;">
+                <div class="card-header">
+                    <span class="card-title">GPS Tracking</span>
+                    <span class="card-unit">Position</span>
                 </div>
-                <div class="chart-box"><canvas id="chAlt"></canvas></div>
-            </div>
-
-            <!-- 2. GRÁFICO INFERIOR: G-LOAD (aceleración axial) -->
-            <div class="card chart-card" style="flex: 1 1 0;">
-                <div class="card-title">
-                    <span>G-LOAD (ACEL. AXIAL — g)</span>
-                    <span class="legend">
-                        <span><i style="background:#b00020"></i>ACEL. AXIAL (g)</span>
-                        <span><i style="background:#f59e0b"></i>REF. 1 g</span>
-                    </span>
-                    <span class="hint">g (0 = ingravidez)</span>
+                <div id="gpsMap"></div>
+                <div class="metric-row" style="margin-top:4px;">
+                    <span class="metric-label">Satellites:</span>
+                    <span class="metric-val num highlight" id="dispGpsSats">0 sats</span>
                 </div>
-                <div class="chart-box"><canvas id="chVel"></canvas></div>
-            </div>
-
-            <!-- Hidden canvas for backwards compatibility -->
-            <canvas id="chAcc" style="display:none;" width="10" height="10"></canvas>
-
-        </section>
-
-        <!-- ==================== ZONA 4: COLUMNA DERECHA (30% × 81%) ==================== -->
-        <section class="panel">
-            <div class="card grow">
-                <div class="card-title">
-                    <span>POSICIÓN Y NAVEGACIÓN GPS</span>
-                    <span class="hint" id="fixQuality">RESCATE</span>
+                <div class="metric-row">
+                    <span class="metric-label">Coordinates:</span>
+                    <span class="metric-val num" style="font-size:10.5pt;" id="dispGpsCoords">--.----°, --.----°</span>
                 </div>
-
-                <!-- Mapa Satelital / Vectorial con rastro y semáforo de calidad -->
-                <div class="map-wrap" id="mapWrap">
-                    <div class="map-gps-banner" id="mapGpsBanner">
-                        [/\] SIN FIX GPS (POSICIÓN CONGELADA &lt; 4 SATÉLITES)
-                    </div>
-                    <div id="gpsMap" style="width:100%; height:100%;"></div>
-                </div>
-
-                <!-- Vector Guía de Rescate desde Base -->
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--soft); border:1.5px solid var(--border); padding:5px 10px; border-radius:3px; margin-top:6px;">
-                    <span style="font-size:11.5px; font-weight:900; color:var(--gray); letter-spacing:0.04em;">VECTOR DESDE BASE:</span>
-                    <span class="num" style="font-size:16px; font-weight:950; color:var(--accent);" id="guidanceVector">--- m • ---°</span>
-                </div>
-
-                <!-- Coordenadas Tabulares Grandes (2x2) -->
-                <div class="coords" style="grid-template-columns: 1fr 1fr; margin-top: 6px;">
-                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
-                        <div class="k">LATITUD</div>
-                        <div class="v num" id="lat">---</div>
-                    </div>
-                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
-                        <div class="k">LONGITUD</div>
-                        <div class="v num" id="lon">---</div>
-                    </div>
-                </div>
-                <div class="coords" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 6px;">
-                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
-                        <div class="k">ALTITUD GPS</div>
-                        <div class="v num" style="font-size:16px;" id="altGps">--- m</div>
-                    </div>
-                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
-                        <div class="k">VEL. SUELO</div>
-                        <div class="v num" style="font-size:16px;" id="groundSpeed">--- m/s</div>
-                    </div>
-                    <div style="background:var(--soft); padding:4px 8px; border-radius:3px; border:1px solid var(--soft-border);">
-                        <div class="k">SATÉLITES</div>
-                        <div class="v num" style="font-size:16px;" id="satellites">--</div>
-                    </div>
+                <div class="metric-row">
+                    <span class="metric-label">GPS Altitude:</span>
+                    <span class="metric-val num" style="font-size:11pt;" id="dispGpsAlt">--.- m MSL</span>
                 </div>
             </div>
-        </section>
+
+            <!-- Telecommand Panel with Safety Interlock -->
+            <div class="card" style="flex: 1.2 1 0; justify-content:space-between;">
+                <div class="card-header">
+                    <span class="card-title">Telecommands</span>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="arm-badge safe" id="armBadge">🔒 SAFE</span>
+                        <button class="arm-toggle-btn" id="armToggleBtn" type="button" onclick="toggleManualArm()" title="Click or hold SHIFT/A with one hand">ARM</button>
+                    </div>
+                </div>
+
+                <div class="arm-hint" id="armHint">
+                    Hold <b>[SHIFT]</b> or <b>[A]</b> with one hand to enable trigger
+                </div>
+
+                <div class="cmd-btn-grid">
+                    <button class="cmd-btn primary cmd-btn-armable locked" onclick="sendAction('calibrate_zero')">CAL ZERO</button>
+                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('set_time')">SYNC UTC</button>
+                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('reset_packet_count')">RESET PKT</button>
+                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('request_battery_solar')">QUERY BATT</button>
+                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('sim_enable')">SIM MODE</button>
+                    <button class="cmd-btn danger cmd-btn-armable locked" onclick="sendAction('mission_start')">START</button>
+                </div>
+
+                <!-- Custom Command Input -->
+                <div class="cmd-custom-row">
+                    <input type="text" class="cmd-input" id="customCmdInput" placeholder="CMD,1000,CAL">
+                    <button class="cmd-btn primary cmd-btn-armable locked" id="customSendBtn" style="padding:4px 10px;" onclick="sendCustomCommand()">SEND</button>
+                </div>
+
+                <div class="metric-row" style="margin-top:2px;">
+                    <span class="metric-label" style="font-size:10pt;">Last Sent:</span>
+                    <span class="metric-val num" style="font-size:10pt;" id="dispLastCmdSent">NONE</span>
+                </div>
+
+                <!-- Clean Flight CSV Export Button -->
+                <a href="/api/export/csv" download="Flight_1000.csv" class="cmd-btn primary" style="text-decoration:none; display:block; text-align:center; padding:5px 8px; margin-top:2px;">
+                    EXPORT FLIGHT CSV (USB)
+                </a>
+            </div>
+
+        </div>
     </main>
 
-    <!-- ==================== ZONA 5: FRANJA INFERIOR COMPACTA (2 PANELES) ==================== -->
-    <footer class="bottom">
-
-        <!-- EVENTOS PIROTÉCNICOS (RECUPERACIÓN) -->
-        <div class="card basecard" style="padding: 6px 8px;">
-            <div class="card-title" style="margin-bottom:4px;">
-                <span>EVENTOS PIROTÉCNICOS</span>
-                <span class="hint">RECUPERACIÓN</span>
+    <!-- ===== BOTTOM SECTION: RAW TEXT TELEMETRY STREAM ===== -->
+    <footer class="bottom-bar">
+        <div class="card" style="padding:4px 8px; height:100%;">
+            <div class="card-header" style="margin-bottom:2px; padding-bottom:1px;">
+                <span class="card-title" style="font-size:10pt;">Raw Telemetry Stream (1 Hz ASCII CSV)</span>
+                <span class="card-unit">Ascent & Descent</span>
             </div>
-            <div class="annun-grid">
-                <div class="annun-card state-idle" id="annunDrogue">
-                    <div class="annun-label">DROGUE (FRENADO)</div>
-                    <div class="annun-state" id="annunDrogueState">[0: EN ESPERA]</div>
-                </div>
-                <div class="annun-card state-idle" id="annunMain">
-                    <div class="annun-label">MAIN (PRINCIPAL)</div>
-                    <div class="annun-state" id="annunMainState">[0: EN ESPERA]</div>
-                </div>
+            <div class="terminal-box" id="rawTerminal">
+                <div class="terminal-line" style="color:var(--ink-subtle);">-- Awaiting CanSat telemetry stream... --</div>
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-title">
-                <span>HITOS DE VUELO</span>
-                <span class="hint" id="eventStats">0 eventos</span>
-            </div>
-            <div class="scroll" id="eventLog"><div class="empty">Sin hitos registrados</div></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                <span>ALERTAS OPERACIONALES (ISA-18.2)</span>
-                <span class="hint" id="alertStats">NOMINAL</span>
-            </div>
-            <div class="scroll" id="alertBox"></div>
-        </div>
-
-        <!-- Hidden compatibility DOM nodes -->
-        <div style="display:none;" aria-hidden="true">
-            <span id="diagRxAfterP0">0</span>
-            <span id="diagSeq">---</span>
-            <span id="diagLoss5s">0,0 %</span>
-            <span id="diagRate">0,0 Hz</span>
-            <span id="diagCrc">100%</span>
-        </div>
-
     </footer>
-
 </div>
 
-<script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-></script>
+<!-- ============================================================
+     REAL-TIME CHARTS & WEBSOCKET ENGINE
+     ============================================================ -->
 <script>
-"use strict";
+    // ------------------------------------------------------------
+    // 1. DATA CACHES & HIGH-CONTRAST CHART RENDERER
+    // ------------------------------------------------------------
+    const MAX_POINTS = 60;
+    const historyData = {
+        time: [],
+        altitude: [],
+        voltage: [],
+        current: [],
+        accel_r: [],
+        accel_p: [],
+        accel_y: [],
+        gyro_r: [],
+        gyro_p: [],
+        gyro_y: []
+    };
 
-/*
- * Solo se muestran datos tal como llegan en la trama (sin interpretación).
- * Los cálculos retirados (Kalman, Vz, velocidad, acimut/elevación, elipse
- * de impacto, actitud, alarmas) están documentados en
- * docs/future-calculations.md
- */
+    function renderTimeChart(canvasId, seriesList, unit, autoScale = true, fixedMin = 0, fixedMax = 100) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
 
-const CFG = {
-    windowMs: 60000,     // ventana de los gráficos
-    tapeSpanM: 200,      // metros visibles en la cinta
-    charts: {
-        scaling_mode: "ratchet",
-        altitude: {
-            pad_max_m: 50.0,
-            expected_apogee_m: 1500.0,
-            step_m: 500.0
-        },
-        acceleration: {
-            min_g: -2.0,
-            max_g: 12.0
-        },
-        velocity: {
-            min_vz_ms: -40.0,
-            max_vz_ms: 160.0,
-            step_ms: 50.0
-        }
-    }
-};
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
 
-const STATUS_LABELS = {
-    0: "STANDBY",
-    1: "POWERED",
-    2: "BURNOUT",
-    3: "BURNOUT",
-    4: "APOGEE",
-    7: "APOGEE",
-    8: "DROGUE_ORD",
-    15: "DROGUE_ORD",
-    16: "DROGUE_CONF",
-    31: "DROGUE_CONF",
-    32: "MAIN_ORD",
-    63: "MAIN_ORD",
-    64: "MAIN_CONF",
-    127: "MAIN_CONF",
-    128: "LANDED",
-    255: "LANDED"
-};
-const STATUS_SHORT = {
-    0: "STANDBY",
-    1: "POWERED",
-    2: "BURNOUT",
-    3: "BURNOUT",
-    4: "APOGEE",
-    7: "APOGEE",
-    8: "DROGUE_ORD",
-    15: "DROGUE_ORD",
-    16: "DROGUE_CONF",
-    31: "DROGUE_CONF",
-    32: "MAIN_ORD",
-    63: "MAIN_ORD",
-    64: "MAIN_CONF",
-    127: "MAIN_CONF",
-    128: "LANDED",
-    255: "LANDED"
-};
+        const dpr = window.devicePixelRatio || 1;
+        const w = rect.width;
+        const h = rect.height;
 
-/* Nombres para mostrar (el código crudo de la trama se usa solo para la lógica) */
-const PHASE_NAME = {
-    STANDBY:     "En espera",
-    POWERED:     "Motor encendido",
-    BURNOUT:     "Fin de empuje",
-    APOGEE:      "Apogeo",
-    DROGUE_ORD:  "Orden de drogue",
-    DROGUE_CONF: "Drogue desplegado",
-    MAIN_ORD:    "Orden de principal",
-    MAIN_CONF:   "Principal desplegado",
-    LANDED:      "Aterrizaje"
-};
-const PHASE_MARK = {
-    STANDBY: "ESPERA", POWERED: "ENCENDIDO", BURNOUT: "FIN EMPUJE", APOGEE: "APOGEO",
-    DROGUE_ORD: "ORD. DROGUE", DROGUE_CONF: "DROGUE", MAIN_ORD: "ORD. PRINC.",
-    MAIN_CONF: "PRINCIPAL", LANDED: "ATERRIZAJE"
-};
-const phaseName = raw => PHASE_NAME[raw] ?? raw;
-const phaseMark = raw => PHASE_MARK[raw] ?? raw;
-
-const state = {
-    startedAt: Date.now(),
-    liftoffDetected: false,
-    liftoffAt: null,
-    liftoffTs: null,
-
-    // Continuidad temporal monótona para gráficos (no resetea datos)
-    timeOffset: 0,
-    lastRawTs: null,
-
-    missionTimestamp: null,
-    missionTimestampAt: null,
-    lastChartTimestamp: null,
-    lastArrivalAt: 0,
-    altDisplay: null,
-
-    lastPacketAt: null,
-    packetTimes: [],
-    connected: false,
-    stats: { received: 0, lost: 0, invalid: 0, loss_percent: 0 },
-
-    // Ventana deslizante de 5 segundos para pérdida de paquetes
-    lastSeq: null,
-    p0Seen: false,
-    rxAfterP0: 0,
-    rxRate: 0,
-    seqWindow: [],      // { t, received, lost }
-    lossRecentPercent: 0,
-
-    hist: { alt: [], altGps: [], ax: [], ay: [], az: [], vz: [], speed: [] },
-    markers: [],
-
-    peakBoostG: 0,
-    peakShockG: 0,
-    baseCoords: null, // [lat, lon] origen de rampa
-    maxChartAlt: 0,
-    maxChartVz: 0,
-    minChartVz: 0,
-
-    altitude: null, maxAltitude: null, vz: null,
-    vzHistory: [],      // [{ t, alt }] para derivación limpia y sin ruido
-    pressure: null,
-
-    ax: null, ay: null, az: null,
-    gx: null, gy: null, gz: null,
-    tempImu: null,
-
-    lat: null, lon: null,
-    altGps: null,
-    groundSpeed: null,
-    satellites: null,
-
-    pinFrenado: null,
-    pinPrincipal: null,
-    statusText: null,
-    rssi: null,
-
-    events: [],
-    eventsVersion: 0,
-    frames: [],
-    framesVersion: 0,
-
-    socket: null,
-    reconnectTimer: null,
-    reconnectDelay: 1000,
-
-    map: null, marker: null, startMarker: null, route: null, routePoints: [], lastMapPoint: null, guidanceLine: null
-};
-window.state = state;
-
-/* ---------- utilidades ---------- */
-
-function setText(id, value) {
-    const el = $(id);
-    if (el && el.textContent !== value) el.textContent = value;
-}
-
-function fmt(value, decimals = 2) {
-    const n = Number(value);
-    return Number.isFinite(n)
-        ? new Intl.NumberFormat("es-AR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n)
-        : "---";
-}
-
-// fmtSigned is provided globally by /frontend/js/common.js
-function sgn(value, decimals) { return fmtSigned(value, decimals); }
-
-function elapsed(ms) {
-    const s = Math.max(0, Math.floor(ms / 1000));
-    const p = v => String(v).padStart(2, "0");
-    return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
-}
-
-function missionTime() {
-    if (!state.liftoffDetected) return 0;
-    if (state.missionTimestamp !== null && state.liftoffTs !== null) {
-        const elapsed = (state.missionTimestamp - state.liftoffTs) + (Date.now() - state.missionTimestampAt);
-        return Math.max(0, elapsed);
-    }
-    return Math.max(0, Date.now() - (state.liftoffAt || Date.now()));
-}
-
-function escapeHtml(t) {
-    return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-}
-
-function fitCanvas(canvas) {
-    const dpr = window.devicePixelRatio || 1;
-    const r = canvas.getBoundingClientRect();
-    const w = Math.max(1, Math.round(r.width * dpr));
-    const h = Math.max(1, Math.round(r.height * dpr));
-    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return { ctx, w: r.width, h: r.height };
-}
-
-function pushHist(key, t, v) {
-    if (!Number.isFinite(v)) return;
-    const list = state.hist[key];
-    list.push({ t, v });
-    const cutoff = t - CFG.windowMs;
-    let removeCount = 0;
-    while (removeCount < list.length && list[removeCount].t < cutoff) {
-        removeCount++;
-    }
-    if (removeCount > 0) {
-        list.splice(0, removeCount);
-    }
-}
-
-/* ---------- modelo: ingesta de telemetría ---------- */
-
-function addEvent(message, markerLabel = null) {
-    const t = missionTime();
-    state.events.unshift({ t, message });
-    if (state.events.length > 200) state.events.pop();
-    state.eventsVersion++;
-    if (markerLabel) state.markers.push({ t: state.lastChartTimestamp ?? t, label: markerLabel });
-    if (state.markers.length > 30) state.markers.shift();
-}
-
-function ingest(message, isHistory = false) {
-    const d = message.data || message.telemetry || message;
-    if (!d || typeof d !== "object") return;
-
-    const frameEpochMs = message.timestamp ? Math.round(message.timestamp * 1000) : Date.now();
-    const now = Date.now();
-    state.lastArrivalAt = now;
-    state.lastPacketAt = now;
-    if (!isHistory) {
-        state.packetTimes.push(now);
-    }
-
-    // Detección de saltos de secuencia para ventana de 5s y conteo post-paquete 0
-    const seq = Number(d.frame_number);
-    let lostInStep = 0;
-    if (Number.isFinite(seq)) {
-        if (seq === 0) {
-            state.p0Seen = true;
-        } else if (state.p0Seen) {
-            state.rxAfterP0++;
+        if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
         }
 
-        if (state.lastSeq !== null) {
-            const expected = (state.lastSeq + 1) & 0xFFFF;
-            if (seq !== expected) {
-                const diff = (seq - expected) & 0xFFFF;
-                if (diff < 1000) {  // Salto hacia adelante creíble
-                    lostInStep = diff;
-                }
-            }
-        }
-        state.lastSeq = seq;
-    }
-    state.seqWindow.push({ t: isHistory ? frameEpochMs : now, rec: 1, lost: lostInStep });
+        const ctx = canvas.getContext('2d');
+        ctx.resetTransform();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
 
-    const hasTs = Number.isFinite(Number(d.timestamp));
-    let ts;
-    if (hasTs) {
-        const rawTs = Number(d.timestamp);
-        if (state.lastRawTs !== null && rawTs < state.lastRawTs) {
-            // Continuidad monótona sin resetear datos ante reinicio de MCU o bucle de simulador
-            state.timeOffset += (state.lastRawTs + 200);
-        }
-        state.lastRawTs = rawTs;
-        ts = rawTs + state.timeOffset;
-        state.missionTimestamp = rawTs;
-        state.missionTimestampAt = now;
-    } else {
-        ts = now - state.startedAt;
-    }
-    state.lastChartTimestamp = ts;
+        const padL = 46;
+        const padR = 12;
+        const padT = 10;
+        const padB = 20;
 
-    if (message.statistics) state.stats = { ...state.stats, ...message.statistics };
+        const plotW = Math.max(10, w - padL - padR);
+        const plotH = Math.max(10, h - padT - padB);
 
-    // RF (solo si el backend lo envía)
-    if (Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
+        let minVal = fixedMin;
+        let maxVal = fixedMax;
 
-    // Satélites GPS
-    if (Number.isFinite(Number(d.satellites))) {
-        state.satellites = Number(d.satellites);
-        setText("satellites", String(state.satellites));
-    }
+        if (autoScale) {
+            let allVals = [];
+            seriesList.forEach(s => {
+                allVals.push(...s.data.filter(v => Number.isFinite(v)));
+            });
 
-    // altitud (admite altura_actual de la nueva trama o altitude legado)
-    const rawAlt = d.altura_actual !== undefined ? d.altura_actual : d.altitude;
-    const alt = Number(rawAlt);
-    if (Number.isFinite(alt)) {
-        state.altitude = alt;
-        state.maxAltitude = state.maxAltitude === null ? alt : Math.max(state.maxAltitude, alt);
-        state.maxChartAlt = Math.max(state.maxChartAlt || 0, alt);
-        pushHist("alt", ts, alt);
-
-        // Variación vertical (derivada con ventana deslizante de ~500 ms a 1 s)
-        const vzNow = isHistory ? frameEpochMs : now;
-        if (state.vzHistory.length > 0 && (Math.abs(alt - state.vzHistory[state.vzHistory.length - 1].alt) > 250 || vzNow < state.vzHistory[state.vzHistory.length - 1].t)) {
-            // Salto abrupto de reinicio del simulador: limpiar ventana de derivada
-            state.vzHistory = [];
-        }
-        state.vzHistory.push({ t: vzNow, alt });
-        const vzCutoff = vzNow - 1000;
-        let cutVz = 0;
-        while (cutVz < state.vzHistory.length && state.vzHistory[cutVz].t < vzCutoff) cutVz++;
-        if (cutVz > 0) state.vzHistory.splice(0, cutVz);
-
-        if (state.vzHistory.length >= 2) {
-            const first = state.vzHistory[0];
-            const dt = (vzNow - first.t) / 1000;
-            if (dt >= 0.2) {
-                const rawVz = (alt - first.alt) / dt;
-                if (Math.abs(rawVz) <= 350) {
-                    state.vz = rawVz;
-                    state.maxChartVz = Math.max(state.maxChartVz || 0, state.vz);
-                    state.minChartVz = Math.min(state.minChartVz || 0, state.vz);
-                    pushHist("vz", ts, state.vz);
-                }
-            }
-        }
-    }
-
-    // presión barométrica BMP280 (hPa)
-    if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) {
-        state.pressure = Number(d.pressure);
-    }
-
-    // aceleración lineal IMU (g)
-    const ax = Number(d.accel_x), ay = Number(d.accel_y), az = Number(d.accel_z);
-    if ([ax, ay, az].every(Number.isFinite)) {
-        state.ax = ax; state.ay = ay; state.az = az;
-        pushHist("ax", ts, ax);
-        pushHist("ay", ts, ay);
-        pushHist("az", ts, az);
-
-        // Actualización de marcas Dual Peak (Boost vs Parachute Shock)
-        const frameStatusText = d.status_label ?? (Number.isFinite(Number(d.status)) ? STATUS_LABELS[Number(d.status)] : null) ?? state.statusText ?? "";
-        const phase = String(frameStatusText).toUpperCase();
-        if (phase.includes("POWERED") || phase.includes("BURNOUT") || phase.includes("STANDBY") || phase.includes("MOTOR") || phase.includes("EMPUJE") || phase.includes("ASCENT")) {
-            state.peakBoostG = Math.max(state.peakBoostG, ax);
-        }
-        if (phase.includes("DROGUE") || phase.includes("MAIN") || phase.includes("PRINCIPAL") || phase.includes("APOGEE") || phase.includes("APOGEO") || d.pin_frenado === 1 || d.pin_principal === 1 || state.pinFrenado === 1 || state.pinPrincipal === 1) {
-            state.peakShockG = Math.max(state.peakShockG, Math.abs(ax));
-        }
-    }
-
-    // velocidad angular giroscopio IMU (°/s)
-    const gx = Number(d.gyro_x), gy = Number(d.gyro_y), gz = Number(d.gyro_z);
-    if ([gx, gy, gz].every(Number.isFinite)) {
-        state.gx = gx; state.gy = gy; state.gz = gz;
-    }
-
-    // temperatura del sensor IMU (°C)
-    if (d.temp_imu !== undefined && Number.isFinite(Number(d.temp_imu))) {
-        state.tempImu = Number(d.temp_imu);
-    }
-
-    // posición y navegación GPS
-    const lat = Number(d.latitude), lon = Number(d.longitude);
-    if (Number.isFinite(lat) && Number.isFinite(lon) &&
-        Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
-        state.lat = lat; state.lon = lon;
-        if (state.baseCoords === null && Number(state.satellites || 0) >= 4) {
-            state.baseCoords = [lat, lon];
-        }
-        if (isHistory && (Math.abs(lat) > 0.001 || Math.abs(lon) > 0.001)) {
-            const pt = [lat, lon];
-            const prev = state.routePoints.length ? state.routePoints[state.routePoints.length - 1] : null;
-            if (!prev || Math.abs(lat - prev[0]) > 0.000015 || Math.abs(lon - prev[1]) > 0.000015) {
-                state.routePoints.push(pt);
-                if (state.routePoints.length > 2000) state.routePoints.shift();
-                state.lastMapPoint = pt;
-            }
-        }
-    }
-
-    if (d.altitud_gps !== undefined && Number.isFinite(Number(d.altitud_gps))) {
-        state.altGps = Number(d.altitud_gps);
-        pushHist("altGps", ts, state.altGps);
-    }
-
-    if (d.ground_speed !== undefined && Number.isFinite(Number(d.ground_speed))) {
-        state.groundSpeed = Number(d.ground_speed);
-        pushHist("speed", ts, state.groundSpeed);
-    }
-
-    // Pines de pirotecnia de recuperación
-    if (d.pin_frenado !== undefined && Number.isFinite(Number(d.pin_frenado))) {
-        const pf = Number(d.pin_frenado);
-        if (state.pinFrenado === 0 && pf === 1) {
-            addEvent("Pirotecnia: Pin de frenado activado (Drogue)", "PIN FRENADO");
-        }
-        state.pinFrenado = pf;
-    }
-
-    if (d.pin_principal !== undefined && Number.isFinite(Number(d.pin_principal))) {
-        const pp = Number(d.pin_principal);
-        if (state.pinPrincipal === 0 && pp === 1) {
-            addEvent("Pirotecnia: Pin principal activado", "PIN PRINC.");
-        }
-        state.pinPrincipal = pp;
-    }
-
-    // fase de vuelo y detección de despegue (T-0)
-    const code = Number.isFinite(Number(d.status)) ? Number(d.status) : null;
-    const text = d.status_label ?? (code !== null ? STATUS_LABELS[code] : null);
-
-    const isFlightPhase = (code !== null && code > 0 && text !== "STANDBY" && text !== "Standby" && text !== "Pre-launch" && text !== "PRE-LAUNCH") ||
-                          (text && !["STANDBY", "Standby", "Pre-launch", "PRE-LAUNCH"].includes(text));
-
-    // Detección inicial de despegue (T-0)
-    if (!state.liftoffDetected && (isFlightPhase || (state.altitude !== null && state.altitude > 25))) {
-        state.liftoffDetected = true;
-        state.liftoffAt = now;
-        state.liftoffTs = hasTs ? Number(d.timestamp) : 0;
-        addEvent("Despegue detectado (T-0)", "T-0");
-    }
-
-    // Registro de eventos ante cambio de fase
-    if (text) {
-        if (state.statusText === null) {
-            // Primer paquete recibido al abrir la sesión: registrar solo la fase inicial
-            state.statusText = text;
-        } else if (state.statusText !== text) {
-            // Detección de nuevo vuelo tras ciclo de simulador o nuevo ensayo
-            if (state.statusText === "LANDED" && (text === "STANDBY" || text === "POWERED")) {
-                state.liftoffDetected = (text === "POWERED");
-                state.liftoffAt = now;
-                state.liftoffTs = hasTs ? Number(d.timestamp) : 0;
-                state.maxChartAlt = 0;
-                state.maxChartVz = 0;
-                state.minChartVz = 0;
-            }
-            state.statusText = text;
-            addEvent(`Fase: ${phaseName(text)}`, phaseMark(text));
-        }
-    }
-
-    // Registro en eventos solo ante cambio de fase
-    // (procesado arriba)
-
-    state.connected = true;
-    $("linkDot").classList.add("online");
-}
-
-/* ---------- gráficos ---------- */
-
-/* Borde derecho de los gráficos: último timestamp de trama + tiempo transcurrido
-   desde su llegada (máx. 250 ms), para que la ventana se desplace de forma continua. */
-function chartEnd() {
-    if (state.lastChartTimestamp === null) return 0;
-    return state.lastChartTimestamp + Math.min(250, Date.now() - state.lastArrivalAt);
-}
-
-function niceRange(min, max, minSpan, fixedMin, fixedMax) {
-    let effMin = Number.isFinite(min) ? min : 0;
-    let effMax = Number.isFinite(max) ? max : 0;
-
-    // El 0 SIEMPRE debe estar contenido en el rango
-    effMin = Math.min(effMin, 0);
-    effMax = Math.max(effMax, 0);
-
-    // Si hay límites fijos mínimos/máximos garantizados
-    if (fixedMin !== undefined && fixedMin !== null) {
-        effMin = Math.min(effMin, fixedMin);
-    }
-    if (fixedMax !== undefined && fixedMax !== null) {
-        effMax = Math.max(effMax, fixedMax);
-    }
-
-    const span = Math.max(effMax - effMin, minSpan);
-    if (fixedMin !== undefined && fixedMin !== null && fixedMax !== undefined && fixedMax !== null) {
-        // Para aceleración con rango nominal fijo pero expandible si supera
-        return [effMin, Math.max(effMin + span, effMax)];
-    }
-    const pad = span * 0.08;
-    return [Math.min(effMin - pad, 0), effMax + pad];
-}
-
-function drawChart(canvasId, series, decimals, minSpan, signedLabels, fixedMin, fixedMax) {
-    const canvasEl = $(canvasId);
-    if (!canvasEl || canvasEl.style.display === "none") return;
-    const { ctx, w, h } = fitCanvas(canvasEl);
-    ctx.clearRect(0, 0, w, h);
-
-    const left = 54, right = 10, top = 8, bottom = 20;
-    const pw = w - left - right, ph = h - top - bottom;
-    if (pw <= 0 || ph <= 0) return;
-
-    const end = chartEnd();
-    const start = end - CFG.windowMs;
-
-    let min = Infinity, max = -Infinity;
-    for (const s of series) {
-        for (let i = 0; i < s.data.length; i++) {
-            const p = s.data[i];
-            if (p.t >= start - 1000) {
-                if (p.v < min) min = p.v;
-                if (p.v > max) max = p.v;
-            }
-        }
-    }
-    const [lo, hi] = niceRange(min, max, minSpan, fixedMin, fixedMax);
-    const invTime = pw / CFG.windowMs;
-    const invRange = (hi > lo) ? ph / (hi - lo) : 0;
-    const X = t => left + (t - start) * invTime;
-    const Y = v => top + ph - (v - lo) * invRange;
-
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    const textCol = isDark ? "#c9d4e0" : "#222222";
-    const gridCol = isDark ? "#1e2a38" : "#dddddd";
-    const zeroCol = isDark ? "#64788f" : "#666666";
-    const borderCol = isDark ? "#2d4057" : "#000000";
-
-    ctx.font = "bold 12px Arial";
-    ctx.fillStyle = textCol;
-    ctx.strokeStyle = gridCol;
-    ctx.lineWidth = 1;
-
-    ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    for (let i = 0; i <= 4; i++) {
-        const v = lo + ((hi - lo) * i) / 4, y = Y(v);
-        ctx.strokeStyle = gridCol;
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + pw, y); ctx.stroke();
-        ctx.fillText((signedLabels && v > 0 ? "+" : "") + fmt(v, decimals), left - 6, y);
-    }
-
-    // Prominent zero reference line (double line)
-    if (lo <= 0 && hi >= 0) {
-        const y0 = Y(0);
-        ctx.strokeStyle = isDark ? "#e2e8f0" : "#000000";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([]);
-        for (const dy of [-2.5, 2.5]) {
-            ctx.beginPath(); ctx.moveTo(left, y0 + dy); ctx.lineTo(left + pw, y0 + dy); ctx.stroke();
-        }
-    }
-    ctx.strokeStyle = gridCol;
-    ctx.lineWidth = 1;
-    ctx.textBaseline = "top";
-    for (let s = 0; s <= 60; s += 15) {
-        const x = left + (s / 60) * pw;
-        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
-        ctx.textAlign = s === 0 ? "left" : (s === 60 ? "right" : "center");
-        ctx.fillText(s === 60 ? "0 s" : `−${60 - s} s`, s === 0 ? left : (s === 60 ? left + pw : x), top + ph + 3);
-    }
-
-    ctx.save();
-    ctx.beginPath(); ctx.rect(left, top, pw, ph); ctx.clip();
-    ctx.lineWidth = 2.6; ctx.lineJoin = "round";
-    for (const s of series) {
-        if (s.data.length < 2) continue;
-        let strokeColor = s.color;
-        if (isDark && (s.color === "#000" || s.color === "#000000" || s.color === "#0056b3")) {
-            strokeColor = "#38bdf8";
-        }
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = s.lineWidth || 2.6;
-        ctx.setLineDash(s.dash || []);
-
-        ctx.beginPath();
-        for (let i = 0; i < s.data.length; i++) {
-            const p = s.data[i];
-            const x = X(p.t), y = Y(p.v);
-            if (i === 0) {
-                ctx.moveTo(x, y);
+            if (allVals.length > 0) {
+                let actualMin = Math.min(...allVals);
+                let actualMax = Math.max(...allVals);
+                let span = actualMax - actualMin;
+                if (span < 1.0) span = 1.0;
+                minVal = actualMin - span * 0.15;
+                maxVal = actualMax + span * 0.15;
             } else {
-                const prev = s.data[i - 1];
-                if (p.t - prev.t > 300) {
-                    ctx.stroke();
-                    // Red dashed bridging line for dropout
-                    ctx.save();
-                    ctx.strokeStyle = "#ef4444";
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([3, 3]);
-                    ctx.beginPath();
-                    ctx.moveTo(X(prev.t), Y(prev.v));
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    ctx.restore();
-                    // Resume normal series line
-                    ctx.beginPath();
-                    ctx.strokeStyle = strokeColor;
-                    ctx.lineWidth = s.lineWidth || 2.6;
-                    ctx.setLineDash(s.dash || []);
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
+                minVal = 0;
+                maxVal = 10;
             }
         }
+
+        if (maxVal === minVal) maxVal += 1;
+
+        // Axes (2px bold)
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        ctx.lineTo(padL, h - padB);
+        ctx.lineTo(w - padR, h - padB);
         ctx.stroke();
-        ctx.setLineDash([]);
+
+        // Horizontal Grid & Y-Ticks
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1.0;
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '700 9pt "Consolas", monospace';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        const ySteps = 3;
+        for (let i = 0; i <= ySteps; i++) {
+            const frac = i / ySteps;
+            const y = (h - padB) - (frac * plotH);
+            const val = minVal + frac * (maxVal - minVal);
+
+            ctx.beginPath();
+            ctx.moveTo(padL, y);
+            ctx.lineTo(w - padR, y);
+            ctx.stroke();
+
+            const text = Math.abs(val) >= 100 ? val.toFixed(0) : val.toFixed(1);
+            ctx.fillText(text, padL - 4, y);
+        }
+
+        // Plot Series Traces (3px bold)
+        if (historyData.time.length > 1) {
+            seriesList.forEach(s => {
+                if (!s.data || s.data.length < 2) return;
+
+                ctx.strokeStyle = s.color;
+                ctx.lineWidth = 3.0;
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+
+                let started = false;
+                for (let i = 0; i < s.data.length; i++) {
+                    const val = s.data[i];
+                    if (!Number.isFinite(val)) continue;
+
+                    const x = padL + (i / (MAX_POINTS - 1)) * plotW;
+                    const y = (h - padB) - ((val - minVal) / (maxVal - minVal)) * plotH;
+
+                    if (!started) {
+                        ctx.moveTo(x, y);
+                        started = true;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            });
+        }
     }
 
-    // Vertical phase markers
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([5, 4]);
-    ctx.font = "bold 11px Arial";
-    ctx.textAlign = "left"; ctx.textBaseline = "top";
-    for (const m of state.markers) {
-        if (m.t < start || m.t > end) continue;
-        const x = X(m.t);
-        ctx.strokeStyle = isDark ? "#38bdf8" : "#000";
-        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + ph); ctx.stroke();
-        const tw = ctx.measureText(m.label).width + 6;
-        ctx.setLineDash([]);
-        ctx.fillStyle = isDark ? "#17202d" : "#fff"; ctx.fillRect(x + 1, top + 1, tw, 15);
-        ctx.fillStyle = isDark ? "#f0f6fc" : "#000";
-        ctx.fillText(m.label, x + 4, top + 2);
-        ctx.setLineDash([5, 4]);
+    function updateAllCharts() {
+        renderTimeChart('chartAltitude', [
+            { data: historyData.altitude, color: '#0284c7' }
+        ], 'm', true);
+
+        renderTimeChart('chartVoltage', [
+            { data: historyData.voltage, color: '#16a34a' }
+        ], 'V', false, 3.0, 4.5);
+
+        renderTimeChart('chartCurrent', [
+            { data: historyData.current, color: '#ca8a04' }
+        ], 'A', false, 0.0, 0.8);
+
+        renderTimeChart('chartAccel', [
+            { data: historyData.accel_r, color: '#0284c7' },
+            { data: historyData.accel_p, color: '#dc2626' },
+            { data: historyData.accel_y, color: '#16a34a' }
+        ], 'm/s²', true);
+
+        renderTimeChart('chartGyro', [
+            { data: historyData.gyro_r, color: '#0284c7' },
+            { data: historyData.gyro_p, color: '#dc2626' },
+            { data: historyData.gyro_y, color: '#16a34a' }
+        ], '°/s', true);
     }
-    ctx.setLineDash([]);
-    ctx.restore();
 
-    ctx.strokeStyle = borderCol; ctx.lineWidth = 2;
-    ctx.strokeRect(left, top, pw, ph);
-}
+    // ------------------------------------------------------------
+    // 2. LEAFLET GPS MAP
+    // ------------------------------------------------------------
+    let map = null;
+    let gpsMarker = null;
+    let gpsTrack = null;
+    const trackCoords = [];
 
-let lastTapeTime = 0;
-function drawTape(now) {
-    const { ctx, w, h } = fitCanvas($("tape"));
-    ctx.clearRect(0, 0, w, h);
-    if (state.altitude !== null) {
-        if (state.altDisplay === null || Math.abs(state.altitude - state.altDisplay) > 500) {
-            state.altDisplay = state.altitude;
+    function initMap() {
+        const defaultLat = -31.5238;
+        const defaultLon = -64.4642;
+
+        map = L.map('gpsMap', { zoomControl: false }).setView([defaultLat, defaultLon], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        gpsMarker = L.circleMarker([defaultLat, defaultLon], {
+            radius: 6,
+            fillColor: '#0284c7',
+            color: '#000000',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.95
+        }).addTo(map);
+
+        gpsTrack = L.polyline([], {
+            color: '#dc2626',
+            weight: 3.0,
+            opacity: 0.9
+        }).addTo(map);
+    }
+
+    function updateGpsMap(lat, lon) {
+        if (!map || !Number.isFinite(lat) || !Number.isFinite(lon) || (lat === 0 && lon === 0)) return;
+        const pos = [lat, lon];
+        gpsMarker.setLatLng(pos);
+        trackCoords.push(pos);
+        if (trackCoords.length > 500) trackCoords.shift();
+        gpsTrack.setLatLngs(trackCoords);
+        map.panTo(pos);
+    }
+
+    // ------------------------------------------------------------
+    // 3. SAFETY INTERLOCK & TELECOMMAND DISPATCH
+    // ------------------------------------------------------------
+    let isArmed = false;
+    let manualArmToggle = false;
+
+    function setArmed(armed) {
+        isArmed = armed;
+        const badge = document.getElementById('armBadge');
+        const hint = document.getElementById('armHint');
+        const toggleBtn = document.getElementById('armToggleBtn');
+        const buttons = document.querySelectorAll('.cmd-btn-armable');
+
+        if (isArmed) {
+            if (badge) {
+                badge.textContent = '🚨 ARMED';
+                badge.className = 'arm-badge armed';
+            }
+            if (hint) {
+                hint.innerHTML = '🚨 <b>TRIGGER ARMED:</b> Press any button to transmit';
+                hint.className = 'arm-hint active';
+            }
+            if (toggleBtn) toggleBtn.classList.add('active');
+            buttons.forEach(btn => {
+                btn.classList.remove('locked');
+                btn.classList.add('armed');
+            });
         } else {
-            const dt = (now && lastTapeTime) ? Math.min((now - lastTapeTime) / 1000, 0.1) : 0.016;
-            const factor = 1 - Math.exp(-5.5 * dt);
-            state.altDisplay += (state.altitude - state.altDisplay) * factor;
-        }
-    }
-    if (now) lastTapeTime = now;
-    const alt = state.altDisplay ?? 0;
-    const ppm = h / CFG.tapeSpanM, cy = h / 2;
-
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    ctx.fillStyle = isDark ? "#090d14" : "#fff"; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = isDark ? "#2d4057" : "#000"; ctx.fillStyle = isDark ? "#f0f6fc" : "#000";
-    ctx.font = "bold 13px Arial"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
-
-    const first = Math.floor((alt - CFG.tapeSpanM / 2) / 10) * 10;
-    const last = Math.ceil((alt + CFG.tapeSpanM / 2) / 10) * 10;
-    for (let m = first; m <= last; m += 10) {
-        const y = cy - (m - alt) * ppm;
-        const major = m % 50 === 0;
-        ctx.lineWidth = major ? 2 : 1;
-        ctx.beginPath(); ctx.moveTo(w, y); ctx.lineTo(w - (major ? 22 : 11), y); ctx.stroke();
-        if (major) ctx.fillText(String(m), 6, y);
-    }
-    ctx.beginPath();
-    ctx.moveTo(w, cy); ctx.lineTo(w - 14, cy - 8); ctx.lineTo(w - 14, cy + 8); ctx.closePath(); ctx.fill();
-    ctx.fillRect(0, cy - 2, w - 14, 4);
-}
-
-/* ---------- mapa ---------- */
-
-function initMap() {
-    if (!window.L) { console.error("No se pudo cargar Leaflet; mapa no disponible"); return; }
-    state.map = L.map("gpsMap", { zoomControl: true }).setView([-34.6, -58.65], 5);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(state.map);
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    state.route = L.polyline([], { color: isDark ? "#38bdf8" : "#111", weight: 4 }).addTo(state.map);
-    setTimeout(() => state.map.invalidateSize(), 100);
-    window.addEventListener("resize", () => state.map && state.map.invalidateSize());
-    window.addEventListener("themechange", e => {
-        const dark = e.detail?.theme === "dark";
-        if (state.route) {
-            state.route.setStyle({ color: dark ? "#38bdf8" : "#111" });
-        }
-    });
-}
-
-let lastRoutePush = 0;
-function updateMap() {
-    if (state.lat === null || state.lon === null) return;
-    setText("lat", fmt(state.lat, 6));
-    setText("lon", fmt(state.lon, 6));
-    if (!state.map) return;
-
-    const point = [state.lat, state.lon];
-    const now = Date.now();
-
-    // Solo acumular puntos si el vehículo se movió al menos ~1.5m para optimizar rendimiento
-    const moved = !state.lastMapPoint ||
-        Math.abs(state.lat - state.lastMapPoint[0]) > 0.000015 ||
-        Math.abs(state.lon - state.lastMapPoint[1]) > 0.000015;
-
-    if (moved && now - lastRoutePush > 500) {
-        lastRoutePush = now;
-        state.lastMapPoint = point;
-        state.routePoints.push(point);
-        if (state.routePoints.length > 2000) state.routePoints.shift();
-        if (state.route) state.route.addLatLng(point);
-    }
-    if (state.baseCoords) {
-        if (!state.startMarker) {
-            state.startMarker = L.circleMarker(state.baseCoords, { radius: 6, color: "#087a3b", fillColor: "#087a3b", fillOpacity: 1 })
-                .addTo(state.map).bindTooltip("Base / Rampa");
-        }
-        if (!state.guidanceLine) {
-            state.guidanceLine = L.polyline([state.baseCoords, point], {
-                color: "#f59e0b",
-                weight: 2,
-                dashArray: "4, 4",
-                opacity: 0.85
-            }).addTo(state.map);
-        } else {
-            state.guidanceLine.setLatLngs([state.baseCoords, point]);
+            if (badge) {
+                badge.textContent = '🔒 SAFE';
+                badge.className = 'arm-badge safe';
+            }
+            if (hint) {
+                hint.innerHTML = 'Hold <b>[SHIFT]</b> or <b>[A]</b> with one hand to enable trigger';
+                hint.className = 'arm-hint';
+            }
+            if (toggleBtn) toggleBtn.classList.remove('active');
+            buttons.forEach(btn => {
+                btn.classList.add('locked');
+                btn.classList.remove('armed');
+            });
         }
     }
 
-    if (!state.marker) {
-        state.marker = L.circleMarker(point, { radius: 7, color: "#000", fillColor: "#fff", fillOpacity: 1, weight: 3 }).addTo(state.map);
-        state.map.setView(point, 15);
-    } else {
-        state.marker.setLatLng(point);
-    }
-    if (moved && state.routePoints.length > 1) state.map.panTo(point, { animate: false });
-}
-
-/* ---------- presentación ---------- */
-
-function renderText() {            // ~10 Hz
-    const now = Date.now();
-    const silenceMs = state.lastPacketAt !== null ? (now - state.lastPacketAt) : 0;
-    const isFrozen = state.connected && state.lastPacketAt !== null && silenceMs > 300;
-
-    // Degradación visual por pérdida de paquetes (>300ms de silencio)
-    const dashboardEl = document.querySelector(".dashboard");
-    if (dashboardEl) {
-        dashboardEl.classList.toggle("stale-dim", isFrozen);
-    }
-    ["badgeFrozenAlt", "badgeFrozenImu"].forEach(id => {
-        const b = $(id);
-        if (b) b.classList.toggle("active", isFrozen);
-    });
-
-    // 1. Altitud y Presión
-    if (state.altitude !== null) {
-        setText("altitude", fmt(state.altitude, 0));
-        setText("altitudeMax", `${fmt(state.maxAltitude, 0)} m`);
-        setText("altitudeVz", state.vz !== null ? `${fmtSigned(state.vz, 1)} m/s` : "--- m/s");
-    }
-    if (state.pressure !== null) {
-        setText("pressure", `${fmt(state.pressure, 1)} hPa`);
-    }
-
-    // GPS altitude readout
-    setText("gpsAltCard", state.altGps !== null ? `${fmt(state.altGps, 0)} m` : "--- m");
-
-    // 2. G-Meter Axial (accel_x: -2g a +12g)
-    const gmeterBar = $("gmeterBar");
-    const gmeterVal = $("gmeterVal");
-    const gPeakBoost = $("gmeterPeakBoost");
-    const gPeakShock = $("gmeterPeakShock");
-
-    if (gmeterBar && state.ax !== null) {
-        const ax = state.ax;
-        if (gmeterVal) gmeterVal.textContent = `${fmtSigned(ax, 1)}g`;
-
-        // Rango de -2g a +12g (14g de amplitud total)
-        const zeroPct = (2 / 14) * 100; // 14.28%
-        if (ax >= 0) {
-            const hPct = Math.min(100 - zeroPct, (ax / 14) * 100);
-            gmeterBar.style.bottom = `${zeroPct}%`;
-            gmeterBar.style.height = `${hPct}%`;
-        } else {
-            const hPct = Math.min(zeroPct, (Math.abs(ax) / 14) * 100);
-            gmeterBar.style.bottom = `${zeroPct - hPct}%`;
-            gmeterBar.style.height = `${hPct}%`;
-        }
-
-        // Marcas Dual Peak (Boost vs Paracaídas)
-        if (gPeakBoost) {
-            const boostPct = Math.min(100, Math.max(0, ((state.peakBoostG - (-2)) / 14) * 100));
-            gPeakBoost.style.bottom = `${boostPct}%`;
-        }
-        if (gPeakShock) {
-            const shockPct = Math.min(100, Math.max(0, ((state.peakShockG - (-2)) / 14) * 100));
-            gPeakShock.style.bottom = `${shockPct}%`;
+    function flashArmWarning() {
+        const hint = document.getElementById('armHint');
+        if (hint) {
+            hint.innerHTML = '⚠️ <b>LOCKED!</b> Hold <b>[SHIFT]</b> or <b>[A]</b> to unlock trigger!';
+            hint.className = 'arm-hint warn';
+            setTimeout(() => {
+                if (!isArmed) {
+                    hint.innerHTML = 'Hold <b>[SHIFT]</b> or <b>[A]</b> with one hand to enable trigger';
+                    hint.className = 'arm-hint';
+                }
+            }, 2000);
         }
     }
 
-    // Micro-tabla Aceleración Lineal XYZ con signo explícito
-    if (state.ax !== null) setText("ax", fmtSigned(state.ax, 2));
-    if (state.ay !== null) setText("ay", fmtSigned(state.ay, 2));
-    if (state.az !== null) setText("az", fmtSigned(state.az, 2));
+    function toggleManualArm() {
+        manualArmToggle = !manualArmToggle;
+        setArmed(manualArmToggle);
+    }
 
-    // 3. Giroscopio Bipolar (±360°/s con centro 0)
-    function updateGyroAxis(fillId, textId, val, warnThresh, critThresh) {
-        const fill = $(fillId);
-        if (!fill) return;
-        setText(textId, val !== null ? fmtSigned(val, 1) : " --- ");
-        if (val === null || !Number.isFinite(val)) {
-            fill.style.width = "0%";
-            fill.className = "gyro-fill";
+    async function sendAction(actionName) {
+        if (!isArmed) {
+            flashArmWarning();
             return;
         }
-        const v = Math.max(-360, Math.min(360, val));
-        const absV = Math.abs(v);
-        const halfWidthPct = (absV / 360) * 50;
 
-        if (v >= 0) {
-            fill.style.left = "50%";
-            fill.style.width = `${halfWidthPct}%`;
-        } else {
-            fill.style.left = `${50 - halfWidthPct}%`;
-            fill.style.width = `${halfWidthPct}%`;
-        }
-
-        if (absV >= critThresh) fill.className = "gyro-fill crit";
-        else if (absV >= warnThresh) fill.className = "gyro-fill warn";
-        else fill.className = "gyro-fill";
-    }
-
-    updateGyroAxis("gyroFillX", "gx", state.gx, 180, 360); // Roll / Spin
-    updateGyroAxis("gyroFillY", "gy", state.gy, 180, 250); // Pitch / Tumble
-    updateGyroAxis("gyroFillZ", "gz", state.gz, 180, 250); // Yaw / Tumble
-
-    // 4. Pines de Pirotecnia
-    if (state.pinFrenado !== null) setAnnunciator("annunDrogue", "annunDrogueState", state.pinFrenado);
-    if (state.pinPrincipal !== null) setAnnunciator("annunMain", "annunMainState", state.pinPrincipal);
-
-    // 5. Coordenadas y Navegación
-    if (state.altGps !== null) setText("altGps", `${fmt(state.altGps, 0)} m`);
-    if (state.groundSpeed !== null) setText("groundSpeed", `${fmt(state.groundSpeed, 1)} m/s`);
-    if (state.satellites !== null) {
-        setText("satellites", String(state.satellites));
-        const mapWrap = $("mapWrap");
-        if (mapWrap) {
-            mapWrap.classList.toggle("no-fix", state.satellites < 4);
-        }
-        setText("fixQuality", state.satellites >= 4 ? "3D FIX" : "SIN FIX");
-    }
-
-    // Vector de Rescate desde Base
-    if (state.baseCoords && state.lat !== null && state.lon !== null) {
-        const R = 6371000;
-        const dLat = (state.lat - state.baseCoords[0]) * Math.PI / 180;
-        const dLon = (state.lon - state.baseCoords[1]) * Math.PI / 180;
-        const lat1 = state.baseCoords[0] * Math.PI / 180;
-        const lat2 = state.lat * Math.PI / 180;
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distM = Math.round(R * c);
-
-        const y = Math.sin(dLon) * Math.cos(lat2);
-        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-        const brg = Math.round(((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360);
-        setText("guidanceVector", `${distM.toLocaleString("es-AR")} m • ${String(brg).padStart(3, "0")}°`);
-    }
-}
-
-function setAnnunciator(cardId, stateId, val) {
-    const card = $(cardId);
-    const stateEl = $(stateId);
-    if (!card || !stateEl) return;
-
-    const isActive = Number(val) === 1;
-    const targetClass = isActive ? "annun-card state-active" : "annun-card state-idle";
-    if (card.className !== targetClass) {
-        card.className = targetClass;
-        if (isActive) {
-            stateEl.innerHTML = '<span class="annun-icon">[OK]</span>[1: DESPLEGADO]';
-        } else {
-            stateEl.textContent = "[0: EN ESPERA]";
-        }
-    }
-}
-
-function setOptional(id, value, fmtFn) {
-    const el = $(id);
-    if (value === null) { setText(id, "N/D"); el.className = "v num nd"; return; }
-    setText(id, fmtFn(value));
-    el.className = "v num";
-}
-
-function renderHeader() {          // ~2 Hz
-    updateGlobalHeader({
-        missionTimeMs: missionTime(),
-        status: state.statusText,
-        rssi: state.rssi,
-        lossPercent: state.lossRecentPercent,
-        connected: state.connected,
-        lastPacketAt: state.lastPacketAt,
-        tempImu: state.tempImu
-    });
-}
-
-let eventsRendered = -1;
-let lastAlertsHtml = "";
-function renderLogs() {            // ~4 Hz
-    // 1. Registro de eventos
-    if (eventsRendered !== state.eventsVersion) {
-        eventsRendered = state.eventsVersion;
-        $("eventLog").innerHTML = state.events.length
-            ? state.events.map(e => `<div class="ev-row"><span class="ev-time num">T+ ${elapsed(e.t)}</span>${escapeHtml(e.message)}</div>`).join("")
-            : '<div class="empty">Sin hitos registrados</div>';
-    }
-
-    // 2. Mantenimiento de ventana de 5s para paquetes
-    const now = Date.now();
-    const cutoff = now - 5000;
-    let cutSeq = 0;
-    while (cutSeq < state.seqWindow.length && state.seqWindow[cutSeq].t < cutoff) cutSeq++;
-    if (cutSeq > 0) state.seqWindow.splice(0, cutSeq);
-
-    let rec5s = 0, lost5s = 0;
-    for (let i = 0; i < state.seqWindow.length; i++) {
-        rec5s += state.seqWindow[i].rec;
-        lost5s += state.seqWindow[i].lost;
-    }
-    const tot5s = rec5s + lost5s;
-    state.lossRecentPercent = tot5s > 0 ? (lost5s / tot5s) * 100 : 0;
-
-    // Tasa RX
-    let cutIdx = 0;
-    while (cutIdx < state.packetTimes.length && state.packetTimes[cutIdx] < cutoff) cutIdx++;
-    if (cutIdx > 0) state.packetTimes.splice(0, cutIdx);
-    const span = state.packetTimes.length > 1 ? (state.packetTimes.at(-1) - state.packetTimes[0]) / 1000 : 0;
-    const rate = span > 0 ? (state.packetTimes.length - 1) / span : 0;
-    state.rxRate = rate;
-    const age = state.lastPacketAt === null ? "--" : `${((now - state.lastPacketAt) / 1000).toFixed(1)} s`;
-
-    setText("eventStats", `${state.events.length} eventos`);
-
-    // Actualización de tarjeta de Diagnóstico de Enlace
-    setText("diagRxAfterP0", state.rxAfterP0.toLocaleString("es-AR"));
-    setText("diagSeq", state.lastSeq !== null ? state.lastSeq.toLocaleString("es-AR") : "---");
-    setText("diagLoss5s", `${fmt(state.lossRecentPercent, 1)} %`);
-    setText("diagRate", `${rate.toFixed(1)} Hz`);
-
-    // Integridad CRC16
-    const totalCrc = (state.stats.received || 0) + (state.stats.invalid || 0);
-    const crcPct = totalCrc > 0 ? (100 - ((state.stats.invalid || 0) / totalCrc) * 100) : 100;
-    const crcEl = $("diagCrc");
-    if (crcEl) {
-        crcEl.textContent = `${crcPct.toFixed(1)} %`;
-        crcEl.style.color = (state.stats.invalid || 0) > 0 ? "var(--warn)" : "var(--ok)";
-    }
-
-    // Color condicional en la pérdida de los últimos 5s
-    const lossEl = $("diagLoss5s");
-    if (lossEl) {
-        if (state.lossRecentPercent > 15) lossEl.style.color = "var(--bad)";
-        else if (state.lossRecentPercent > 5) lossEl.style.color = "var(--warn)";
-        else lossEl.style.color = "var(--ink)";
-    }
-
-    // 3. Panel de Alertas activas y estado de enlace (ISA-18.2)
-    const alerts = [];
-    const isDisconnected = !state.connected || (state.lastPacketAt !== null && now - state.lastPacketAt > 3000);
-    const isDegraded = state.connected && state.lastPacketAt !== null && now - state.lastPacketAt > 1500;
-
-    if (isDisconnected) {
-        alerts.push({ badge: "crit", text: "Enlace perdido", val: `Sin señal hace ${age}` });
-    } else if (isDegraded) {
-        alerts.push({ badge: "warn", text: "Enlace degradado", val: `Sin datos hace ${age}` });
-    }
-
-    // Alerta Transónica Mach Dip
-    if (state.liftoffDetected && state.altitude !== null && state.altGps !== null && Number(state.satellites || 0) >= 4) {
-        const delta = Math.abs(state.altitude - state.altGps);
-        if (delta > 60) {
-            alerts.push({ badge: "crit", text: "Divergencia Baro-GPS (Mach dip)", val: `Δ ${fmt(delta, 1)} m` });
-        } else if (delta > 30) {
-            alerts.push({ badge: "warn", text: "Divergencia barométrica moderada", val: `Δ ${fmt(delta, 1)} m` });
+        try {
+            const resp = await fetch('/api/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: actionName })
+            });
+            const res = await resp.json();
+            const lastEl = document.getElementById('dispLastCmdSent');
+            if (lastEl) lastEl.textContent = res.command || actionName;
+            logTerminalLine(`[CMD SENT] ${res.command || actionName} (Status: ${res.status})`, true);
+        } catch (e) {
+            logTerminalLine(`[CMD ERROR] ${e.message}`, true);
         }
     }
 
-    // Alerta Tumbling o Spin
-    const maxTumble = Math.max(Math.abs(state.gy ?? 0), Math.abs(state.gz ?? 0));
-    if (maxTumble >= 250) {
-        alerts.push({ badge: "crit", text: "Alerta de Tumbling (Caída descontrolada)", val: `${fmt(maxTumble, 0)} °/s` });
-    } else if (Math.abs(state.gx ?? 0) >= 180) {
-        alerts.push({ badge: "warn", text: "Rotación axial de spin elevada", val: `${fmt(Math.abs(state.gx), 0)} °/s` });
+    async function sendCustomCommand() {
+        if (!isArmed) {
+            flashArmWarning();
+            return;
+        }
+
+        const input = document.getElementById('customCmdInput');
+        const cmd = input.value.trim();
+        if (!cmd) return;
+
+        try {
+            const resp = await fetch('/api/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: cmd })
+            });
+            const res = await resp.json();
+            const lastEl = document.getElementById('dispLastCmdSent');
+            if (lastEl) lastEl.textContent = res.command || cmd;
+            logTerminalLine(`[CMD SENT] ${res.command || cmd} (Status: ${res.status})`, true);
+            input.value = '';
+        } catch (e) {
+            logTerminalLine(`[CMD ERROR] ${e.message}`, true);
+        }
     }
 
-    if (state.lossRecentPercent > 15) {
-        alerts.push({ badge: "crit", text: "Pérdida alta de paquetes (últimos 5 s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
-    } else if (state.lossRecentPercent > 5) {
-        alerts.push({ badge: "warn", text: "Pérdida moderada de paquetes (últimos 5 s)", val: `${fmt(state.lossRecentPercent, 1)} %` });
+    function logTerminalLine(text, isCmd = false) {
+        const terminal = document.getElementById('rawTerminal');
+        if (!terminal) return;
+        const div = document.createElement('div');
+        div.className = isCmd ? 'terminal-line cmd' : 'terminal-line';
+        div.textContent = text;
+        terminal.prepend(div);
+        if (terminal.children.length > 80) {
+            terminal.removeChild(terminal.lastChild);
+        }
     }
 
-    const maxAcc = Math.max(Math.abs(state.ax ?? 0), Math.abs(state.ay ?? 0), Math.abs(state.az ?? 0));
-    if (maxAcc >= 9.5) {
-        alerts.push({ badge: "warn", text: "Aceleración cercana al límite", val: `${fmt(maxAcc, 1)} g` });
-    }
+    // ------------------------------------------------------------
+    // 4. TELEMETRY PACKET PROCESSOR & UI SYNC
+    // ------------------------------------------------------------
+    function handleTelemetryPacket(msg) {
+        const d = msg.data || {};
+        const stats = msg.statistics || {};
 
-    if (state.pinFrenado === 1) {
-        alerts.push({ badge: "warn", text: "Línea pirotécnica 1 activada (Drogue)", val: "ACTIVADO" });
-    }
-    if (state.pinPrincipal === 1) {
-        alerts.push({ badge: "warn", text: "Línea pirotécnica 2 activada (Principal)", val: "ACTIVADO" });
-    }
-    if (state.tempImu !== null && state.tempImu > 60) {
-        alerts.push({ badge: "warn", text: "Temperatura alta sensor IMU", val: `${fmt(state.tempImu, 1)} °C` });
-    }
+        // 1. Raw Text Terminal
+        if (msg.raw_line) {
+            logTerminalLine(msg.raw_line);
+        }
 
-    if (Number(state.stats.invalid ?? 0) > 0) {
-        alerts.push({ badge: "info", text: "Tramas con error de CRC", val: `${state.stats.invalid}` });
-    }
+        // 2. Mission Time & State
+        if (d.MISSION_TIME) document.getElementById('dispMissionTime').textContent = d.MISSION_TIME;
+        if (d.TEAM_ID) document.getElementById('dispTeamId').textContent = `TEAM ${d.TEAM_ID}`;
 
-    if (alerts.length === 0) {
-        alerts.push({ badge: "ok", text: "Todos los sistemas nominales", val: "OK" });
-    }
+        if (d.STATE) {
+            const stateEl = document.getElementById('dispFlightState');
+            if (stateEl) {
+                stateEl.textContent = d.STATE;
+                stateEl.className = 'state-badge';
+                const st = d.STATE.toUpperCase();
+                if (st.includes('PAD') || st.includes('STANDBY')) stateEl.classList.add('pad');
+                else if (st.includes('ASCENT') || st.includes('POWERED')) stateEl.classList.add('ascent');
+                else if (st.includes('APOGEE')) stateEl.classList.add('apogee');
+                else if (st.includes('DESCENT')) stateEl.classList.add('descent');
+                else if (st.includes('LANDED')) stateEl.classList.add('landed');
+            }
+        }
 
-    const alertsHtml = alerts.map(a =>
-        `<div class="al-row">
-            <span class="al-badge ${a.badge}">${a.badge === "crit" ? "CRÍTICO" : a.badge === "warn" ? "ALERTA" : a.badge === "ok" ? "OK" : "INFO"}</span>
-            <span class="al-desc">${a.text}</span>
-            <span class="al-val">${a.val}</span>
-        </div>`
-    ).join("");
-    if (alertsHtml !== lastAlertsHtml) {
-        lastAlertsHtml = alertsHtml;
-        $("alertBox").innerHTML = alertsHtml;
-    }
-    setText("alertStats", alerts.some(a => a.badge === "crit") ? "CRÍTICO" : (alerts.some(a => a.badge === "warn") ? "AVISO" : "NOMINAL"));
-}
+        // 3. Link Statistics
+        const rxEl = document.getElementById('dispRxCount');
+        if (rxEl) rxEl.textContent = stats.rx_count !== undefined ? stats.rx_count : stats.received || 0;
+        const txEl = document.getElementById('dispTxCount');
+        if (txEl) txEl.textContent = d.PACKET_COUNT !== undefined ? d.PACKET_COUNT : '--';
+        const lostEl = document.getElementById('dispLostCount');
+        if (lostEl) lostEl.textContent = stats.lost_count !== undefined ? stats.lost_count : stats.lost || 0;
+        const lossPctEl = document.getElementById('dispLossPct');
+        if (lossPctEl) lossPctEl.textContent = `(${stats.loss_percent || 0.0}%)`;
 
-function renderCharts() {          // 10 Hz
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    const altLineColor = isDark ? "#38bdf8" : "#000";
+        // 4. Altitude & Vertical Velocity
+        const altEl = document.getElementById('dispAltitude');
+        if (altEl && d.ALTITUDE !== undefined) {
+            altEl.innerHTML = `${Number(d.ALTITUDE).toFixed(1)} <span style="font-size:13pt;">m</span>`;
+        }
 
-    const mode = CFG.charts?.scaling_mode || "ratchet";
-    const cfgAlt = CFG.charts?.altitude || { pad_max_m: 50.0, expected_apogee_m: 1500.0, step_m: 500.0 };
-    const cfgAcc = CFG.charts?.acceleration || { min_g: -2.0, max_g: 12.0 };
-    const cfgVel = CFG.charts?.velocity || { min_vz_ms: -40.0, max_vz_ms: 160.0, step_ms: 50.0 };
+        const vz = stats.vertical_velocity || 0.0;
+        const vzEl = document.getElementById('dispVz');
+        if (vzEl) vzEl.textContent = `${vz > 0 ? '+' : ''}${vz.toFixed(1)} m/s`;
 
-    let altMin = 0, altMax = null, altSpan = 20;
-    let accMin = -2, accMax = 12, accSpan = 14;
-    let velMin = null, velMax = null, velSpan = 10;
+        // Unified Descent Status Tag
+        const tagDescent = document.getElementById('tagDescent');
+        if (tagDescent) {
+            const absVz = Math.abs(vz);
+            const st = (d.STATE || '').toUpperCase();
 
-    const inFlight = state.liftoffDetected || (state.statusText && !["STANDBY", "Standby", "Pre-launch", "PRE-LAUNCH"].includes(state.statusText));
-
-    if (mode === "ratchet") {
-        // En espera en rampa: sobre ajustado a pad_max_m (50m) para evitar zoom sobre ruido barométrico
-        // En vuelo: sobre ajustado al apogeo planificado (1500m), con trinquete monótono en pasos limpios
-        altMin = 0;
-        if (!inFlight) {
-            altMax = cfgAlt.pad_max_m || 50.0;
-        } else {
-            const step = cfgAlt.step_m || 500.0;
-            const expected = cfgAlt.expected_apogee_m || 1500.0;
-            const currentPeak = Math.max(state.maxAltitude || 0, state.maxChartAlt || 0);
-            if (currentPeak > expected) {
-                altMax = Math.ceil(currentPeak / step) * step;
+            if (st.includes('LANDED')) {
+                tagDescent.textContent = 'TOUCHDOWN';
+                tagDescent.className = 'compliance-tag ok';
+            } else if (st.includes('PAD') || st.includes('STANDBY')) {
+                tagDescent.textContent = 'STANDBY';
+                tagDescent.className = 'compliance-tag ok';
+            } else if (st.includes('ASCENT')) {
+                tagDescent.textContent = 'ASCENDING';
+                tagDescent.className = 'compliance-tag ok';
+            } else if (absVz >= 12.0 && absVz <= 18.0) {
+                tagDescent.textContent = 'C3 NOMINAL (15 m/s)';
+                tagDescent.className = 'compliance-tag ok';
+            } else if (absVz >= 2.0 && absVz <= 8.0) {
+                tagDescent.textContent = 'C4 NOMINAL (5 m/s)';
+                tagDescent.className = 'compliance-tag ok';
             } else {
-                altMax = expected;
+                tagDescent.textContent = absVz > 18.0 ? 'HIGH VELOCITY' : 'DESCENT';
+                tagDescent.className = 'compliance-tag warn';
             }
         }
-        altSpan = altMax;
 
-        // Aceleración: nominal -2g a +12g (se expande automáticamente si hay pico >12g)
-        accMin = cfgAcc.min_g;
-        accMax = cfgAcc.max_g;
-        accSpan = accMax - accMin;
+        // 5. Environmental Sensors
+        const pEl = document.getElementById('dispPressure');
+        if (pEl && d.PRESSURE !== undefined) pEl.innerHTML = `${Number(d.PRESSURE).toFixed(1)} <span style="font-size:10.5pt;">kPa</span>`;
+        const tEl = document.getElementById('dispTemperature');
+        if (tEl && d.TEMPERATURE !== undefined) tEl.innerHTML = `${Number(d.TEMPERATURE).toFixed(1)} <span style="font-size:10.5pt;">°C</span>`;
 
-        // Velocidad: -40 m/s a +160 m/s (trinquete si supera el máximo previsto de burnout)
-        velMin = cfgVel.min_vz_ms;
-        const velStep = cfgVel.step_ms || 50.0;
-        const currentVzMax = Math.max(0, state.maxChartVz || 0);
-        if (currentVzMax > cfgVel.max_vz_ms) {
-            velMax = Math.ceil(currentVzMax / velStep) * velStep;
-        } else {
-            velMax = cfgVel.max_vz_ms;
+        // 6. Battery Power
+        const vEl = document.getElementById('dispVoltage');
+        if (vEl && d.VOLTAGE !== undefined) vEl.innerHTML = `${Number(d.VOLTAGE).toFixed(2)} <span style="font-size:10.5pt;">V</span>`;
+        const iEl = document.getElementById('dispCurrent');
+        if (iEl && d.CURRENT !== undefined) iEl.innerHTML = `${Number(d.CURRENT).toFixed(2)} <span style="font-size:10.5pt;">A</span>`;
+        const pwrEl = document.getElementById('dispPower');
+        if (pwrEl && d.VOLTAGE !== undefined && d.CURRENT !== undefined) {
+            const pwr = Number(d.VOLTAGE) * Number(d.CURRENT);
+            pwrEl.innerHTML = `${pwr.toFixed(2)} <span style="font-size:10.5pt;">W</span>`;
         }
-        velSpan = (velMax || 160) - (velMin || -40);
 
-    } else if (mode === "fixed") {
-        // Sobre rígido locked al apogeo y límites nominales del cohete
-        altMin = 0;
-        altMax = cfgAlt.expected_apogee_m || 1500.0;
-        altSpan = altMax;
+        // 7. Mode & Rate
+        const modeEl = document.getElementById('dispMode');
+        if (modeEl && d.MODE) modeEl.textContent = d.MODE === 'S' ? 'SIMULATION (S)' : 'FLIGHT (F)';
+        const rateEl = document.getElementById('dispRate');
+        if (rateEl && stats.rate_hz !== undefined) rateEl.textContent = `${Number(stats.rate_hz).toFixed(1)} Hz`;
 
-        accMin = cfgAcc.min_g;
-        accMax = cfgAcc.max_g;
-        accSpan = accMax - accMin;
+        // 8. Command Echo
+        const echoEl = document.getElementById('dispCmdEcho');
+        if (echoEl && d.CMD_ECHO) echoEl.textContent = d.CMD_ECHO;
 
-        velMin = cfgVel.min_vz_ms;
-        velMax = cfgVel.max_vz_ms;
-        velSpan = (velMax || 160) - (velMin || -40);
+        // 9. GPS
+        const satsEl = document.getElementById('dispGpsSats');
+        if (satsEl && d.GPS_SATS !== undefined) satsEl.textContent = `${d.GPS_SATS} sats`;
+        const coordsEl = document.getElementById('dispGpsCoords');
+        if (coordsEl && d.GPS_LATITUDE !== undefined && d.GPS_LONGITUDE !== undefined) {
+            coordsEl.textContent = `${Number(d.GPS_LATITUDE).toFixed(4)}°, ${Number(d.GPS_LONGITUDE).toFixed(4)}°`;
+            updateGpsMap(Number(d.GPS_LATITUDE), Number(d.GPS_LONGITUDE));
+        }
+        const gpsAltEl = document.getElementById('dispGpsAlt');
+        if (gpsAltEl && d.GPS_ALTITUDE !== undefined) gpsAltEl.textContent = `${Number(d.GPS_ALTITUDE).toFixed(1)} m`;
 
-    } else {
-        // "auto": Auto-escala dinámica por ventana deslizante
-        altMin = 0;
-        altMax = null;
-        altSpan = 20;
+        // 10. Append to Graph Buffers
+        historyData.time.push(d.MISSION_TIME || new Date().toISOString().substring(11, 19));
+        historyData.altitude.push(Number(d.ALTITUDE || 0));
+        historyData.voltage.push(Number(d.VOLTAGE || 0));
+        historyData.current.push(Number(d.CURRENT || 0));
+        historyData.accel_r.push(Number(d.ACCEL_R || 0));
+        historyData.accel_p.push(Number(d.ACCEL_P || 0));
+        historyData.accel_y.push(Number(d.ACCEL_Y || 0));
+        historyData.gyro_r.push(Number(d.GYRO_R || 0));
+        historyData.gyro_p.push(Number(d.GYRO_P || 0));
+        historyData.gyro_y.push(Number(d.GYRO_Y || 0));
 
-        accMin = null;
-        accMax = null;
-        accSpan = 4;
+        if (historyData.time.length > MAX_POINTS) {
+            for (let k in historyData) {
+                historyData[k].shift();
+            }
+        }
 
-        velMin = null;
-        velMax = null;
-        velSpan = 10;
+        updateAllCharts();
     }
 
-    // Chart 1 (50% H): Altitud Baro (sólida) vs GPS (punteada verde)
-    drawChart("chAlt", [
-        { data: state.hist.alt, color: altLineColor, lineWidth: 2.2 },
-        { data: state.hist.altGps, color: "#10b981", lineWidth: 1.8, dash: [4, 4] }
-    ], 0, altSpan, false, altMin, altMax);
+    // ------------------------------------------------------------
+    // 5. WEBSOCKET CONNECTION ENGINE
+    // ------------------------------------------------------------
+    let ws = null;
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
 
-    // Chart 2 (25% H): Aceleración Axial Accel X (-2g a +12g)
-    drawChart("chAcc", [
-        { data: state.hist.ax, color: "#b00020", lineWidth: 2.2 }
-    ], 1, accSpan, true, accMin, accMax);
+        ws = new WebSocket(wsUrl);
 
-    // Chart 3 (25% H): G-LOAD (axial accel, g) with a dashed 1 g reference series
-    const oneG = state.hist.ax.length >= 2
-        ? [{ t: state.hist.ax[0].t, v: 1 }, { t: state.hist.ax[state.hist.ax.length - 1].t, v: 1 }]
-        : [];
-    drawChart("chVel", [
-        { data: oneG, color: "#f59e0b", lineWidth: 1.6, dash: [6, 4] },
-        { data: state.hist.ax, color: "#b00020", lineWidth: 2.4 }
-    ], 1, accSpan, true, accMin, accMax);
-}
-
-/* ---------- selector de escala de gráficos ---------- */
-
-let userSelectedScaleMode = false;
-
-function initScaleSelector() {
-    const selector = $("scaleSelector");
-    if (!selector) return;
-    const buttons = selector.querySelectorAll(".btn-scale-opt");
-    buttons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            const mode = btn.getAttribute("data-scale");
-            if (!mode) return;
-            userSelectedScaleMode = true;
-            CFG.charts.scaling_mode = mode;
-            buttons.forEach(b => b.classList.toggle("active", b === btn));
-        });
-    });
-}
-
-/* ---------- conexión ---------- */
-
-function setConnection(connected) {
-    state.connected = connected;
-    $("linkDot").classList.toggle("online", connected);
-}
-
-function connect() {
-    if (state.socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(state.socket.readyState)) return;
-    const scheme = location.protocol === "https:" ? "wss:" : "ws:";
-    state.socket = new WebSocket(`${scheme}//${location.host}/ws/telemetry`);
-    state.socket.onopen = () => { state.reconnectDelay = 1000; setConnection(true); };
-    state.socket.onmessage = event => {
-        let message;
-        try { message = JSON.parse(event.data); }
-        catch (error) { console.error("Mensaje WebSocket inválido", error); return; }
-        if (message.type === "connection") setConnection(Boolean(message.connected));
-        else if (message.type === "telemetry") ingest(message);
-        else if (message.type === "statistics") state.stats = { ...state.stats, ...(message.statistics || {}) };
-    };
-    state.socket.onerror = error => console.error("WebSocket telemetry error", error);
-    state.socket.onclose = () => {
-        setConnection(false);
-        if (!state.reconnectTimer) {
-            state.reconnectTimer = setTimeout(() => { state.reconnectTimer = null; connect(); }, state.reconnectDelay);
-            state.reconnectDelay = Math.min(state.reconnectDelay * 2, 10000);
-        }
-    };
-}
-
-async function loadStatus() {
-    try {
-        const response = await fetch("/api/status", { cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const status = await response.json();
-        setConnection(Boolean(status.connected));
-        if (status.statistics) state.stats = { ...state.stats, ...status.statistics };
-        if (status.charts) {
-            if (!userSelectedScaleMode && status.charts.scaling_mode) {
-                CFG.charts.scaling_mode = status.charts.scaling_mode;
+        ws.onopen = () => {
+            const radioEl = document.getElementById('dispRadioStatus');
+            if (radioEl) {
+                radioEl.textContent = 'LINK: CONNECTED';
+                radioEl.className = 'status-badge connected';
             }
-            if (status.charts.altitude) CFG.charts.altitude = { ...CFG.charts.altitude, ...status.charts.altitude };
-            if (status.charts.acceleration) CFG.charts.acceleration = { ...CFG.charts.acceleration, ...status.charts.acceleration };
-            if (status.charts.velocity) CFG.charts.velocity = { ...CFG.charts.velocity, ...status.charts.velocity };
+        };
 
-            const selector = $("scaleSelector");
-            if (selector) {
-                const buttons = selector.querySelectorAll(".btn-scale-opt");
-                buttons.forEach(b => b.classList.toggle("active", b.getAttribute("data-scale") === CFG.charts.scaling_mode));
-            }
-        }
-    } catch (error) {
-        console.warn("No se pudo leer estado de la estación", error);
-    }
-}
-
-async function loadHistory() {
-    await fetchHistory60s(
-        item => ingest(item, true),
-        res => {
-            if (res && res.frames && res.frames.length > 0) {
-                if (state.route && state.routePoints.length > 0) {
-                    state.route.setLatLngs(state.routePoints);
+        ws.onmessage = (evt) => {
+            try {
+                const msg = JSON.parse(evt.data);
+                if (msg.type === 'telemetry') {
+                    handleTelemetryPacket(msg);
+                } else if (msg.type === 'connection') {
+                    const radioEl = document.getElementById('dispRadioStatus');
+                    if (radioEl) {
+                        if (msg.connected) {
+                            radioEl.textContent = 'LINK: CONNECTED';
+                            radioEl.className = 'status-badge connected';
+                        } else {
+                            radioEl.textContent = 'LINK: DISCONNECTED';
+                            radioEl.className = 'status-badge disconnected';
+                        }
+                    }
+                } else if (msg.type === 'command_dispatched') {
+                    logTerminalLine(`[UPLINK] Command ${msg.command}: ${msg.status}`, true);
                 }
-                drawTape(performance.now());
-                renderCharts();
-                renderText();
-                updateMap();
-                renderLogs();
-                renderHeader();
+            } catch (e) {
+                console.error('Error handling WebSocket message', e);
             }
+        };
+
+        ws.onclose = () => {
+            const radioEl = document.getElementById('dispRadioStatus');
+            if (radioEl) {
+                radioEl.textContent = 'LINK: DISCONNECTED';
+                radioEl.className = 'status-badge disconnected';
+            }
+            setTimeout(connectWebSocket, 2000);
+        };
+    }
+
+    // ------------------------------------------------------------
+    // 6. INITIALIZATION & RESIZE LISTENERS
+    // ------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        connectWebSocket();
+        window.addEventListener('resize', () => {
+            if (map) map.invalidateSize();
+            updateAllCharts();
+        });
+
+        // Enter key in custom command input
+        const customInput = document.getElementById('customCmdInput');
+        if (customInput) {
+            customInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') sendCustomCommand();
+            });
         }
-    );
-}
 
-/* ---------- bucle: requestAnimationFrame (frecuencia de la pantalla) ----------
-   cinta y gráficos: cada cuadro · números: ~30 Hz · mapa/logs: 4 Hz · cabecera: 2 Hz */
+        // Keyboard Hold-to-Arm Safety Trigger
+        window.addEventListener('keydown', (e) => {
+            // If typing inside custom command input and pressing 'a'/'A', do not trigger ARM
+            if (e.target && e.target.id === 'customCmdInput' && (e.key === 'a' || e.key === 'A')) {
+                return;
+            }
+            if (e.key === 'Shift' || e.key === 'a' || e.key === 'A' || e.key === 'Control' || e.key === 'Alt') {
+                setArmed(true);
+            }
+        });
 
-let lastText = 0, lastSlow = 0, lastHeader = 0;
-function loop(now) {
-    drawTape(now);
-    renderCharts();
-    if (now - lastText >= 33) { lastText = now; renderText(); }
-    if (now - lastSlow >= 250) { lastSlow = now; updateMap(); renderLogs(); }
-    if (now - lastHeader >= 200) { lastHeader = now; renderHeader(); }
-    requestAnimationFrame(loop);
-}
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'Shift' || e.key === 'a' || e.key === 'A' || e.key === 'Control' || e.key === 'Alt') {
+                if (!manualArmToggle) {
+                    setArmed(false);
+                }
+            }
+        });
 
-document.addEventListener("DOMContentLoaded", async () => {
-    initMap();
-    initScaleSelector();
-    await loadHistory();
-    loadStatus();
-    connect();
-    requestAnimationFrame(loop);
-    setInterval(loadStatus, 5000);
-});
+        // Hydrate initial history if available
+        fetch('/api/history?seconds=60')
+            .then(res => res.json())
+            .then(data => {
+                if (data.frames && Array.isArray(data.frames)) {
+                    data.frames.forEach(f => {
+                        if (f.data) handleTelemetryPacket({ data: f.data, statistics: f.statistics, raw_line: f.raw_line });
+                    });
+                }
+            })
+            .catch(() => {});
+    });
 </script>
 
 </body>

@@ -18,8 +18,8 @@ htmlcov/
 # Generated telemetry data
 /telemetry.csv
 /telemetry.db
-/data/*.csv
-/data/*.db*
+/data/
+data/
 *.db-journal
 *.db-wal
 *.db-shm

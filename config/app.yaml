@@ -1,59 +1,63 @@
+# ============================================================
+# CanSat CONAE Ground Station Configuration
+# Meets CONAE / ENACOM regulations & Bases §4-§7
+# ============================================================
+
+team:
+  id: "1000"              # 4-digit Team ID (e.g., '1000')
+  name: "CanSat Team"
+  mode: "F"               # 'F' for Flight Mode, 'S' for Simulation Mode
+
 serial:
-  port: "/dev/ttyACM0"
-  baudrate: 115200
-  reconnect_delay: 3
+  port: "/tmp/cansat_uart" # Virtual UART simulator or hardware (/dev/ttyACM0, /dev/ttyUSB0, COM3)
+  fallback_port: "/dev/ttyACM0"
+  baudrate: 115200        # UART Baudrate (115200 or 9600 for LoRa transceivers)
+  reconnect_delay: 2.0    # Reconnection retry interval in seconds
+  timeout: 1.0
 
 websocket:
-  host: "0.0.0.0"
-  port: 8000
+  host: "0.0.0.0"         # Listen on all network interfaces
+  port: 8080              # Port for local browser connection (8080)
 
 storage:
   database: "data/telemetry.db"
-  csv: "data/telemetry.csv"
+  primary_csv: "data/Flight_1000.csv"         # Primary CSV on Ground Station notebook (G2)
+  backup_csv: "data/backup/Flight_1000.csv"   # Backup CSV on secondary storage/USB (G2)
 
-gonogo:
-  altitude_tol_m: 5.0
-  accel_xy_tol_g: 0.1
-  accel_z_nominal_g: 1.0
-  accel_z_tol_g: 0.15
-  gps_radius_m: 5.0
-  weather_limits:
-    max_wind_speed_ms: 10.0
-    max_cloud_cover_pct: 75.0
-    min_visibility_km: 5.0
-  manual_checklist:
-    - id: "ant_gs"
-      item: "Antena de GS instalada"
-      responsible: "Comunicaciones"
-    - id: "ant_rocket"
-      item: "Antena del cohete"
-      responsible: "Mecánica"
-    - id: "rocket_secured"
-      item: "Cohete asegurado"
-      responsible: "Mecánica"
-    - id: "area_clear"
-      item: "Área despejada"
-      responsible: "Operaciones"
-    - id: "rec_ready"
-      item: "Recuperación lista"
-      responsible: "Recuperación"
-    - id: "weather_check"
-      item: "Meteorología (<15 km/h)"
-      responsible: "Control de vuelo"
-    - id: "wiring_check"
-      item: "Cableado e ignitores"
-      responsible: "Mecánica"
+radio:
+  band: "915MHz"          # ENACOM authorized: '915MHz' (915-928 MHz) or '2.4GHz' (2400-2483.5 MHz)
+  frequency_mhz: 915.0    # Operating frequency (reconfigurable for field coexistence)
+  power_dbm: 20           # Transmit power (up to +20 dBm / 100 mW)
+  addressing: "p2p"       # Point-to-point addressing (no broadcast, X2)
+  cansat_address: 1000    # CanSat node ID
+  station_address: 1      # Ground station node ID
+
+mission_limits:
+  altitude_max_m: 1000.0  # Mission ceiling (~500 - 1000 m)
+  descent_c3_nominal_ms: 15.0  # Phase C3 descent rate: 15 ± 3 m/s
+  descent_c3_tol_ms: 3.0
+  descent_c4_nominal_ms: 5.0   # Phase C4 descent rate: 5 ± 3 m/s
+  descent_c4_tol_ms: 3.0
+  voltage_min_v: 3.3
+  voltage_nominal_v: 3.7
+  voltage_max_v: 4.2
+  current_max_a: 1.0
 
 charts:
-  scaling_mode: "ratchet" # "ratchet" (recommended: envelope with non-shrinking expansion), "auto", or "fixed"
+  scaling_mode: "ratchet"
   altitude:
-    pad_max_m: 50.0 # Maximum visible scale on launchpad (STANDBY phase) to avoid noise amplification
-    expected_apogee_m: 1500.0 # Planned apogee ceiling for flight envelope
-    step_m: 500.0 # Incremental step when expanding above expected apogee
+    pad_max_m: 30.0
+    expected_apogee_m: 1000.0
+    step_m: 200.0
+  voltage:
+    min_v: 3.0
+    max_v: 4.5
+  current:
+    min_a: 0.0
+    max_a: 0.8
   acceleration:
-    min_g: -2.0 # Nominal negative G floor (e.g. atmospheric drag / separation)
-    max_g: 12.0 # Nominal axial positive G ceiling (boost / chute opening shock)
-  velocity:
-    min_vz_ms: -40.0 # Nominal descent velocity floor
-    max_vz_ms: 160.0 # Nominal ascent velocity ceiling
-    step_ms: 50.0 # Expansion step for velocity
+    min_ms2: -30.0
+    max_ms2: 50.0
+  rotation:
+    min_degs: -360.0
+    max_degs: 360.0

@@ -1,211 +1,168 @@
-name: "Trama"
-id: 1
-description: "Telemetría LoRa 65 bytes definitiva"
-
-frame:
-  length: 65
-  byte_order: "little_endian"
-  sync: "0xAA"
-
-  crc:
-    enabled: true
-    algorithm: "CRC-16/CCITT-FALSE"
-    polynomial: 0x1021
-    initial_value: 0xFFFF
-    final_xor: 0x0000
-    reflect_input: false
-    reflect_output: false
-
-    offset: 63
-    length: 2
-    byte_order: "little_endian"
-
-    calculate_from: 0
-    calculate_to: 62
+name: "CanSat CONAE Telemetry Frame"
+id: 1000
+description: "Official CONAE CanSat 1 Hz Telemetry Specification (Plain-text CSV / Binary)"
+format: "ascii_csv" # "ascii_csv" or "binary"
 
 fields:
-
-  - name: "sync"
-    description: "Byte fijo de sincronización para filtrado de ruido"
-    offset: 0
-    length: 1
-    type: "uint8"
-    expected_value: 0xAA
-
-  - name: "frame_number"
-    description: "ID de Trama secuencial incremental (0..65535)"
-    offset: 1
-    length: 2
-    type: "uint16"
-
-  - name: "timestamp"
-    description: "Tiempo transcurrido desde el inicio del vuelo en milisegundos"
-    offset: 3
-    length: 4
-    type: "uint32"
-    unit: "ms"
-
-  - name: "status"
-    description: "Etapa actual del vuelo (máquina de estados)"
-    offset: 7
-    length: 1
-    type: "uint8"
-    values:
-      0x00: "STANDBY"
-      0x01: "POWERED"
-      0x02: "BURNOUT"
-      0x03: "BURNOUT"
-      0x04: "APOGEE"
-      0x07: "APOGEE"
-      0x08: "DROGUE_ORD"
-      0x0F: "DROGUE_ORD"
-      0x10: "DROGUE_CONF"
-      0x1F: "DROGUE_CONF"
-      0x20: "MAIN_ORD"
-      0x3F: "MAIN_ORD"
-      0x40: "MAIN_CONF"
-      0x7F: "MAIN_CONF"
-      0x80: "LANDED"
-      0xFF: "LANDED"
-
-  - name: "pressure"
-    description: "Presión atmosférica en hPa entregada por BMP280"
-    offset: 8
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "hPa"
-
-  - name: "altura_actual"
-    description: "Altitud barométrica en metros respecto al punto de calibración"
-    offset: 12
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "m"
-
-  - name: "accel_x"
-    description: "Aceleración lineal en eje X de la IMU"
-    offset: 16
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "g"
-
-  - name: "accel_y"
-    description: "Aceleración lineal en eje Y de la IMU"
-    offset: 20
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "g"
-
-  - name: "accel_z"
-    description: "Aceleración lineal en eje Z de la IMU"
-    offset: 24
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "g"
-
-  - name: "gyro_x"
-    description: "Velocidad angular en eje X de la IMU"
-    offset: 28
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "deg/s"
-
-  - name: "gyro_y"
-    description: "Velocidad angular en eje Y de la IMU"
-    offset: 32
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "deg/s"
-
-  - name: "gyro_z"
-    description: "Velocidad angular en eje Z de la IMU"
-    offset: 36
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "deg/s"
-
-  - name: "temp_imu"
-    description: "Temperatura interna del sensor IMU"
-    offset: 40
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "°C"
-
-  - name: "latitude"
-    description: "Coordenada geográfica de latitud obtenida del GPS"
-    offset: 44
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "deg"
-
-  - name: "longitude"
-    description: "Coordenada geográfica de longitud obtenida del GPS"
-    offset: 48
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "deg"
-
-  - name: "altitud_gps"
-    description: "Altitud absoluta sobre el nivel del mar entregada por GPS"
-    offset: 52
-    length: 4
-    type: "float32"
-    scale: 1.0
-    offset_value: 0
-    unit: "m"
-
-  - name: "satellites"
-    description: "Cantidad de satélites conectados (calidad de fix)"
-    offset: 56
-    length: 1
-    type: "uint8"
+  - index: 0
+    name: "TEAM_ID"
+    description: "4-digit assigned Team ID (e.g. '1000')"
+    type: "string"
+    expected_value: "1000"
     unit: ""
 
-  - name: "ground_speed"
-    description: "Velocidad sobre el suelo entregada directamente por GPS"
-    offset: 57
-    length: 4
+  - index: 1
+    name: "MISSION_TIME"
+    description: "UTC time formatted as hh:mm:ss with 1 second resolution"
+    type: "time_utc"
+    unit: "UTC"
+
+  - index: 2
+    name: "PACKET_COUNT"
+    description: "Total packets transmitted since boot, persistent across reboots"
+    type: "uint32"
+    unit: "pkts"
+
+  - index: 3
+    name: "MODE"
+    description: "'F' for Flight mode, 'S' for Simulation mode"
+    type: "string"
+    allowed_values: ["F", "S"]
+    unit: ""
+
+  - index: 4
+    name: "STATE"
+    description: "Flight software operating state"
+    type: "string"
+    allowed_values:
+      - "LAUNCH_PAD"
+      - "ASCENT"
+      - "APOGEE"
+      - "DESCENT"
+      - "PROBE_RELEASE"
+      - "PAYLOAD_RELEASE"
+      - "LANDED"
+    unit: ""
+
+  - index: 5
+    name: "ALTITUDE"
+    description: "Altitude in meters relative to ground level at launch site (0.1 m resolution)"
     type: "float32"
     scale: 1.0
-    offset_value: 0
-    unit: "m/s"
+    unit: "m"
 
-  - name: "pin_frenado"
-    description: "Estado lógico actual del pin de frenado (paracaídas drogue)"
-    offset: 61
-    length: 1
-    type: "uint8"
-    values:
-      0: "DESACTIVADO"
-      1: "ACTIVADO"
+  - index: 6
+    name: "TEMPERATURE"
+    description: "Temperature in degrees Celsius (0.1 °C resolution)"
+    type: "float32"
+    scale: 1.0
+    unit: "°C"
 
-  - name: "pin_principal"
-    description: "Estado lógico actual del pin principal (paracaídas principal)"
-    offset: 62
-    length: 1
+  - index: 7
+    name: "PRESSURE"
+    description: "Atmospheric pressure in kPa (0.1 kPa resolution)"
+    type: "float32"
+    scale: 1.0
+    unit: "kPa"
+
+  - index: 8
+    name: "VOLTAGE"
+    description: "Power bus voltage in Volts (0.1 V resolution)"
+    type: "float32"
+    scale: 1.0
+    unit: "V"
+
+  - index: 9
+    name: "CURRENT"
+    description: "Battery current in Amperes (0.01 A resolution)"
+    type: "float32"
+    scale: 1.0
+    unit: "A"
+
+  - index: 10
+    name: "GYRO_R"
+    description: "Gyroscope Roll rate in degrees per second"
+    type: "float32"
+    scale: 1.0
+    unit: "°/s"
+
+  - index: 11
+    name: "GYRO_P"
+    description: "Gyroscope Pitch rate in degrees per second"
+    type: "float32"
+    scale: 1.0
+    unit: "°/s"
+
+  - index: 12
+    name: "GYRO_Y"
+    description: "Gyroscope Yaw rate in degrees per second"
+    type: "float32"
+    scale: 1.0
+    unit: "°/s"
+
+  - index: 13
+    name: "ACCEL_R"
+    description: "Accelerometer Roll / X reading in m/s^2"
+    type: "float32"
+    scale: 1.0
+    unit: "m/s²"
+
+  - index: 14
+    name: "ACCEL_P"
+    description: "Accelerometer Pitch / Y reading in m/s^2"
+    type: "float32"
+    scale: 1.0
+    unit: "m/s²"
+
+  - index: 15
+    name: "ACCEL_Y"
+    description: "Accelerometer Yaw / Z reading in m/s^2"
+    type: "float32"
+    scale: 1.0
+    unit: "m/s²"
+
+  - index: 16
+    name: "GPS_TIME"
+    description: "GPS UTC time formatted as hh:mm:ss (1s resolution)"
+    type: "time_utc"
+    unit: "UTC"
+
+  - index: 17
+    name: "GPS_ALTITUDE"
+    description: "GPS altitude in meters MSL (0.1 m resolution)"
+    type: "float32"
+    scale: 1.0
+    unit: "m"
+
+  - index: 18
+    name: "GPS_LATITUDE"
+    description: "GPS latitude in decimal degrees (0.0001 deg resolution)"
+    type: "float64"
+    scale: 1.0
+    unit: "°"
+
+  - index: 19
+    name: "GPS_LONGITUDE"
+    description: "GPS longitude in decimal degrees (0.0001 deg resolution)"
+    type: "float64"
+    scale: 1.0
+    unit: "°"
+
+  - index: 20
+    name: "GPS_SATS"
+    description: "Number of GPS satellites tracked"
     type: "uint8"
-    values:
-      0: "DESACTIVADO"
-      1: "ACTIVADO"
+    unit: "sats"
+
+  - index: 21
+    name: "CMD_ECHO"
+    description: "Text of last telecommand received and processed by CanSat"
+    type: "string"
+    unit: ""
+
+  - index: 22
+    name: "OPTIONAL_DATA"
+    description: "Optional payload sensors or diagnostic metrics"
+    type: "string"
+    optional: true
+    unit: ""
