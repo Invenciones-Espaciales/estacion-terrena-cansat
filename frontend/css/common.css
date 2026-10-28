@@ -938,3 +938,167 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
     }
 }
 
+/* ============================================================
+   DEMO MODE FLOATING CONTROLLER HUD (GITHUB PAGES & ?demo=1)
+   Fixed overlay: zero impact on document layout or scrollbars
+   ============================================================ */
+
+.demo-hud {
+    position: fixed;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 980;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    background: rgba(9, 13, 20, 0.94);
+    border: 2px solid #38bdf8;
+    border-radius: 5px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.65);
+    color: #f0f6fc;
+    font-family: Arial, Helvetica, sans-serif;
+    max-width: calc(100vw - 16px);
+    box-sizing: border-box;
+    user-select: none;
+    backdrop-filter: blur(6px);
+}
+
+.demo-hud.minimized {
+    left: auto;
+    right: 10px;
+    transform: none;
+    padding: 3px 8px;
+}
+
+.demo-hud-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 9.5px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.demo-hud-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 7px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    background: #17202d;
+    color: #e2e8f0;
+    border: 1.5px solid #2d4057;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.demo-hud-btn:hover {
+    background: #253346;
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.demo-hud-btn.active {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.demo-hud-btn.play-btn {
+    min-width: 26px;
+    background: #064e3b;
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.demo-hud-btn.play-btn.paused {
+    background: #451a03;
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.demo-hud-sep {
+    width: 1px;
+    height: 16px;
+    background: #2d4057;
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+.demo-hud-scrubber-wrap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.demo-hud-slider {
+    width: 96px;
+    height: 5px;
+    accent-color: #38bdf8;
+    cursor: pointer;
+    margin: 0;
+}
+
+.demo-hud-time {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 10.5px;
+    font-weight: 900;
+    color: #38bdf8;
+    min-width: 72px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.demo-hud-presets {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+@media (max-width: 1050px) {
+    .demo-hud {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 4px 6px;
+        gap: 4px;
+        width: calc(100vw - 12px);
+        max-width: calc(100vw - 12px);
+    }
+    .demo-hud-scrubber-wrap {
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+        gap: 3px;
+    }
+    .demo-hud-presets {
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+        gap: 2px;
+    }
+    .demo-hud-btn {
+        padding: 0 5px;
+        font-size: 9px;
+        height: 20px;
+    }
+    .demo-hud-sep {
+        display: none;
+    }
+    .demo-hud-slider {
+        width: 64px;
+    }
+}
+
+

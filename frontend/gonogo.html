@@ -6,9 +6,9 @@
 
 <title>Go / No-Go Checklist — Estación Terrena</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
-<link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
-<link rel="stylesheet" href="/frontend/css/common.css">
-<script src="/frontend/js/common.js"></script>
+<link rel="icon" type="image/png" href="assets/invenciones-espaciales.png">
+<link rel="stylesheet" href="css/common.css">
+<script src="js/common.js"></script>
 
 <style>
 /* ============================================================
@@ -673,7 +673,7 @@
     <!-- ==================== CABECERA GLOBAL (IDENTICAL ACROSS ALL 3 VIEWS) ==================== -->
     <header class="global-header">
         <div class="brand">
-            <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
+            <img src="assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
             <h1>ESTACIÓN<br>TERRENA</h1>
             <nav class="view-nav">
                 <a href="/gonogo" class="nav-tab active">GO / NO-GO</a>
@@ -1578,13 +1578,16 @@ function renderManualChecklistTable() {
    DATA INGESTION & WEBSOCKET
    ============================================================ */
 
-function handleTelemetry(d) {
+function handleTelemetry(d, isHistory = false, frameEpochMs = null) {
     const now = Date.now();
+    const tMs = isHistory && frameEpochMs ? frameEpochMs : now;
     state.lastPacketAt = now;
-    state.packetTimes.push(now);
+    if (!isHistory) {
+        state.packetTimes.push(now);
+    }
 
     if (state.lastPacketArrival) {
-        const dt = now - state.lastPacketArrival;
+        const dt = tMs - state.lastPacketArrival;
         const slotType = dt > 150 ? 2 : 1;
         state.packetSlots.push(slotType);
         if (state.packetSlots.length > 120) state.packetSlots.shift();
@@ -1592,7 +1595,7 @@ function handleTelemetry(d) {
         state.packetSlots.push(1);
         if (state.packetSlots.length > 120) state.packetSlots.shift();
     }
-    state.lastPacketArrival = now;
+    state.lastPacketArrival = tMs;
 
     const seq = Number(d.frame_number);
     let lostInStep = 0;
@@ -1614,7 +1617,7 @@ function handleTelemetry(d) {
     }
     state.totalReceived++;
     state.totalLost += lostInStep;
-    state.seqWindow.push({ t: now, rec: 1, lost: lostInStep });
+    state.seqWindow.push({ t: tMs, rec: 1, lost: lostInStep });
 
     if (d.rssi !== undefined && Number.isFinite(Number(d.rssi))) state.rssi = Number(d.rssi);
     if (d.pressure !== undefined && Number.isFinite(Number(d.pressure))) state.pressure = Number(d.pressure);
@@ -1661,9 +1664,37 @@ function handleTelemetry(d) {
         state.status = Number(d.status);
         if (state.status >= 1 && !state.liftoffDetected) {
             state.liftoffDetected = true;
-            state.liftoffAt = Date.now();
+            state.liftoffAt = tMs;
         }
     }
+
+    if (isHistory) {
+        state.connected = true;
+        updateStabilityEngines(100);
+    }
+}
+
+async function loadHistory() {
+    if (typeof window.fetchHistory60s !== "function") return;
+    await window.fetchHistory60s(
+        item => {
+            const d = item.data || item.telemetry || item;
+            const epochMs = item.timestamp ? Math.round(item.timestamp * 1000) : Date.now();
+            if (d && typeof d === "object") {
+                handleTelemetry(d, true, epochMs);
+            }
+        },
+        res => {
+            if (res && res.frames && res.frames.length > 0) {
+                const now = Date.now();
+                for (let k = 0; k < 10; k++) {
+                    state.packetTimes.push(now - (10 - k) * 95);
+                }
+                state.rxRate = 10;
+                renderDashboard();
+            }
+        }
+    );
 }
 
 let socket = null;
@@ -1748,6 +1779,7 @@ setInterval(() => {
 document.addEventListener("DOMContentLoaded", async () => {
     loadPersistedState();
     await loadStatus();
+    await loadHistory();
     renderManualChecklistTable();
     connect();
     requestAnimationFrame(frameLoop);

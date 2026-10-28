@@ -1277,9 +1277,16 @@ app = FastAPI(
 )
 
 app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR), name="frontend")
+if (FRONTEND_DIR / "css").exists():
+    app.mount("/css", StaticFiles(directory=FRONTEND_DIR / "css"), name="css")
+if (FRONTEND_DIR / "js").exists():
+    app.mount("/js", StaticFiles(directory=FRONTEND_DIR / "js"), name="js")
+if (FRONTEND_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
 
 
 @app.get("/")
+@app.get("/index.html")
 async def root():
     index_file = FRONTEND_DIR / "index.html"
     if not index_file.exists():
@@ -1289,6 +1296,7 @@ async def root():
 
 
 @app.get("/gonogo")
+@app.get("/gonogo.html")
 async def gonogo():
     gonogo_file = FRONTEND_DIR / "gonogo.html"
     if not gonogo_file.exists():
@@ -1298,6 +1306,7 @@ async def gonogo():
 
 
 @app.get("/recovery")
+@app.get("/recovery.html")
 async def recovery():
     recovery_file = FRONTEND_DIR / "recovery.html"
     if not recovery_file.exists():

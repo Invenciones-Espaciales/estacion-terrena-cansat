@@ -6,15 +6,15 @@
 
 <title>Estación Terrena de Telemetría</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='17' r='2' fill='black'/><path d='M12 15V3'/><path d='M4.93 7.93a10 10 0 0 1 14.14 0'/><path d='M7.76 10.76a6 6 0 0 1 8.48 0'/></svg>">
-<link rel="icon" type="image/png" href="/frontend/assets/invenciones-espaciales.png">
-<link rel="stylesheet" href="/frontend/css/common.css">
+<link rel="icon" type="image/png" href="assets/invenciones-espaciales.png">
+<link rel="stylesheet" href="css/common.css">
 <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
 >
-<script src="/frontend/js/common.js"></script>
+<script src="js/common.js"></script>
 
 <style>
 * { box-sizing: border-box; }
@@ -257,7 +257,7 @@ table.t td { padding: 3px 4px; border-bottom: 1px solid var(--soft-border); whit
     <!-- ==================== ZONA 1: CABECERA SUPERIOR (100% × 8%) ==================== -->
     <header class="global-header">
         <div class="brand">
-            <img src="/frontend/assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
+            <img src="assets/invenciones-espaciales.png" alt="Invenciones Espaciales">
             <h1>ESTACIÓN<br>TERRENA</h1>
             <nav class="view-nav">
                 <a href="/gonogo" class="nav-tab">GO / NO-GO</a>
@@ -850,19 +850,20 @@ function ingest(message, isHistory = false) {
         pushHist("alt", ts, alt);
 
         // Variación vertical (derivada con ventana deslizante de ~500 ms a 1 s)
-        if (state.vzHistory.length > 0 && Math.abs(alt - state.vzHistory[state.vzHistory.length - 1].alt) > 250) {
+        const vzNow = isHistory ? frameEpochMs : now;
+        if (state.vzHistory.length > 0 && (Math.abs(alt - state.vzHistory[state.vzHistory.length - 1].alt) > 250 || vzNow < state.vzHistory[state.vzHistory.length - 1].t)) {
             // Salto abrupto de reinicio del simulador: limpiar ventana de derivada
             state.vzHistory = [];
         }
-        state.vzHistory.push({ t: now, alt });
-        const vzCutoff = now - 1000;
+        state.vzHistory.push({ t: vzNow, alt });
+        const vzCutoff = vzNow - 1000;
         let cutVz = 0;
         while (cutVz < state.vzHistory.length && state.vzHistory[cutVz].t < vzCutoff) cutVz++;
         if (cutVz > 0) state.vzHistory.splice(0, cutVz);
 
         if (state.vzHistory.length >= 2) {
             const first = state.vzHistory[0];
-            const dt = (now - first.t) / 1000;
+            const dt = (vzNow - first.t) / 1000;
             if (dt >= 0.2) {
                 const rawVz = (alt - first.alt) / dt;
                 if (Math.abs(rawVz) <= 350) {
@@ -917,6 +918,15 @@ function ingest(message, isHistory = false) {
         state.lat = lat; state.lon = lon;
         if (state.baseCoords === null && Number(state.satellites || 0) >= 4) {
             state.baseCoords = [lat, lon];
+        }
+        if (isHistory && (Math.abs(lat) > 0.001 || Math.abs(lon) > 0.001)) {
+            const pt = [lat, lon];
+            const prev = state.routePoints.length ? state.routePoints[state.routePoints.length - 1] : null;
+            if (!prev || Math.abs(lat - prev[0]) > 0.000015 || Math.abs(lon - prev[1]) > 0.000015) {
+                state.routePoints.push(pt);
+                if (state.routePoints.length > 2000) state.routePoints.shift();
+                state.lastMapPoint = pt;
+            }
         }
     }
 
@@ -1749,6 +1759,9 @@ async function loadHistory() {
         item => ingest(item, true),
         res => {
             if (res && res.frames && res.frames.length > 0) {
+                if (state.route && state.routePoints.length > 0) {
+                    state.route.setLatLngs(state.routePoints);
+                }
                 drawTape(performance.now());
                 renderCharts();
                 renderText();
@@ -1769,7 +1782,7 @@ function loop(now) {
     renderCharts();
     if (now - lastText >= 33) { lastText = now; renderText(); }
     if (now - lastSlow >= 250) { lastSlow = now; updateMap(); renderLogs(); }
-    if (now - lastHeader >= 500) { lastHeader = now; renderHeader(); }
+    if (now - lastHeader >= 200) { lastHeader = now; renderHeader(); }
     requestAnimationFrame(loop);
 }
 
