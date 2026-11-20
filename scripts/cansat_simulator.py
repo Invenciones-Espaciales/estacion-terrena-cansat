@@ -86,7 +86,7 @@ class CanSatSimulator:
             cmd_name = tokens[2].upper()
             self.last_cmd_echo = cmd_name
 
-            if cmd_name in ("CAL", "CX"):
+            if cmd_name in ("CAL", "CX", "CAL_ALT_ZERO"):
                 # G1, F5: Calibrate altitude to zero
                 self.altitude = 0.0
                 print("[SIMULATOR] Altitude calibrated to 0.0 m (G1, F5)")
@@ -94,12 +94,14 @@ class CanSatSimulator:
                 # Reset packet count
                 self.packet_count = 0
                 print("[SIMULATOR] Packet count reset to 0")
-            elif cmd_name == "ST":
+            elif cmd_name in ("ST", "SET_UTC"):
                 # F3, F2: Synchronize UTC Time
                 print(f"[SIMULATOR] UTC Time synchronized: {tokens[3] if len(tokens)>3 else 'GPS'}")
-            elif cmd_name == "BATT":
+            elif cmd_name in ("BATT", "GET_POWER"):
                 # X6: Query battery & solar
-                print(f"[SIMULATOR] Battery report requested: {self.voltage:.2f}V, {self.current:.2f}A")
+                print(f"[SIMULATOR] Power report requested: {self.voltage:.2f}V, {self.current:.2f}A")
+            elif cmd_name == "GET_INFO":
+                print("[SIMULATOR] Additional documented info requested")
             elif cmd_name == "SIM":
                 sub = tokens[3].upper() if len(tokens) > 3 else "ENABLE"
                 if sub == "ENABLE":

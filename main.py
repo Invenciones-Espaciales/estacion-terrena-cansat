@@ -1369,10 +1369,14 @@ async def post_command(request: Request):
         elif action == "set_time":
             utc_now = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S")
             cmd = f"CMD,{team_id},ST,{utc_now}"
-        elif action == "reset_packet_count":
-            cmd = f"CMD,{team_id},PC,0"
-        elif action == "request_battery_solar":
-            cmd = f"CMD,{team_id},BATT"
+        elif action == "telemetry_on":
+            cmd = f"CMD,{team_id},CX,ON"
+        elif action == "telemetry_off":
+            cmd = f"CMD,{team_id},CX,OFF"
+        elif action == "mec_toggle":
+            device = body.get("device", "CHUTE")
+            state = body.get("state", "ON")
+            cmd = f"CMD,{team_id},MEC,{device},{state}"
         elif action == "sim_enable":
             cmd = f"CMD,{team_id},SIM,ENABLE"
         elif action == "sim_activate":

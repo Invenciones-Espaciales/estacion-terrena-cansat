@@ -625,8 +625,8 @@
                 <div class="card-header">
                     <span class="card-title">Telemetry</span>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px 10px; align-items:center;">
-                    <div class="metric-val big" style="color:#000000; line-height:1;" id="dispAltitude">0.0 <span style="font-size:14pt;">m</span></div>
+                <div style="display:grid; grid-template-columns: 1fr; gap:6px;">
+                    <div class="metric-val big" style="color:#000000; line-height:1; white-space:nowrap;" id="dispAltitude">0.0 <span style="font-size:14pt;">m</span></div>
                     <div style="background:#f8fafc; border:1.5px solid var(--border-light); border-radius:3px; padding:4px 6px;">
                         <div class="metric-label" style="font-size:9.5pt;">Vertical Speed</div>
                         <div class="metric-val num" style="font-size:14pt;" id="dispVz">0.0 m/s</div>
@@ -736,10 +736,11 @@
                     <button class="arm-toggle-btn" id="armToggleBtn" type="button" onclick="toggleManualArm()" title="Click or hold SHIFT/A">ARM</button>
                 </div>
 
-                <div class="cmd-btn-grid" style="grid-template-columns: 1fr;">
-                    <button class="cmd-btn primary cmd-btn-armable locked" onclick="sendAction('calibrate_zero')">CAL ZERO</button>
-                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('set_time')">SYNC UTC</button>
-                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('request_battery_solar')">QUERY BATT</button>
+                <div class="cmd-btn-grid" style="grid-template-columns: 1fr 1fr;">
+                    <button class="cmd-btn primary cmd-btn-armable locked" onclick="sendAction('calibrate_zero')">CAL</button>
+                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('set_time')">ST (UTC)</button>
+                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('telemetry_on')">CX ON</button>
+                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('telemetry_off')">CX OFF</button>
                 </div>
 
                 <!-- Custom Command Input -->
