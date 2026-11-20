@@ -732,11 +732,14 @@ class PacketStatistics:
         else:
             seq = item
 
-        # Track packet loss using persistent CanSat PACKET_COUNT
+        # Track packet loss and duplicates using persistent CanSat PACKET_COUNT
         if seq is not None:
             try:
                 seq_int = int(seq)
                 if self.last_packet_count is not None:
+                    if seq_int <= self.last_packet_count and seq_int > 1:
+                        self.duplicates = getattr(self, "duplicates", 0) + 1
+                        return False
                     expected = self.last_packet_count + 1
                     if seq_int > expected:
                         self.lost += (seq_int - expected)
@@ -759,6 +762,7 @@ class PacketStatistics:
                     self.last_alt_time = now
             except (ValueError, TypeError):
                 pass
+        return True
 
     def snapshot(self) -> dict[str, Any]:
         total = self.received + self.lost
@@ -828,6 +832,8 @@ class DualCSVLogger:
 
         self.primary_file = self.primary_path.open("a", newline="", encoding="utf-8")
         self.backup_file = self.backup_path.open("a", newline="", encoding="utf-8")
+        self.primary_ok = True
+        self.backup_ok = True
 
         logger.info("Primary CSV active: %s", self.primary_path)
         logger.info("Backup CSV active: %s", self.backup_path)
@@ -844,14 +850,18 @@ class DualCSVLogger:
             self.primary_file.write(row)
             self.primary_file.flush()
             os.fsync(self.primary_file.fileno())
+            self.primary_ok = True
         except Exception:
+            self.primary_ok = False
             logger.exception("Error writing primary CSV")
 
         try:
             self.backup_file.write(row)
             self.backup_file.flush()
             os.fsync(self.backup_file.fileno())
+            self.backup_ok = True
         except Exception:
+            self.backup_ok = False
             logger.exception("Error writing backup CSV")
 
     def close(self):
@@ -1063,8 +1073,12 @@ def create_background_task(coroutine) -> asyncio.Task:
 # ============================================================
 
 async def process_telemetry(telemetry: CanSatTelemetry, raw_line: str):
+    is_new = statistics.register(telemetry.packet_count, telemetry.altitude)
+    if not is_new:
+        logger.warning("Duplicate or out-of-order packet ignored: PACKET_COUNT=%s", telemetry.packet_count)
+        return
+
     data_dict = telemetry.to_dict()
-    statistics.register(telemetry.packet_count, telemetry.altitude)
 
     # Persist simultaneously to Dual CSV (G2) and SQLite
     if dual_csv_logger is not None:

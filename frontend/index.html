@@ -1072,9 +1072,20 @@
                 body: JSON.stringify({ action: actionName })
             });
             const res = await resp.json();
+            const cmdStr = res.command || actionName;
+            const cmdToken = cmdStr.split(',')[2] || cmdStr;
+            window._pendingCmdName = cmdToken;
+            clearTimeout(window._cmdAckTimer);
             const lastEl = document.getElementById('dispLastCmdSent');
-            if (lastEl) lastEl.textContent = res.command || actionName;
-            logTerminalLine(`[CMD SENT] ${res.command || actionName} (Status: ${res.status})`, true);
+            if (lastEl) lastEl.textContent = `${cmdStr} (PENDING...)`;
+            window._cmdAckTimer = setTimeout(() => {
+                if (window._pendingCmdName === cmdToken) {
+                    window._pendingCmdName = null;
+                    if (lastEl) lastEl.textContent = `${cmdStr} (TIMEOUT)`;
+                    logTerminalLine(`[CMD WARN] No ACK echo received for ${cmdStr} within 5s`, true);
+                }
+            }, 5000);
+            logTerminalLine(`[CMD SENT] ${cmdStr} (Status: ${res.status})`, true);
         } catch (e) {
             logTerminalLine(`[CMD ERROR] ${e.message}`, true);
         }
@@ -1218,17 +1229,37 @@
         const rateEl = document.getElementById('dispRate');
         if (rateEl && stats.rate_hz !== undefined) rateEl.textContent = `${Number(stats.rate_hz).toFixed(1)} Hz`;
 
-        // 8. Command Echo
+        // 8. Command Echo & ACK Verification
         const echoEl = document.getElementById('dispCmdEcho');
-        if (echoEl && d.CMD_ECHO) echoEl.textContent = d.CMD_ECHO;
+        if (echoEl && d.CMD_ECHO) {
+            echoEl.textContent = d.CMD_ECHO;
+            if (window._pendingCmdName && d.CMD_ECHO.toUpperCase().includes(window._pendingCmdName.toUpperCase())) {
+                clearTimeout(window._cmdAckTimer);
+                window._pendingCmdName = null;
+                const lastEl = document.getElementById('dispLastCmdSent');
+                if (lastEl) lastEl.textContent = `${d.CMD_ECHO} (ACK OK)`;
+            }
+        }
 
-        // 9. GPS
+        // 9. GPS (with No-Fix guard preserving last valid map position)
+        const sats = Number(d.GPS_SATS || 0);
+        const lat = Number(d.GPS_LATITUDE || 0);
+        const lon = Number(d.GPS_LONGITUDE || 0);
+        const hasFix = sats >= 3 && (lat !== 0 || lon !== 0);
+
         const satsEl = document.getElementById('dispGpsSats');
-        if (satsEl && d.GPS_SATS !== undefined) satsEl.textContent = `${d.GPS_SATS} sats`;
+        if (satsEl && d.GPS_SATS !== undefined) {
+            satsEl.textContent = hasFix ? `${sats} sats` : `${sats} sats (NO FIX)`;
+            satsEl.style.color = hasFix ? '' : '#dc2626';
+        }
         const coordsEl = document.getElementById('dispGpsCoords');
         if (coordsEl && d.GPS_LATITUDE !== undefined && d.GPS_LONGITUDE !== undefined) {
-            coordsEl.textContent = `${Number(d.GPS_LATITUDE).toFixed(4)}°, ${Number(d.GPS_LONGITUDE).toFixed(4)}°`;
-            updateGpsMap(Number(d.GPS_LATITUDE), Number(d.GPS_LONGITUDE));
+            if (hasFix) {
+                coordsEl.textContent = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+                updateGpsMap(lat, lon);
+            } else {
+                coordsEl.textContent = `NO FIX (last held)`;
+            }
         }
         const gpsAltEl = document.getElementById('dispGpsAlt');
         if (gpsAltEl && d.GPS_ALTITUDE !== undefined) gpsAltEl.textContent = `${Number(d.GPS_ALTITUDE).toFixed(1)} m`;
