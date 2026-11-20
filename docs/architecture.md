@@ -100,10 +100,8 @@ The presentation layer is designed strictly for intense solar environments:
 
 ---
 
-## 5. Auxiliary Views & Client-Side Demo Engine
+## 5. Client-Side Demo Engine
 
-In addition to the primary flight dashboard (`frontend/index.html`), the presentation layer includes:
+The single-page dashboard (`frontend/index.html`) includes:
 
-- **Go/No-Go Checklist & Audit Log (`frontend/gonogo.html`):** Pre-launch readiness verification with an interactive UI viewer, SQLite persistence, and CSV audit export (`data/gonogo_audit.csv`).
-- **Recovery View (`frontend/recovery.html`):** Dedicated post-landing GPS tracking and coordinate guidance view for field recovery teams.
 - **Interactive Demo Mode (`frontend/js/demo_mode.js`):** Pure client-side 240-second flight simulator that auto-activates on static hosts (such as GitHub Pages) or via `?demo=1`. It mocks WebSocket telemetry and intercepts `/api/command` and `/api/export/csv` requests. See [Demo Mode Documentation](demo-mode.md) for details.

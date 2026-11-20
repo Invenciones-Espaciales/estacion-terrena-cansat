@@ -111,6 +111,11 @@ class CanSatSimulator:
                 # X3: Mission start separation
                 self.state = "DESCENT"
                 print("[SIMULATOR] Mission start triggered!")
+            else:
+                print(f"[SIMULATOR] Accepted custom command: {cmd_name}")
+        elif cmd_str.strip() and not cmd_str.strip().startswith("1000,"):
+            self.last_cmd_echo = cmd_str.strip().upper()
+            print(f"[SIMULATOR] Accepted raw command: {self.last_cmd_echo}")
 
     def update_physics(self, dt: float):
         """Update CanSat flight dynamics profile."""
@@ -164,6 +169,11 @@ class CanSatSimulator:
         elif self.state == "LANDED":
             self.altitude = 0.0
             self.current = 0.15
+            if self.sim_phase_time > 10.0:
+                self.state = "LAUNCH_PAD"
+                self.sim_phase_time = 0.0
+                self.voltage = 4.12
+                print("[SIMULATOR] >>> LOOPING TO LAUNCH_PAD <<<")
 
         # Battery slow discharge
         self.voltage = max(3.3, self.voltage - 0.0001)

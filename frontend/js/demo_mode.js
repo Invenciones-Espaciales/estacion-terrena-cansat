@@ -782,18 +782,12 @@
         if (!brandSec) return;
 
         const tag = document.createElement('a');
+        if (!IS_DEMO) return;
         tag.id = 'demoPillBadge';
-        if (IS_DEMO) {
-            tag.className = 'demo-header-tag';
-            tag.textContent = 'DEMO ACTIVE';
-            tag.title = 'Running client-side CanSat simulation. Click to switch to Live mode.';
-            tag.onclick = (e) => { e.preventDefault(); window.exitDemoMode(); };
-        } else {
-            tag.className = 'demo-header-tag live-btn';
-            tag.textContent = 'LAUNCH DEMO';
-            tag.title = 'Click to launch interactive client-side CanSat flight simulation';
-            tag.onclick = (e) => { e.preventDefault(); window.enterDemoMode(); };
-        }
+        tag.className = 'demo-header-tag';
+        tag.textContent = 'DEMO ACTIVE';
+        tag.title = 'Running client-side CanSat simulation. Click to switch to Live mode.';
+        tag.onclick = (e) => { e.preventDefault(); window.exitDemoMode(); };
         brandSec.appendChild(tag);
     }
 

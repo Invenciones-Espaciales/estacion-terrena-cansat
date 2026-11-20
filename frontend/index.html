@@ -515,7 +515,7 @@
             border-radius: 4px;
             padding: 4px 8px;
             font-family: var(--font-mono);
-            font-size: 9.5pt;
+            font-size: 11.5pt;
             height: 100%;
             overflow-y: auto;
             white-space: pre-wrap;
@@ -533,6 +533,49 @@
             color: #0284c7;
             font-weight: 900;
         }
+        .right-col .cmd-btn-grid {
+            flex: 0 0 auto;
+            gap: 8px;
+        }
+        .right-col .cmd-btn {
+            padding: 10px 10px;
+            font-size: 13pt;
+        }
+        .cmd-history-list {
+            flex: 1 1 0;
+            min-height: 80px;
+            overflow-y: auto;
+            background: #f8fafc;
+            border: 1.5px solid var(--border-light);
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-family: monospace;
+            font-size: 10pt;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .cmd-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dotted #cbd5e1;
+            padding-bottom: 2px;
+        }
+        .cmd-verify-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 9pt;
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            border: 1.5px solid #000000;
+            margin-left: 6px;
+        }
+        .cmd-verify-badge.idle { background: #e2e8f0; color: #334155; }
+        .cmd-verify-badge.pending { background: #fef08a; color: #854d0e; }
+        .cmd-verify-badge.verified { background: #bbf7d0; color: #166534; }
+        .cmd-verify-badge.timeout { background: #fecaca; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -543,7 +586,6 @@
         <div class="brand-section">
             <span class="brand-title">CanSat GS</span>
             <span class="brand-subtitle" id="dispTeamId">TEAM 1000</span>
-            <span class="state-badge pad" id="dispFlightState">STANDBY</span>
         </div>
 
         <div class="header-metrics">
@@ -578,71 +620,46 @@
         <!-- ===== LEFT COLUMN: KEY FLIGHT TELEMETRY ===== -->
         <div class="left-col">
 
-            <!-- Altitude & Vertical Speed -->
-            <div class="card" style="flex: 1.2 1 0;">
+            <!-- Unified Flight & Sensor Telemetry -->
+            <div class="card" style="flex: 0 0 auto; gap:6px;">
                 <div class="card-header">
-                    <span class="card-title">Altitude</span>
-                    <span class="card-unit">[m] rel. ground</span>
+                    <span class="card-title">Telemetry</span>
                 </div>
-                <div class="metric-val big highlight" id="dispAltitude">0.0 <span style="font-size:13pt;">m</span></div>
-
-                <div style="background:#f8fafc; border:1.5px solid var(--border-light); border-radius:3px; padding:4px 6px; margin-top:auto;">
-                    <div class="metric-row">
-                        <span class="metric-label">Vertical Speed (Vz):</span>
-                        <span class="metric-val num" id="dispVz">0.0 m/s</span>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px 10px; align-items:center;">
+                    <div class="metric-val big" style="color:#000000; line-height:1;" id="dispAltitude">0.0 <span style="font-size:14pt;">m</span></div>
+                    <div style="background:#f8fafc; border:1.5px solid var(--border-light); border-radius:3px; padding:4px 6px;">
+                        <div class="metric-label" style="font-size:9.5pt;">Vertical Speed</div>
+                        <div class="metric-val num" style="font-size:14pt;" id="dispVz">0.0 m/s</div>
                     </div>
-                    <div class="metric-row" style="margin-top:2px;">
-                        <span class="metric-label">Descent Status:</span>
-                        <span class="compliance-tag" id="tagDescent">STANDBY</span>
+                    <div style="background:#f8fafc; border:1.5px solid var(--border-light); border-radius:3px; padding:4px 6px;">
+                        <div class="metric-label" style="font-size:9.5pt;">Pressure</div>
+                        <div class="metric-val num" style="font-size:14pt;" id="dispPressure">101.3 <span style="font-size:14pt;">kPa</span></div>
+                    </div>
+                    <div style="background:#f8fafc; border:1.5px solid var(--border-light); border-radius:3px; padding:4px 6px;">
+                        <div class="metric-label" style="font-size:9.5pt;">Temperature</div>
+                        <div class="metric-val num" style="font-size:14pt;" id="dispTemperature">20.0 <span style="font-size:14pt;">°C</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Atmosphere & Power -->
+            <!-- GPS Position & Map -->
             <div class="card" style="flex: 1.1 1 0;">
                 <div class="card-header">
-                    <span class="card-title">Sensors & Power</span>
-                    <span class="card-unit">SI Units</span>
+                    <span class="card-title">GPS Tracking</span>
+                    <span class="card-unit">Position</span>
+                </div>
+                <div id="gpsMap" style="flex: 1 1 0; min-height: 90px;"></div>
+                <div class="metric-row" style="margin-top:4px;">
+                    <span><span class="metric-label">Sats:</span> <span class="metric-val num highlight" style="font-size:11.5pt;" id="dispGpsSats">0</span></span>
+                    <span><span class="metric-label">GPS Alt:</span> <span class="metric-val num" style="font-size:11.5pt;" id="dispGpsAlt">--.- m</span></span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Pressure:</span>
-                    <span class="metric-val num" id="dispPressure">101.3 <span style="font-size:10.5pt;">kPa</span></span>
+                    <span class="metric-label">Lat:</span>
+                    <span class="metric-val num" style="font-size:11.5pt;" id="dispGpsLat">--.----°</span>
                 </div>
                 <div class="metric-row">
-                    <span class="metric-label">Temperature:</span>
-                    <span class="metric-val num" id="dispTemperature">20.0 <span style="font-size:10.5pt;">°C</span></span>
-                </div>
-                <div class="metric-row" style="border-top:1px dotted var(--border-light); padding-top:4px; margin-top:2px;">
-                    <span class="metric-label">Battery Voltage:</span>
-                    <span class="metric-val num" id="dispVoltage">3.70 <span style="font-size:10.5pt;">V</span></span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Battery Current:</span>
-                    <span class="metric-val num" id="dispCurrent">0.24 <span style="font-size:10.5pt;">A</span></span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Total Power:</span>
-                    <span class="metric-val num" id="dispPower">0.89 <span style="font-size:10.5pt;">W</span></span>
-                </div>
-            </div>
-
-            <!-- Avionics & Telecommand Echo -->
-            <div class="card" style="flex: 0.9 1 0;">
-                <div class="card-header">
-                    <span class="card-title">Avionics Status</span>
-                    <span class="card-unit">System</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Flight Mode:</span>
-                    <span class="metric-val num" id="dispMode">FLIGHT (F)</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Packet Rate:</span>
-                    <span class="metric-val num" id="dispRate">1.0 Hz</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Command Echo:</span>
-                    <span class="metric-val num highlight" style="font-size:12pt;" id="dispCmdEcho">BOOT_OK</span>
+                    <span class="metric-label">Long:</span>
+                    <span class="metric-val num" style="font-size:11.5pt;" id="dispGpsLon">--.----°</span>
                 </div>
             </div>
 
@@ -664,15 +681,15 @@
                 <div class="card chart-card">
                     <div class="card-header">
                         <span class="card-title">Battery Voltage</span>
-                        <span class="card-unit">[V]</span>
+                        <span class="metric-val num" style="font-size:14pt;" id="dispVoltage">3.70 V</span>
                     </div>
                     <div class="chart-box"><canvas id="chartVoltage"></canvas></div>
                 </div>
 
                 <div class="card chart-card">
                     <div class="card-header">
-                        <span class="card-title">Battery Current</span>
-                        <span class="card-unit">[A]</span>
+                        <span class="card-title">Battery Current [A]</span>
+                        <span class="metric-val num" style="font-size:14pt;" id="dispCurrent">0.24 A</span>
                     </div>
                     <div class="chart-box"><canvas id="chartCurrent"></canvas></div>
                 </div>
@@ -709,51 +726,20 @@
 
         </div>
 
-        <!-- ===== RIGHT COLUMN: GPS MAP & TELECOMMANDS ===== -->
+        <!-- ===== RIGHT COLUMN: TELECOMMANDS ===== -->
         <div class="right-col">
 
-            <!-- GPS Position & Map -->
-            <div class="card" style="flex: 1.1 1 0;">
-                <div class="card-header">
-                    <span class="card-title">GPS Tracking</span>
-                    <span class="card-unit">Position</span>
-                </div>
-                <div id="gpsMap"></div>
-                <div class="metric-row" style="margin-top:4px;">
-                    <span class="metric-label">Satellites:</span>
-                    <span class="metric-val num highlight" id="dispGpsSats">0 sats</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Coordinates:</span>
-                    <span class="metric-val num" style="font-size:10.5pt;" id="dispGpsCoords">--.----°, --.----°</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">GPS Altitude:</span>
-                    <span class="metric-val num" style="font-size:11pt;" id="dispGpsAlt">--.- m MSL</span>
-                </div>
-            </div>
-
             <!-- Telecommand Panel with Safety Interlock -->
-            <div class="card" style="flex: 1.2 1 0; justify-content:space-between;">
+            <div class="card" style="flex: 1 1 0; justify-content:space-between;">
                 <div class="card-header">
                     <span class="card-title">Telecommands</span>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="arm-badge safe" id="armBadge">🔒 SAFE</span>
-                        <button class="arm-toggle-btn" id="armToggleBtn" type="button" onclick="toggleManualArm()" title="Click or hold SHIFT/A with one hand">ARM</button>
-                    </div>
+                    <button class="arm-toggle-btn" id="armToggleBtn" type="button" onclick="toggleManualArm()" title="Click or hold SHIFT/A">ARM</button>
                 </div>
 
-                <div class="arm-hint" id="armHint">
-                    Hold <b>[SHIFT]</b> or <b>[A]</b> with one hand to enable trigger
-                </div>
-
-                <div class="cmd-btn-grid">
+                <div class="cmd-btn-grid" style="grid-template-columns: 1fr;">
                     <button class="cmd-btn primary cmd-btn-armable locked" onclick="sendAction('calibrate_zero')">CAL ZERO</button>
                     <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('set_time')">SYNC UTC</button>
-                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('reset_packet_count')">RESET PKT</button>
                     <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('request_battery_solar')">QUERY BATT</button>
-                    <button class="cmd-btn cmd-btn-armable locked" onclick="sendAction('sim_enable')">SIM MODE</button>
-                    <button class="cmd-btn danger cmd-btn-armable locked" onclick="sendAction('mission_start')">START</button>
                 </div>
 
                 <!-- Custom Command Input -->
@@ -762,15 +748,17 @@
                     <button class="cmd-btn primary cmd-btn-armable locked" id="customSendBtn" style="padding:4px 10px;" onclick="sendCustomCommand()">SEND</button>
                 </div>
 
-                <div class="metric-row" style="margin-top:2px;">
-                    <span class="metric-label" style="font-size:10pt;">Last Sent:</span>
-                    <span class="metric-val num" style="font-size:10pt;" id="dispLastCmdSent">NONE</span>
+                <div style="margin-top:2px;">
+                    <div class="metric-row" style="margin-bottom:2px;">
+                        <span class="metric-label" style="font-size:12pt;">Last Sent:</span>
+                        <span class="cmd-verify-badge idle" id="cmdVerifyBadge">IDLE</span>
+                    </div>
+                    <div class="metric-val num" style="font-size:12pt; word-break:break-all;" id="dispLastCmdSent">NONE</div>
                 </div>
 
-                <!-- Clean Flight CSV Export Button -->
-                <a href="/api/export/csv" download="Flight_1000.csv" class="cmd-btn primary" style="text-decoration:none; display:block; text-align:center; padding:5px 8px; margin-top:2px;">
-                    EXPORT FLIGHT CSV (USB)
-                </a>
+                <div class="cmd-history-list" id="cmdHistoryList">
+                    <div style="color:#64748b;">Command history &amp; ACK log...</div>
+                </div>
             </div>
 
         </div>
@@ -780,8 +768,10 @@
     <footer class="bottom-bar">
         <div class="card" style="padding:4px 8px; height:100%;">
             <div class="card-header" style="margin-bottom:2px; padding-bottom:1px;">
-                <span class="card-title" style="font-size:10pt;">Raw Telemetry Stream (1 Hz ASCII CSV)</span>
-                <span class="card-unit">Ascent & Descent</span>
+                <span class="card-title" style="font-size:12pt;">Raw Telemetry Stream</span>
+                <a href="/api/export/csv" download="Flight_1000.csv" class="cmd-btn primary" style="text-decoration:none; padding:2px 10px; font-size:10pt;">
+                    EXPORT FLIGHT CSV (USB)
+                </a>
             </div>
             <div class="terminal-box" id="rawTerminal">
                 <div class="terminal-line" style="color:var(--ink-subtle);">-- Awaiting CanSat telemetry stream... --</div>
@@ -811,7 +801,7 @@
         gyro_y: []
     };
 
-    function renderTimeChart(canvasId, seriesList, unit, autoScale = true, fixedMin = 0, fixedMax = 100) {
+    function renderTimeChart(canvasId, seriesList, unit, autoScale = true, fixedMin = 0, fixedMax = 100, showLatest = false) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
 
@@ -924,6 +914,17 @@
                 ctx.stroke();
             });
         }
+
+        if (showLatest && seriesList.length === 1 && seriesList[0].data.length > 0) {
+            const lastVal = seriesList[0].data[seriesList[0].data.length - 1];
+            if (lastVal !== null && lastVal !== undefined && !isNaN(lastVal)) {
+                ctx.font = '900 14pt monospace';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                ctx.fillText(`${Number(lastVal).toFixed(2)} ${unit}`, w - padR - 4, padT + 2);
+            }
+        }
     }
 
     function updateAllCharts() {
@@ -933,11 +934,11 @@
 
         renderTimeChart('chartVoltage', [
             { data: historyData.voltage, color: '#16a34a' }
-        ], 'V', false, 3.0, 4.5);
+        ], 'V', false, 3.0, 4.5, false);
 
         renderTimeChart('chartCurrent', [
             { data: historyData.current, color: '#ca8a04' }
-        ], 'A', false, 0.0, 0.8);
+        ], 'A', false, 0.0, 0.8, false);
 
         renderTimeChart('chartAccel', [
             { data: historyData.accel_r, color: '#0284c7' },
@@ -1073,22 +1074,55 @@
             });
             const res = await resp.json();
             const cmdStr = res.command || actionName;
-            const cmdToken = cmdStr.split(',')[2] || cmdStr;
-            window._pendingCmdName = cmdToken;
-            clearTimeout(window._cmdAckTimer);
-            const lastEl = document.getElementById('dispLastCmdSent');
-            if (lastEl) lastEl.textContent = `${cmdStr} (PENDING...)`;
-            window._cmdAckTimer = setTimeout(() => {
-                if (window._pendingCmdName === cmdToken) {
-                    window._pendingCmdName = null;
-                    if (lastEl) lastEl.textContent = `${cmdStr} (TIMEOUT)`;
-                    logTerminalLine(`[CMD WARN] No ACK echo received for ${cmdStr} within 5s`, true);
-                }
-            }, 5000);
+            trackPendingCommand(cmdStr);
             logTerminalLine(`[CMD SENT] ${cmdStr} (Status: ${res.status})`, true);
         } catch (e) {
             logTerminalLine(`[CMD ERROR] ${e.message}`, true);
         }
+    }
+
+    function setCmdVerifyBadge(state, label) {
+        const badge = document.getElementById('cmdVerifyBadge');
+        if (!badge) return;
+        badge.className = `cmd-verify-badge ${state}`;
+        badge.textContent = label;
+    }
+
+    function trackPendingCommand(cmdStr) {
+        const cmdToken = cmdStr.split(',')[2] || cmdStr;
+        window._pendingCmdName = cmdToken;
+        clearTimeout(window._cmdAckTimer);
+        const lastEl = document.getElementById('dispLastCmdSent');
+        if (lastEl) lastEl.textContent = cmdStr;
+        setCmdVerifyBadge('pending', 'PENDING');
+
+        const histList = document.getElementById('cmdHistoryList');
+        let histBadge = null;
+        if (histList) {
+            if (histList.firstElementChild && histList.firstElementChild.textContent.includes('Command history')) {
+                histList.innerHTML = '';
+            }
+            const row = document.createElement('div');
+            row.className = 'cmd-history-item';
+            const ts = new Date().toISOString().slice(11, 19);
+            row.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${ts} ${cmdStr}</span><span class="cmd-verify-badge pending" style="font-size:8pt; padding:1px 4px;">PENDING</span>`;
+            histBadge = row.lastElementChild;
+            histList.prepend(row);
+            window._pendingHistBadge = histBadge;
+        }
+
+        window._cmdAckTimer = setTimeout(() => {
+            if (window._pendingCmdName === cmdToken) {
+                window._pendingCmdName = null;
+                setCmdVerifyBadge('timeout', 'TIMEOUT');
+                if (window._pendingHistBadge) {
+                    window._pendingHistBadge.className = 'cmd-verify-badge timeout';
+                    window._pendingHistBadge.textContent = 'TIMEOUT';
+                    window._pendingHistBadge = null;
+                }
+                logTerminalLine(`[CMD WARN] No ACK echo received for ${cmdStr} within 5s`, true);
+            }
+        }, 5000);
     }
 
     async function sendCustomCommand() {
@@ -1108,9 +1142,9 @@
                 body: JSON.stringify({ command: cmd })
             });
             const res = await resp.json();
-            const lastEl = document.getElementById('dispLastCmdSent');
-            if (lastEl) lastEl.textContent = res.command || cmd;
-            logTerminalLine(`[CMD SENT] ${res.command || cmd} (Status: ${res.status})`, true);
+            const cmdStr = res.command || cmd;
+            trackPendingCommand(cmdStr);
+            logTerminalLine(`[CMD SENT] ${cmdStr} (Status: ${res.status})`, true);
             input.value = '';
         } catch (e) {
             logTerminalLine(`[CMD ERROR] ${e.message}`, true);
@@ -1118,6 +1152,7 @@
     }
 
     function logTerminalLine(text, isCmd = false) {
+        if (isCmd) return;
         const terminal = document.getElementById('rawTerminal');
         if (!terminal) return;
         const div = document.createElement('div');
@@ -1231,13 +1266,19 @@
 
         // 8. Command Echo & ACK Verification
         const echoEl = document.getElementById('dispCmdEcho');
-        if (echoEl && d.CMD_ECHO) {
-            echoEl.textContent = d.CMD_ECHO;
+        if (d.CMD_ECHO) {
+            if (echoEl) echoEl.textContent = d.CMD_ECHO;
             if (window._pendingCmdName && d.CMD_ECHO.toUpperCase().includes(window._pendingCmdName.toUpperCase())) {
                 clearTimeout(window._cmdAckTimer);
                 window._pendingCmdName = null;
                 const lastEl = document.getElementById('dispLastCmdSent');
-                if (lastEl) lastEl.textContent = `${d.CMD_ECHO} (ACK OK)`;
+                if (lastEl) lastEl.textContent = d.CMD_ECHO;
+                setCmdVerifyBadge('verified', 'VERIFIED');
+                if (window._pendingHistBadge) {
+                    window._pendingHistBadge.className = 'cmd-verify-badge verified';
+                    window._pendingHistBadge.textContent = 'VERIFIED';
+                    window._pendingHistBadge = null;
+                }
             }
         }
 
@@ -1252,13 +1293,16 @@
             satsEl.textContent = hasFix ? `${sats} sats` : `${sats} sats (NO FIX)`;
             satsEl.style.color = hasFix ? '' : '#dc2626';
         }
-        const coordsEl = document.getElementById('dispGpsCoords');
-        if (coordsEl && d.GPS_LATITUDE !== undefined && d.GPS_LONGITUDE !== undefined) {
+        const latEl = document.getElementById('dispGpsLat');
+        const lonEl = document.getElementById('dispGpsLon');
+        if (d.GPS_LATITUDE !== undefined && d.GPS_LONGITUDE !== undefined) {
             if (hasFix) {
-                coordsEl.textContent = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+                if (latEl) latEl.textContent = `${d.GPS_LATITUDE}°`;
+                if (lonEl) lonEl.textContent = `${d.GPS_LONGITUDE}°`;
                 updateGpsMap(lat, lon);
             } else {
-                coordsEl.textContent = `NO FIX (last held)`;
+                if (latEl) latEl.textContent = `NO FIX`;
+                if (lonEl) lonEl.textContent = `NO FIX`;
             }
         }
         const gpsAltEl = document.getElementById('dispGpsAlt');
